@@ -14,9 +14,11 @@ export class XmlParserService {
     }
 
     parseXml(xml: string): EventLog {
+        console.log('parsing from', xml)
         const doc = this.parser.parseFromString(xml, 'application/xml')
         const traces = doc.getElementsByTagName('trace')
         const tracesArray = Array.from(traces).map(trace => this.parseTrace(trace))
+        console.log('parsed successfully', tracesArray)
         return new EventLog(tracesArray)
     }
 

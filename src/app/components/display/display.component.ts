@@ -2,10 +2,11 @@ import {Component, ElementRef, EventEmitter, OnDestroy, Output, ViewChild} from 
 import {DisplayService} from '../../services/display.service';
 import {catchError, of, Subscription, take} from 'rxjs';
 import {SvgService} from '../../services/svg.service';
-import {Diagram} from '../../classes/diagram/diagram';
+//import {Diagram} from '../../classes/diagram/diagram';
 import {ExampleFileComponent} from "../example-file/example-file.component";
 import {FileReaderService} from "../../services/file-reader.service";
 import { HttpClient } from "@angular/common/http";
+import { EventLog } from 'src/app/classes/event-log/event-log';
 
 @Component({
     selector: 'app-display',
@@ -19,7 +20,8 @@ export class DisplayComponent implements OnDestroy {
     @Output('fileContent') fileContent: EventEmitter<string>;
 
     private _sub: Subscription;
-    private _diagram: Diagram | undefined;
+    //private _diagram: Diagram | undefined;
+    private _log: EventLog | undefined;
 
     constructor(private _svgService: SvgService,
                 private _displayService: DisplayService,
@@ -28,10 +30,16 @@ export class DisplayComponent implements OnDestroy {
 
         this.fileContent = new EventEmitter<string>();
 
-        this._sub  = this._displayService.diagram$.subscribe(diagram => {
+       /*  this._sub  = this._displayService.diagram$.subscribe(diagram => {
             console.log('new diagram');
 
             this._diagram = diagram;
+            this.draw();
+        }); */
+        this._sub  = this._displayService.eventLog$.subscribe(log => {
+            console.log('new log');
+
+            this._log = log;
             this.draw();
         });
     }
@@ -95,7 +103,7 @@ export class DisplayComponent implements OnDestroy {
         }
 
         this.clearDrawingArea();
-        const elements = this._svgService.createSvgElements(this._displayService.diagram);
+        const elements = this._svgService.createSvgElements(this._displayService.eventLog);
         for (const element of elements) {
             this.drawingArea.nativeElement.appendChild(element);
         }

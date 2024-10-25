@@ -1,25 +1,44 @@
 import {Injectable} from '@angular/core';
 import {Diagram} from '../classes/diagram/diagram';
 import {Element} from '../classes/diagram/element';
+import { EventLog } from '../classes/event-log/event-log';
+import { Trace } from '../classes/event-log/trace';
+import { TraceEvent } from '../classes/event-log/trace-event';
 
 @Injectable({
     providedIn: 'root'
 })
 export class SvgService {
 
-    public createSvgElements(diagram: Diagram): Array<SVGElement> {
+    /* public createSvgElements(diagram: Diagram): Array<SVGElement> {
         const result: Array<SVGElement> = [];
         diagram.elements.forEach(el => {
             result.push(this.createSvgForElement(el))
         });
         return result;
+    } */
+    public createSvgElements(eventLog: EventLog): Array<SVGElement> {
+        const result: Array<SVGElement> = [];
+        const uniqueEvents = new Set<TraceEvent>();
+
+        eventLog.traces.forEach(trace => {
+            trace.events.forEach(event => {
+                uniqueEvents.add(event)
+            })
+        });
+
+        uniqueEvents.forEach(el => {
+            result.push(this.createSvgForEvent(new Element(el.conceptName)))
+        });
+        console.log(uniqueEvents.size)
+        return result;
     }
 
-    private createSvgForElement(element: Element): SVGElement {
+    private createSvgForEvent(element: Element): SVGElement {
         const svg = this.createSvgElement('circle');
-
-        svg.setAttribute('cx', `${element.x}`);
-        svg.setAttribute('cy', `${element.y}`);
+        
+        svg.setAttribute('cx', `50`);
+        svg.setAttribute('cy', `50`);
         svg.setAttribute('r', '25');
         svg.setAttribute('fill', 'black');
 
