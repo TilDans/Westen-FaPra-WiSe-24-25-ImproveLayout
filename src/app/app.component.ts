@@ -28,7 +28,7 @@ export class AppComponent {
         this.textareaFc.setValue(newSource);
 
         //const result = this._parserService.parse(newSource);
-        const result = this._parserService.parseXml('src/assets/example.xes');
+        const result = this._parserService.parseXml(newSource)
         if (result !== undefined) {
             this._displayService.display(result);
         }
