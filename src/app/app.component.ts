@@ -13,11 +13,6 @@ export class AppComponent {
 
     public textareaFc: FormControl;
 
-    /* constructor(private _parserService: ParserService,
-                private _displayService: DisplayService) {
-        this.textareaFc = new FormControl();
-        this.textareaFc.disable();
-    } */
     constructor(private _parserService: XmlParserService,
         private _displayService: DisplayService) {
         this.textareaFc = new FormControl();
@@ -27,7 +22,6 @@ export class AppComponent {
     public processSourceChange(newSource: string) {
         this.textareaFc.setValue(newSource);
 
-        //const result = this._parserService.parse(newSource);
         const result = this._parserService.parseXml(newSource)
         if (result !== undefined) {
             this._displayService.display(result);

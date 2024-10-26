@@ -9,21 +9,16 @@ import { TraceEvent } from '../classes/event-log/trace-event';
     providedIn: 'root'
 })
 export class SvgService {
+    //Delete when layout done
     offset = 0;
 
-    /* public createSvgElements(diagram: Diagram): Array<SVGElement> {
-        const result: Array<SVGElement> = [];
-        diagram.elements.forEach(el => {
-            result.push(this.createSvgForElement(el))
-        });
-        return result;
-    } */
     public createSvgElements(eventLog: EventLog): Array<SVGElement> {
         const result: Array<SVGElement> = [];
         const uniqueEvents = new Set<string>();
         const edges = new Set<string>(); // To track unique edges as a string representation
         const svgElementsMap: { [key: string]: SVGElement } = {}; // Map to hold SVG elements by concept name
     
+        //Extract events and connections between those
         eventLog.traces.forEach(trace => {
             const events = trace.events;
     

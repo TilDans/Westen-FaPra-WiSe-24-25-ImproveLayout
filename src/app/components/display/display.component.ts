@@ -2,7 +2,6 @@ import {Component, ElementRef, EventEmitter, OnDestroy, Output, ViewChild} from 
 import {DisplayService} from '../../services/display.service';
 import {catchError, of, Subscription, take} from 'rxjs';
 import {SvgService} from '../../services/svg.service';
-//import {Diagram} from '../../classes/diagram/diagram';
 import {ExampleFileComponent} from "../example-file/example-file.component";
 import {FileReaderService} from "../../services/file-reader.service";
 import { HttpClient } from "@angular/common/http";
@@ -20,7 +19,6 @@ export class DisplayComponent implements OnDestroy {
     @Output('fileContent') fileContent: EventEmitter<string>;
 
     private _sub: Subscription;
-    //private _diagram: Diagram | undefined;
     private _log: EventLog | undefined;
 
     constructor(private _svgService: SvgService,
@@ -30,12 +28,6 @@ export class DisplayComponent implements OnDestroy {
 
         this.fileContent = new EventEmitter<string>();
 
-       /*  this._sub  = this._displayService.diagram$.subscribe(diagram => {
-            console.log('new diagram');
-
-            this._diagram = diagram;
-            this.draw();
-        }); */
         this._sub  = this._displayService.eventLog$.subscribe(log => {
             console.log('new log');
 
