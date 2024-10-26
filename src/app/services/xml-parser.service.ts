@@ -9,6 +9,7 @@ import {TraceEvent} from "../classes/event-log/trace-event";
 export class XmlParserService {
 
     private readonly parser = new DOMParser()
+    eventsInLog = 0;
 
     constructor() {
     }
@@ -17,6 +18,7 @@ export class XmlParserService {
         const doc = this.parser.parseFromString(xml, 'application/xml')
         const traces = doc.getElementsByTagName('trace')
         const tracesArray = Array.from(traces).map(trace => this.parseTrace(trace))
+        console.log('parsed successfully', tracesArray, ' containing ', this.eventsInLog, ' elements')
         return new EventLog(tracesArray)
     }
 
@@ -31,6 +33,7 @@ export class XmlParserService {
         if (!conceptName) {
             throw new Error('Concept name is undefined for element is undefined: ' + event)
         }
+        this.eventsInLog++;
         return new TraceEvent(conceptName)
     }
 
