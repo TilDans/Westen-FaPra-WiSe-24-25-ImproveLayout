@@ -13,14 +13,14 @@ import {ExampleFileComponent} from './components/example-file/example-file.compo
 import {APP_BASE_HREF, PlatformLocation} from "@angular/common";
 import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {ExampleButtonComponent} from "./components/example-button/example-button.component";
+import {EventLogInputComponent} from "./components/event-log-input/event-log-input.component";
 
 @NgModule({
     declarations: [
         AppComponent,
         DisplayComponent,
         FooterComponent,
-        ExampleFileComponent,
-        ExampleButtonComponent,
+        ExampleFileComponent
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         BrowserAnimationsModule,
@@ -28,7 +28,9 @@ import {ExampleButtonComponent} from "./components/example-button/example-button
         MatInputModule,
         MatButtonModule,
         MatIconModule,
-        ReactiveFormsModule], providers: [
+        ReactiveFormsModule, EventLogInputComponent],
+    exports: [ ],
+    providers: [
         {
             provide: APP_BASE_HREF,
             useFactory: (s: PlatformLocation) => s.getBaseHrefFromDOM(),
