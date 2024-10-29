@@ -13,7 +13,7 @@ export class TextParserService {
 
     parse(eventLog: string): EventLog {
         const sequences = eventLog.split('+');
-        const traces = sequences.map(sequence => {
+        const traces = sequences.filter(element => element.length > 0).map(sequence => {
             const events = sequence.split(',').map(eventName => new TraceEvent(eventName.trim()));
             return new Trace(events);
         });
