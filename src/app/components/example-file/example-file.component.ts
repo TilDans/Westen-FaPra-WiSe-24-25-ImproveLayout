@@ -40,4 +40,14 @@ export class ExampleFileComponent {
         e.dataTransfer!.setData(ExampleFileComponent.META_DATA_CODE, this.link);
     }
 
+    download(){
+       let docLink = document.createElement('a');
+       docLink.setAttribute('type', 'hidden');
+       docLink.href = this.link;
+       docLink.download = this.title+".xes";
+       document.body.appendChild(docLink);
+       docLink.click();
+       docLink.remove();
+    }
+
 }
