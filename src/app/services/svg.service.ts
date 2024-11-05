@@ -1,9 +1,8 @@
 import {Injectable} from '@angular/core';
-import {Diagram} from '../classes/diagram/diagram';
-import {Element} from '../classes/diagram/element';
-import { EventLog } from '../classes/event-log/event-log';
-import { Trace } from '../classes/event-log/trace';
-import { TraceEvent } from '../classes/event-log/trace-event';
+import {Element} from '../classes/Datastructure/InductiveGraph/element';
+import { EventLog } from '../classes/Datastructure/event-log/event-log';
+import { Trace } from '../classes/Datastructure/event-log/trace';
+import { TraceEvent } from '../classes/Datastructure/event-log/trace-event';
 
 @Injectable({
     providedIn: 'root'

@@ -5,7 +5,8 @@ import {SvgService} from '../../services/svg.service';
 import {ExampleFileComponent} from "../example-file/example-file.component";
 import {FileReaderService} from "../../services/file-reader.service";
 import { HttpClient } from "@angular/common/http";
-import { EventLog } from 'src/app/classes/event-log/event-log';
+import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
+import { InductivePetriNet } from 'src/app/classes/Datastructure/InductiveGraph/inductivePetriNet';
 
 @Component({
     selector: 'app-display',
@@ -19,7 +20,7 @@ export class DisplayComponent implements OnDestroy {
     @Output('fileContent') fileContent: EventEmitter<string>;
 
     private _sub: Subscription;
-    private _log: EventLog | undefined;
+    private _log: InductivePetriNet | undefined;
 
     constructor(private _svgService: SvgService,
                 private _displayService: DisplayService,
@@ -28,7 +29,7 @@ export class DisplayComponent implements OnDestroy {
 
         this.fileContent = new EventEmitter<string>();
 
-        this._sub  = this._displayService.eventLog$.subscribe(log => {
+        this._sub  = this._displayService.InductivePetriNet$.subscribe(log => {
             console.log('new log');
 
             this._log = log;
@@ -95,9 +96,17 @@ export class DisplayComponent implements OnDestroy {
         }
 
         this.clearDrawingArea();
-        const elements = this._svgService.createSvgElements(this._displayService.eventLog);
-        for (const element of elements) {
-            this.drawingArea.nativeElement.appendChild(element);
+        const elements = this._log?.createSVGs;
+        if (elements && Array.isArray(elements)) {  // or ensure it's an iterable
+            try {
+                for (const element of elements) {
+                    this.drawingArea.nativeElement.appendChild(element);
+                }
+            } catch (error) {
+                console.error("Error appending elements:", error);
+            }
+        } else {
+            console.warn("No valid elements found to append.");
         }
     }
 

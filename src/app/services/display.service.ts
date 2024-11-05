@@ -1,32 +1,34 @@
 import {Injectable, OnDestroy} from '@angular/core';
 import {BehaviorSubject, Observable} from 'rxjs';
-import { EventLog } from '../classes/event-log/event-log';
-import {Diagram} from '../classes/diagram/diagram';
+import { InductivePetriNet } from '../classes/Datastructure/InductiveGraph/inductivePetriNet';
 
 @Injectable({
     providedIn: 'root'
 })
 export class DisplayService implements OnDestroy {
+    inductivePetriNet(inductivePetriNet: any) {
+        throw new Error('Method not implemented.');
+    }
 
-    private _eventLog$: BehaviorSubject<EventLog>;
+    private _petriNet$: BehaviorSubject<InductivePetriNet>;
 
     constructor() {
-        this._eventLog$ = new BehaviorSubject<EventLog>(new EventLog([]));
+        this._petriNet$ = new BehaviorSubject<InductivePetriNet>(new InductivePetriNet());
     }
 
     ngOnDestroy(): void {
-        this._eventLog$.complete();
+        this._petriNet$.complete();
     }
 
-    public get eventLog$(): Observable<EventLog> {
-        return this._eventLog$.asObservable();
+    public get InductivePetriNet$(): Observable<InductivePetriNet> {
+        return this._petriNet$.asObservable();
     }
 
-    public get eventLog(): EventLog {
-        return this._eventLog$.getValue();
+    public get InductivePetriNet(): InductivePetriNet {
+        return this._petriNet$.getValue();
     }
 
-    public display(log: EventLog) {
-        this._eventLog$.next(log);
+    public display(log: InductivePetriNet) {
+        this._petriNet$.next(log);
     }
 }

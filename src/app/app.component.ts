@@ -12,7 +12,7 @@ import {TextParserService} from "./services/text-parser.service";
 export class AppComponent {
 
     public textareaFc: FormControl;
-
+    
     constructor(private _xmlParserService: XmlParserService,
                 private _displayService: DisplayService,
                 private _textParserService: TextParserService) {
