@@ -1,14 +1,14 @@
-.main{
+.main {
     display: flex;
- flex-direction: column;
- justify-content: space-evenly;
- height: 100%;
- margin-bottom: 10px;
- margin-right: 10px;
+    flex-direction: column;
+    justify-content: space-evenly;
+    height: 100%;
+    margin-bottom: 10px;
+    margin-right: 10px;
 }
 
-input{
- height: 30px;
- width: 300px;
- font-size: 18px;
+input {
+    height: 30px;
+    width: 300px;
+    font-size: 18px;
 }
