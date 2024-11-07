@@ -97,6 +97,7 @@ export class DisplayComponent implements OnDestroy {
 
         this.clearDrawingArea();
         const elements = this._log?.createSVGs;
+        //elements = {(places), (transitions), arcs, (dfgs)}
         if (elements && Array.isArray(elements)) {  // or ensure it's an iterable
             try {
                 for (const element of elements) {
