@@ -1,13 +1,17 @@
+import { TraceEvent } from "../event-log/trace-event";
+
 export class Element {
     private readonly _id: string;
     private _x: number;
     private _y: number;
     private _svgElement: SVGElement | undefined;
+    traceEvent: TraceEvent;
 
-    constructor(id: string) {
-        this._id = id;
+    constructor(traceEvent: TraceEvent) {
+        this._id = traceEvent.conceptName;
         this._x = 0;
         this._y = 0;
+        this.traceEvent = traceEvent;
     }
 
     get id(): string {

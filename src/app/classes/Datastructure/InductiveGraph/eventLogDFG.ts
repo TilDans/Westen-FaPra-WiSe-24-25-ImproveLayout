@@ -13,7 +13,8 @@ export class EventLogDFG {
     }
 
     private createDFGForEventLog() {
-
+        //for each traceEvent in eventLog
+            //uniqueEvents.push(new Element(traceEvent))
     }
 
 
