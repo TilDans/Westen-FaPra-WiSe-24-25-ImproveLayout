@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 @Component({
     selector: 'app-example-file',
@@ -11,7 +11,7 @@ export class ExampleFileComponent {
 
     @Input() title: string | undefined;
     @Input() description: string | undefined;
-    @Input({required: true}) link: string = '';
+    @Input({ required: true }) link: string = '';
 
     constructor() {
     }
@@ -38,6 +38,16 @@ export class ExampleFileComponent {
 
         e.dataTransfer!.effectAllowed = 'link';
         e.dataTransfer!.setData(ExampleFileComponent.META_DATA_CODE, this.link);
+    }
+
+    download() {
+        let docLink = document.createElement('a');
+        docLink.setAttribute('type', 'hidden');
+        docLink.href = this.link;
+        docLink.download = this.title + ".xes";
+        document.body.appendChild(docLink);
+        docLink.click();
+        docLink.remove();
     }
 
 }
