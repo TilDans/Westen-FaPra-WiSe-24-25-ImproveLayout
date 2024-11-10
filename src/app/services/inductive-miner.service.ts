@@ -10,8 +10,8 @@ import { TraceEvent } from '../classes/event-log/trace-event';
 export class InductiveMinerService {
     constructor() {}
 
-    public applyInductiveMiner(eventLog: EventLog, cutTraces: Trace[]): any {
-    this.checkSequenceCut(eventLog, cutTraces); // WIP
+    public applyInductiveMiner(eventLog: EventLog, edges: Trace[]): any {
+    const splitEventlogs: EventLog[] = this.checkSequenceCut(eventLog, edges); // WIP
     //checkExclusiveCut
     //...
     }
@@ -19,78 +19,120 @@ export class InductiveMinerService {
 
   // Aktuell geht man davon aus, dass ein cut in Form eines Arrays von Traces dargestellt wird (also ein eigner eventLog). 
   // Beispiel: cut: Trace[] = ['AB', 'AC'] / cut: Trace[] = ['BD', 'CD']
-    private checkSequenceCut(eventLog: EventLog, cutTraces: Trace[]): EventLog[] { // Wir übergeben einen eventlog und einen cut-Vorschlag
+    private checkSequenceCut(eventLog: EventLog, edges: Trace[]): EventLog[] { // Wir übergeben einen eventlog und einen cut-Vorschlag
 
-    var cutPossible;
+    // Deklaration neuer, geteilter eventlogs
+    let A1: EventLog = new EventLog([]);
+    let A2: EventLog = new EventLog([]);
+
+    var cutPossible: boolean = false; // Abbruchbedingung, wenn in einem Trace keine Kante gefunden wurde
+    let usedEdges: Set<Trace> = new Set<Trace>; // Hilfsvariable, um zu prüfen, ob alle übergebenen Kanten verwendet wurden
+    const eventlogMap: Map<string, string[]> = this.parseEventlogToNodes(eventLog); // Map, um später Bedingungen prüfen zu können
+
     for (const eventLogTrace of eventLog.traces) { // Traversiere durch jeden Trace im eventlog
-        // Deklaration neuer, geteilter eventlogs
-        let A1: EventLog;
-        let A2: EventLog;
-        cutPossible = false; // Hilfsvariable für Abbruchbedingung
+        cutPossible = false; // Initial ist noch keine Kante im akt. trace im eventlog gefunden
         
-        for (const cutTrace of cutTraces) { // Prüfe jeden cut-Vorschlag einzeln
-            // Deklaration von Hilfsarrays, anhand dessen man später Bedingungen prüft
-            let A1Helper: string[] = [];
-            let A2Helper: string[] = [];
+        // Deklaration von traces zum Befüllen geteilter eventlogs
+        let A1Trace: Trace = new Trace([]);
+        let A2Trace: Trace = new Trace([]);
 
-            // Überprüfe, ob akt. cut überhaupt im akt. eventlog trace ist
-            const indexOfCutInTrace = eventLogTrace.events.toString().indexOf(cutTrace.events.toString()); 
+        for (const cEdge of edges) { // Prüfe jede Kante einzeln
+            
+            // Überprüfe, ob akt. Kante im akt. eventlog trace ist
+            const indexOfCutInTrace = eventLogTrace.events.toString().indexOf(cEdge.events.toString()); 
+
             if (indexOfCutInTrace !== -1) { // wenn akt. cut-Vorschlag im akt. eventlog trace gefunden
-        
                 cutPossible = true;
-                // Deklaration von TraceEvent Objekten
-                let A1TraceEvent: TraceEvent[] = [];
-                let A2TraceEvent: TraceEvent[] = [];
+                usedEdges.add(cEdge);
 
-                // Konstruiere das linke TraceEvents
+                // Deklaration von helperSets, anhand dessen man später Bedingungen prüft
+                let A1HelperSet: Set<string> = new Set();
+                let A2HelperSet: Set<string> = new Set();
+    
+                // Fülle den linken Trace
                 // Traversiere dafür vom vom Anfang des akt. eventlog-traces bis zum INDEX DES JEWEILIGEN CUTS 
                 for (let i = 0; i <= indexOfCutInTrace; i++) {
-                    A1TraceEvent.push(new TraceEvent(eventLogTrace.events[i].conceptName))
-                    A1Helper.push(eventLogTrace.events[i].conceptName); // Fülle Hilfsarray
+                    A1Trace.events.push(new TraceEvent(eventLogTrace.events[i].conceptName))
+                    A1HelperSet.add(eventLogTrace.events[i].conceptName); // Fülle helperSets
                 }
-                // Konstruiere das rechte TraceEvents
+
+                // Fülle den rechten Trace
                 // Traversiere dafür vom INDEX DES JEWEILIGEN CUTS bis zum Ende des akt. eventlog-traces
                 for (let i = indexOfCutInTrace; i < eventLogTrace.events.length; i++) {
-                    A2TraceEvent.push(new TraceEvent(eventLogTrace.events[i].conceptName))
-                    A2Helper.push(eventLogTrace.events[i].conceptName); // Fülle Hilfsarray
+                    A2Trace.events.push(new TraceEvent(eventLogTrace.events[i].conceptName))
+                    A2HelperSet.add(eventLogTrace.events[i].conceptName); // Fülle helperSets
                 }
 
-                // A1 und A2 sollten keine Intersection haben
-                if (A1Helper.some(r=> A2Helper.includes(r))) throw Error;
+                // A1 und A2 dürfen keine intersection haben
+                for (const e of A1HelperSet) {
+                    if (A2HelperSet.has(e)) {
+                        throw Error;
+                    }
+                }
                 // A1 und A2 sollten alle events umfassen
-                const unionA1A2 = new Set([...A1Helper, ...A2Helper]);
-                const uniqueActivities = this.getUniqueActivities(eventLog);
-                // Prüfe Sets: 1. Gleiche Länge, 2. Einträge im ersten Set müssen im 2. vorhanden sein
-                if (!(unionA1A2.size === uniqueActivities.size && [...unionA1A2].every((x) => uniqueActivities.has(x)))) throw Error;
+                const unionA1A2: Set<string>  = new Set([...A1HelperSet, ...A2HelperSet]);
+                const uniqueActivities: Set<string>  = this.getUniqueActivities(eventLog);
+                if (!this.compareSets(unionA1A2, uniqueActivities)) throw Error;
 
                 /*
-                für jede Aktivität in 𝐴1 gibt es in 𝐷 einen Weg zu jeder Aktivität in 𝐴2,
-                für keine Aktivität in 𝐴2 gibt es in 𝐷 einen Weg zu einer Aktivität in 𝐴1.
+                1. für jede Aktivität in 𝐴1 gibt es in 𝐷 einen Weg zu jeder Aktivität in 𝐴2,
+                2. für keine Aktivität in 𝐴2 gibt es in 𝐷 einen Weg zu einer Aktivität in 𝐴1.
                 */
-               // Um Transitionen nachvollziehen zu können, um die Bedingungen zu prüfen, soll eine Map verwendet werden
-                const eventlogMap: Map<string, string[]> = this.parseEventlogToNodes(eventLog);
+                // 1:
+                for (const cEvent of A1Trace.events) {
+                    const reachableActivities = this.getAllReachableActivities(eventlogMap, cEvent);
+                    if (!(this.compareSets(reachableActivities, A2HelperSet))) throw Error; // Alle erreichbaren Aktivitäten müssen in A2 sein!
+                }
 
-                // TODO: Bedingungen prüfen (eigene Funktion?)
+                // 2:
+                for (const cEvent of A2Trace.events) {
+                    const reachableActivities = this.getAllReachableActivities(eventlogMap, cEvent);
+                    if (this.compareSets(reachableActivities, A1HelperSet)) throw Error; // Alle erreichbaren Aktivitäten müssen in A1 sein!
+                }
 
-
-                break; // Wenn akt. cut in akt. trace gefunden, können restliche cuts im akt. trace übersprungen werden
+                break; // Wenn akt. Kante in akt. trace gefunden, können restliche Kanten im akt. trace übersprungen werden
             } 
 
-
         }; // End-Loop: Cut-Vorschläge
-        if (!cutPossible) break; // Wenn in einem trace keiner der vorgeschlagenen Cuts zu finden war, Loop unterbrechen
+        if (!cutPossible) throw Error; // Wenn in einem trace keiner der vorgeschlagenen Kanten zu finden war, Loop unterbrechen
 
-        // TODO: Erstellte Traces u.U. in die eventlogs A1 und A2 pushen
+        // Befülle neue, geteilte eventlogs mit konstruierten traces
+        A1.traces.push(A1Trace);
+        A2.traces.push(A2Trace)
 
     } // End-Loop: Traces in eventlog
-    // Wenn in einem trace des eventlogs kein cut zu finden war, abbrechen
-    if (!cutPossible) throw Error; // vorübergehend
+    // ###Redundant: if (!cutPossible) throw Error;
 
-    // Wenn alle Bedingungen erfolgreich: Returne zwei eventlogs / Wenn nicht, dann Error
-    return [eventLog];
+    // Wenn einer der Kanten nicht im Eventlog zu finden war, abbrechen:
+    let originalEdges: Set<Trace> = new Set(edges);
+    if (!(usedEdges.size === originalEdges.size && [...usedEdges].every((x) => originalEdges.has(x)))) throw Error; // Konvertiere Kanten zu Set und vergleiche
+
+    // Wenn alle Bedingungen erfolgreich: Returne zwei eventlogs
+    return [A1, A2];
     }
 
-    parseEventlogToNodes(eventlog: EventLog): Map<string, string[]> {
+    // Gebe jeden direkten und indirekten Nachfolger eines Events zurück (rekursiv: DFS)
+    private getAllReachableActivities(map: Map<string, string[]>, traceEvent: TraceEvent): Set<string> {
+        const reachableActivities = new Set<string>();
+        
+        function dfs(activity: string) {
+            if (reachableActivities.has(activity)) return;  // Wenn traceEvent bereits besucht, überspringe 
+            reachableActivities.add(activity);
+            
+            const neighbors = map.get(activity);
+            if (neighbors) {
+                for (const neighbor of neighbors) {
+                    dfs(neighbor);  // Recursively visit neighbors
+                }
+            }
+        }
+        
+        dfs(traceEvent.conceptName);
+        return reachableActivities;
+    }
+
+    // Wandelt einen eventlog in eine Map vom Typ "Map<string, string[]>" um
+    private parseEventlogToNodes(eventlog: EventLog): Map<string, string[]> {
         // Parse zunächst in ein Array von Strings
         let eventlogAsArray: string[] = [];
 
@@ -137,11 +179,20 @@ export class InductiveMinerService {
         return eventlogMap;
 }
 
-    getUniqueActivities(eventlog: EventLog): Set<string> {
+    // Gibt alle einzigartigen Akitivtäten aus einem eventlog zurück
+    private getUniqueActivities(eventlog: EventLog): Set<string> {
         const activities = new Set<string>();
         for (const trace of eventlog.traces) {
             trace.events.forEach(traceEvent => activities.add(traceEvent.conceptName));
         }
         return activities;
+    }
+
+    //Vergleicht zwei Sets
+    //Return true, wenn die Sets identisch sind
+    private compareSets(a: Set<string>, b: Set<string>): boolean {
+        // Prüfe Sets: 1. Gleiche Länge, 2. Einträge im ersten Set müssen im 2. vorhanden sein
+        if (!(a.size === b.size && [...a].every((x) => b.has(x)))) return true;
+        return false;
     }
 }
