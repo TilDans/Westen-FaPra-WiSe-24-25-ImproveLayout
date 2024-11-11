@@ -3,6 +3,8 @@ import {Element} from '../classes/Datastructure/InductiveGraph/element';
 import { EventLog } from '../classes/Datastructure/event-log/event-log';
 import { Trace } from '../classes/Datastructure/event-log/trace';
 import { TraceEvent } from '../classes/Datastructure/event-log/trace-event';
+import { InductivePetriNet } from '../classes/Datastructure/InductiveGraph/inductivePetriNet';
+import { transition } from '@angular/animations';
 
 @Injectable({
     providedIn: 'root'
@@ -11,12 +13,38 @@ export class SvgService {
     //Delete when layout done
     offset = 0;
 
-    public createSvgElements(eventLog: EventLog): Array<SVGElement> {
+
+    public createSvgElements(petriNet: InductivePetriNet): Array<SVGElement> {
         const result: Array<SVGElement> = [];
-        const uniqueEvents = new Set<string>();
+        petriNet.eventLogDFGs.forEach(eventLogDFG => {
+            result.push(this.createSVGforEventLog(eventLogDFG.eventLog))
+        });
+        petriNet.transitions.forEach(transition => {
+
+        });
+        petriNet.places.forEach(place => {
+
+        });
+        petriNet.transitions.forEach(transition => {
+            
+        });
+
+
+
+        return result;
+    }
+    
+    //erstelle Gruppen von SVG Elementen für EventLogs
+    private createSVGforEventLog(eventLog: EventLog) : SVGGElement {
+        const result: Array<SVGElement> = [];
+        const uniqueEvents = new Set<TraceEvent>();
+        const addedConceptNames = new Set<string>(); // To track unique concept names
         const edges = new Set<string>(); // To track unique edges as a string representation
         const svgElementsMap: { [key: string]: SVGElement } = {}; // Map to hold SVG elements by concept name
+        const group = this.createSvgElement('g') as SVGGElement;
     
+        group.setAttribute('class', 'event-log-group');
+
         //Extract events and connections between those
         eventLog.traces.forEach(trace => {
             const events = trace.events;
@@ -24,13 +52,16 @@ export class SvgService {
             // Iterate through each event in the trace
             events.forEach((event, index) => {
                 // Add the current event to the set of unique events
-                uniqueEvents.add(event.conceptName);
+                if (!addedConceptNames.has(event.conceptName)) {
+                    addedConceptNames.add(event.conceptName); // Mark this conceptName as added
+                    uniqueEvents.add(event); // Store the TraceEvent itself
+                }
     
                 // Create edges if there is a next event
                 if (index < events.length - 1) {
                     const nextEvent = events[index + 1];
                     const edgeKey = `${event.conceptName}->${nextEvent.conceptName}`; // Create a unique key for the edge
-    
+                    
                     // Check if the edge has already been added
                     if (!edges.has(edgeKey) && event.conceptName !== nextEvent.conceptName) {
                         edges.add(edgeKey); // Add the edge key to the set
@@ -56,8 +87,8 @@ export class SvgService {
         uniqueEvents.forEach(el => {
             const newElem = new Element(el);
             const svgElement = this.createSvgForEvent(newElem); // Create SVG for each event
-            result.push(svgElement);
-            svgElementsMap[el] = svgElement; // Store the SVG element in the map
+            group.appendChild(svgElement);
+            svgElementsMap[el.conceptName] = svgElement; // Store the SVG element in the map
         });
     
         console.log('Number of unique events:', uniqueEvents.size);
@@ -70,21 +101,21 @@ export class SvgService {
     
             if (fromElement && toElement) {
                 const edgeSvg = this.createSvgForEdge(fromElement, toElement);
-                result.push(edgeSvg); // Append the edge to the result
+                group.appendChild(edgeSvg); // Append the edge to the result
             }
         });
     
-        console.log('Total SVG elements:', result.length);
     
         // TODO here could be the layouter
     
-        return result;
-    }
         
+        return group;
+    }
 
     private createSvgForEvent(element: Element): SVGElement {
         const svg = this.createSvgElement('circle');
         const currX = 50 + this.offset
+        svg.setAttribute('id', element.id);
         svg.setAttribute('cx', currX.toString());
         svg.setAttribute('cy', `50`);
         svg.setAttribute('r', '15');

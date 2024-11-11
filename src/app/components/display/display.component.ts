@@ -20,7 +20,7 @@ export class DisplayComponent implements OnDestroy {
     @Output('fileContent') fileContent: EventEmitter<string>;
 
     private _sub: Subscription;
-    private _log: InductivePetriNet | undefined;
+    private _petriNet: InductivePetriNet | undefined;
 
     constructor(private _svgService: SvgService,
                 private _displayService: DisplayService,
@@ -32,7 +32,7 @@ export class DisplayComponent implements OnDestroy {
         this._sub  = this._displayService.InductivePetriNet$.subscribe(log => {
             console.log('new log');
 
-            this._log = log;
+            this._petriNet = log;
             this.draw();
         });
     }
@@ -96,18 +96,21 @@ export class DisplayComponent implements OnDestroy {
         }
 
         this.clearDrawingArea();
-        const elements = this._log?.createSVGs;
-        //elements = {(places), (transitions), arcs, (dfgs)}
-        if (elements && Array.isArray(elements)) {  // or ensure it's an iterable
+        var petriGraph = new Array<SVGElement>;
+        if (this._petriNet) {
+            petriGraph = this._svgService?.createSvgElements(this._petriNet);
+        }
+        //petriGraph = {(places), (transitions), arcs, (dfgs)}
+        if (petriGraph && Array.isArray(petriGraph)) {  // or ensure it's an iterable
             try {
-                for (const element of elements) {
-                    this.drawingArea.nativeElement.appendChild(element);
+                for (const node of petriGraph) {
+                    this.drawingArea.nativeElement.appendChild(node);
                 }
             } catch (error) {
-                console.error("Error appending elements:", error);
+                console.error("Error appending petriGraph:", error);
             }
         } else {
-            console.warn("No valid elements found to append.");
+            console.warn("No valid petriGraph found to append.");
         }
     }
 

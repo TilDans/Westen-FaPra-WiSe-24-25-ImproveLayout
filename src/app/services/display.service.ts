@@ -1,6 +1,8 @@
 import {Injectable, OnDestroy} from '@angular/core';
 import {BehaviorSubject, Observable} from 'rxjs';
 import { InductivePetriNet } from '../classes/Datastructure/InductiveGraph/inductivePetriNet';
+import { EventLog } from '../classes/Datastructure/event-log/event-log';
+import { Trace } from '../classes/Datastructure/event-log/trace';
 
 @Injectable({
     providedIn: 'root'
@@ -13,7 +15,7 @@ export class DisplayService implements OnDestroy {
     private _petriNet$: BehaviorSubject<InductivePetriNet>;
 
     constructor() {
-        this._petriNet$ = new BehaviorSubject<InductivePetriNet>(new InductivePetriNet());
+        this._petriNet$ = new BehaviorSubject<InductivePetriNet>(new InductivePetriNet(new EventLog(new Array<Trace>)));
     }
 
     ngOnDestroy(): void {
@@ -28,7 +30,7 @@ export class DisplayService implements OnDestroy {
         return this._petriNet$.getValue();
     }
 
-    public display(log: InductivePetriNet) {
-        this._petriNet$.next(log);
+    public display(petriNet: InductivePetriNet) {
+        this._petriNet$.next(petriNet);
     }
 }

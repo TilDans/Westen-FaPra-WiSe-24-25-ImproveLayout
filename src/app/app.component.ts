@@ -3,6 +3,7 @@ import {FormControl} from '@angular/forms';
 import {DisplayService} from './services/display.service';
 import {XmlParserService} from './services/xml-parser.service';
 import {TextParserService} from "./services/text-parser.service";
+import { InductivePetriNet } from './classes/Datastructure/InductiveGraph/inductivePetriNet';
 
 @Component({
     selector: 'app-root',
@@ -25,14 +26,14 @@ export class AppComponent {
 
         const result = this._xmlParserService.parseXml(newSource)
         if (result !== undefined) {
-            this._displayService.display(result);
+            this._displayService.display(new InductivePetriNet(result));
         }
     }
 
     parseEventLog(newEventLog: string) {
         const result = this._textParserService.parse(newEventLog);
         if(result) {
-            this._displayService.display(result);
+            this._displayService.display(new InductivePetriNet(result));
         }
     }
 }

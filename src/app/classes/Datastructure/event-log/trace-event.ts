@@ -8,4 +8,5 @@ export class TraceEvent {
     get conceptName(): string {
         return this._conceptName
     }
+
 }
