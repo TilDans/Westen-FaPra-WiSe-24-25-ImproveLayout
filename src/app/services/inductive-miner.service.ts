@@ -10,17 +10,65 @@ import { TraceEvent } from '../classes/event-log/trace-event';
 export class InductiveMinerService {
     constructor() {}
 
-    public applyInductiveMiner(eventLog: EventLog, edges: Trace[]): EventLog[] {
-    const splitEventlogs: EventLog[] = this.checkSequenceCut(eventLog, edges); // WIP
+    public applyInductiveMiner(eventlog: EventLog, edges: Trace[]): EventLog[] {
+    const splitEventlogs: EventLog[] = this.checkSequenceCut(eventlog, edges); // WIP
+    //const checkExclusiveCut: EventLog[] = this.checkExclusiveCut(eventlog, edges[0].events); // Hier erstmal aus mit UI-Kanten weitermachen
+    
     return splitEventlogs;
-    //checkExclusiveCut
+    
     //...
     }
 
 
-  // Aktuell geht man davon aus, dass ein cut in Form eines Arrays von Traces dargestellt wird (also ein eigener eventLog). 
+    private checkExclusiveCut(eventlog: EventLog, edges: TraceEvent[]): EventLog[] {
+    // Deklaration neuer, geteilter eventlogs
+    let A1: EventLog = new EventLog([]);
+    let A2: EventLog = new EventLog([]);
+
+    for (const cTrace of eventlog.traces) {
+        
+        if (cTrace.events[0].conceptName == edges[0].conceptName && cTrace.events[cTrace.events.length-1].conceptName == edges[1].conceptName) {
+            A2.traces.push(cTrace);
+        } else {
+            A1.traces.push(cTrace);
+        }
+    
+    }
+
+    // Bedingungen prüfen
+    // A1 und A2 dürfen keine intersection haben
+    if (this.hasIntersection(A1, A2)) return [];
+
+    // A1 und A2 sollten alle events umfassen
+    if (!this.isUnion(eventlog, A1, A2)) return [];
+
+    /*
+    1. es gibt keine Kante von 𝐴1 nach 𝐴2 in 𝐷
+    2. es gibt keine Kante von 𝐴2 nach 𝐴1 in D
+    */
+    const eventlogMap: Map<string, string[]> = this.parseEventlogToNodes(eventlog); // Map, um Bedingungen prüfen zu können
+    // 1.
+    for (const cTrace of A1.traces) {
+        for (const cEvent of cTrace.events) {
+            const reachableActivities = this.getAllReachableActivities(eventlogMap, cEvent);
+            if (this.isSubset(reachableActivities, this.parseEventlogToSet(A2))) return []; // Aus A1 darf nichts von A2 erreichbar sein
+        }
+    }
+    // 2.
+    for (const cTrace of A2.traces) {
+        for (const cEvent of cTrace.events) {
+            const reachableActivities = this.getAllReachableActivities(eventlogMap, cEvent);
+            if (this.isSubset(reachableActivities, this.parseEventlogToSet(A1))) return []; // Aus A2 darf nichts von A1 erreichbar sein
+        }
+    }
+
+    // Wenn alle Bedingungen erfolgreich: Returne zwei eventlogs
+    return [A1, A2];
+  }
+    
+  // Aktuell geht man davon aus, dass ein cut in Form eines Arrays von Traces dargestellt wird (also ein eigener eventlog). 
   // Beispiel: cut: Trace[] = ['AB', 'AC'] / cut: Trace[] = ['BD', 'CD']
-  private checkSequenceCut(eventLog: EventLog, edges: Trace[]): EventLog[] { // Wir übergeben einen eventlog und einen cut-Vorschlag
+  private checkSequenceCut(eventlog: EventLog, edges: Trace[]): EventLog[] { // Wir übergeben einen eventlog und einen cut-Vorschlag
 
     // Deklaration neuer, geteilter eventlogs
     let A1: EventLog = new EventLog([]);
@@ -28,9 +76,8 @@ export class InductiveMinerService {
 
     var cutPossible: boolean = false; // Abbruchbedingung, wenn in einem Trace keine Kante gefunden wurde
     let usedEdges: Set<Trace> = new Set<Trace>; // Hilfsvariable, um zu prüfen, ob alle übergebenen Kanten verwendet wurden
-    const eventlogMap: Map<string, string[]> = this.parseEventlogToNodes(eventLog); // Map, um später Bedingungen prüfen zu können
 
-    for (const cEventLogTrace of eventLog.traces) { // Traversiere durch jeden Trace im eventlog
+    for (const cEventLogTrace of eventlog.traces) { // Traversiere durch jeden Trace im eventlog
         cutPossible = false; // Initial ist noch keine Kante im akt. trace im eventlog gefunden
         // Deklaration von traces zum Befüllen geteilter eventlogs
         let A1Trace: Trace = new Trace([]);
@@ -84,12 +131,13 @@ export class InductiveMinerService {
     if (this.hasIntersection(A1, A2)) return [];
 
     // A1 und A2 sollten alle events umfassen
-    if (!this.isUnion(eventLog, A1, A2)) return [];
+    if (!this.isUnion(eventlog, A1, A2)) return [];
 
     /*
     1. für jede Aktivität in 𝐴1 gibt es in 𝐷 einen Weg zu jeder Aktivität in 𝐴2,
     2. für keine Aktivität in 𝐴2 gibt es in 𝐷 einen Weg zu einer Aktivität in 𝐴1.
     */
+    const eventlogMap: Map<string, string[]> = this.parseEventlogToNodes(eventlog); // Map, um später Bedingungen prüfen zu können
     // 1:
     for (const cTrace of A1.traces) {
         for (const cEvent of cTrace.events) {
