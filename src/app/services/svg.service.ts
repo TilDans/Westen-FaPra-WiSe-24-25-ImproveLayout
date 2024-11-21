@@ -25,9 +25,9 @@ export class SvgService {
         petriNet.places.forEach(place => {
 
         });
-        petriNet.transitions.forEach(transition => {
+        /* petriNet.arcs.forEach(transition => {
             
-        });
+        }); */
 
 
 
@@ -42,8 +42,16 @@ export class SvgService {
         const edges = new Set<string>(); // To track unique edges as a string representation
         const svgElementsMap: { [key: string]: SVGElement } = {}; // Map to hold SVG elements by concept name
         const group = this.createSvgElement('g') as SVGGElement;
-    
-        group.setAttribute('class', 'event-log-group');
+
+        // Add a rectangle as background/container
+        const rectangle = this.createSvgElement('rect');
+        rectangle.setAttribute('x', '0');
+        rectangle.setAttribute('y', '0');
+        //set at the end instead
+        rectangle.setAttribute('width', '1000');
+        rectangle.setAttribute('height', '100');
+        rectangle.setAttribute('fill', 'lightblue'); // Example background color
+        group.appendChild(rectangle);
 
         //Extract events and connections between those
         eventLog.traces.forEach(trace => {
@@ -107,8 +115,11 @@ export class SvgService {
     
     
         // TODO here could be the layouter
-    
-        
+        //return Array [minX, maxX, minY, maxY]
+
+        //set rectangle width and height
+        group.setAttribute('transform', 'translate(200, 100)');
+
         return group;
     }
 
