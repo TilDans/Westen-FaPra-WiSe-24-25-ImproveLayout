@@ -47,9 +47,6 @@ export class SvgService {
         const rectangle = this.createSvgElement('rect');
         rectangle.setAttribute('x', '0');
         rectangle.setAttribute('y', '0');
-        //set at the end instead
-        rectangle.setAttribute('width', '1000');
-        rectangle.setAttribute('height', '100');
         rectangle.setAttribute('fill', 'lightblue'); // Example background color
         group.appendChild(rectangle);
 
@@ -101,6 +98,29 @@ export class SvgService {
     
         console.log('Number of unique events:', uniqueEvents.size);
     
+        const positions = this.applySpringEmbedderLayout(uniqueEventsArray, edgesArray);
+        console.log("positions: ", positions);
+
+        //group.setAttribute('transform', 'translate(200, 100)');
+        // Update rectangle dimensions to encompass the layout
+        const minX = Math.min(...Object.values(positions).map(pos => pos.x));
+        const minY = Math.min(...Object.values(positions).map(pos => pos.y));
+        const maxX = Math.max(...Object.values(positions).map(pos => pos.x));
+        const maxY = Math.max(...Object.values(positions).map(pos => pos.y));
+
+        rectangle.setAttribute('width', (maxX - minX + 100).toString()); // Add padding
+        rectangle.setAttribute('height', (maxY - minY + 100).toString());
+
+        // Apply the computed positions to the SVG elements
+        Object.entries(positions).forEach(([conceptName, pos]) => {
+            const svgElement = svgElementsMap[conceptName];
+            if (svgElement) {
+                svgElement.setAttribute('cx', (pos.x - minX + 50).toString());
+                svgElement.setAttribute('cy', (pos.y - minY + 50).toString());
+            }
+        });
+
+
         // Draw edges based on edgesArray
         edgesArray.forEach(e => {
             const { from, to } = e;
@@ -112,15 +132,90 @@ export class SvgService {
                 group.appendChild(edgeSvg); // Append the edge to the result
             }
         });
-    
-    
-        // TODO here could be the layouter
-        //return Array [minX, maxX, minY, maxY]
-
-        //set rectangle width and height
-        group.setAttribute('transform', 'translate(200, 100)');
 
         return group;
+    }
+
+    private applySpringEmbedderLayout(nodes: Array<TraceEvent>, edges: Array<{ from: string; to: string }>) {
+        const positions: { [key: string]: { x: number; y: number } } = {};
+        const width = 1000; // Canvas width
+        const height = 800; // Canvas height
+        const maxIterations = 500; // Number of iterations for the layout
+        const k = 100; // Ideal edge length
+        const repulsiveForce = 5000; // Force constant for repulsion
+        const step = 0.1; // Step size for position updates
+    
+        // Initialize positions randomly within the canvas bounds
+        nodes.forEach(node => {
+            positions[node.conceptName] = {
+                x: Math.random() * width,
+                y: Math.random() * height,
+            };
+        });
+    
+        // Function to compute repulsive force between two nodes
+        const computeRepulsiveForce = (pos1: { x: number; y: number }, pos2: { x: number; y: number }) => {
+            const dx = pos1.x - pos2.x;
+            const dy = pos1.y - pos2.y;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1; // Avoid division by zero
+            const force = repulsiveForce / (dist * dist);
+            return { fx: force * (dx / dist), fy: force * (dy / dist) };
+        };
+    
+        // Function to compute attractive force along an edge
+        const computeAttractiveForce = (pos1: { x: number; y: number }, pos2: { x: number; y: number }) => {
+            const dx = pos2.x - pos1.x;
+            const dy = pos2.y - pos1.y;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1; // Avoid division by zero
+            const force = (dist - k) / k;
+            return { fx: force * (dx / dist), fy: force * (dy / dist) };
+        };
+    
+        // Iteratively apply forces
+        for (let i = 0; i < maxIterations; i++) {
+            const forces: { [key: string]: { fx: number; fy: number } } = {};
+    
+            // Initialize forces to zero
+            nodes.forEach(node => {
+                forces[node.conceptName] = { fx: 0, fy: 0 };
+            });
+    
+            // Compute repulsive forces
+            for (let j = 0; j < nodes.length; j++) {
+                for (let k = j + 1; k < nodes.length; k++) {
+                    const nodeA = nodes[j];
+                    const nodeB = nodes[k];
+                    const force = computeRepulsiveForce(positions[nodeA.conceptName], positions[nodeB.conceptName]);
+                    forces[nodeA.conceptName].fx += force.fx;
+                    forces[nodeA.conceptName].fy += force.fy;
+                    forces[nodeB.conceptName].fx -= force.fx;
+                    forces[nodeB.conceptName].fy -= force.fy;
+                }
+            }
+    
+            // Compute attractive forces
+            edges.forEach(edge => {
+                const force = computeAttractiveForce(positions[edge.from], positions[edge.to]);
+                forces[edge.from].fx += force.fx;
+                forces[edge.from].fy += force.fy;
+                forces[edge.to].fx -= force.fx;
+                forces[edge.to].fy -= force.fy;
+            });
+    
+            // Update positions based on forces
+            nodes.forEach(node => {
+                const pos = positions[node.conceptName];
+                const force = forces[node.conceptName];
+                pos.x += force.fx * step;
+                pos.y += force.fy * step;
+    
+                // Keep positions within bounds
+                pos.x = Math.max(0, Math.min(width, pos.x));
+                pos.y = Math.max(0, Math.min(height, pos.y));
+            });
+        }
+    
+        return positions;
     }
 
     private createSvgForEvent(element: Element): SVGElement {
