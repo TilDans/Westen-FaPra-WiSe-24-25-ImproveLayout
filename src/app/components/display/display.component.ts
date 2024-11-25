@@ -4,9 +4,9 @@ import {catchError, of, Subscription, take} from 'rxjs';
 import {SvgService} from '../../services/svg.service';
 import {ExampleFileComponent} from "../example-file/example-file.component";
 import {FileReaderService} from "../../services/file-reader.service";
-import { HttpClient } from "@angular/common/http";
-import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
-import { InductivePetriNet } from 'src/app/classes/Datastructure/InductiveGraph/inductivePetriNet';
+import {HttpClient} from "@angular/common/http";
+import {EventLog} from 'src/app/classes/Datastructure/event-log/event-log';
+import {InductivePetriNet} from 'src/app/classes/Datastructure/InductiveGraph/inductivePetriNet';
 
 @Component({
     selector: 'app-display',
@@ -21,6 +21,9 @@ export class DisplayComponent implements OnDestroy {
 
     private _sub: Subscription;
     private _petriNet: InductivePetriNet | undefined;
+    private _leftMouseDown = false;
+
+    private _markedEdges: SVGLineElement[] = [];
 
     constructor(private _svgService: SvgService,
                 private _displayService: DisplayService,
@@ -29,7 +32,7 @@ export class DisplayComponent implements OnDestroy {
 
         this.fileContent = new EventEmitter<string>();
 
-        this._sub  = this._displayService.InductivePetriNet$.subscribe(log => {
+        this._sub = this._displayService.InductivePetriNet$.subscribe(log => {
             console.log('new log');
 
             this._petriNet = log;
@@ -60,7 +63,7 @@ export class DisplayComponent implements OnDestroy {
     }
 
     private fetchFile(link: string) {
-        this._http.get(link,{
+        this._http.get(link, {
             responseType: 'text'
         }).pipe(
             catchError(err => {
@@ -122,6 +125,85 @@ export class DisplayComponent implements OnDestroy {
 
         while (drawingArea.childElementCount > 0) {
             drawingArea.removeChild(drawingArea.lastChild as ChildNode);
+        }
+    }
+
+    public processMouseDown(e: MouseEvent) {
+        if (e.button === 0 && this.drawingArea) {
+            this._leftMouseDown = true;
+            this.removeAllDrawnLines();
+            const {x, y} = this.calculateSvgCoordinates(e);
+            this.drawingArea.nativeElement.appendChild(this._svgService.createDrawnLine(x, y));
+        }
+    }
+
+    private calculateSvgCoordinates(e: MouseEvent) {
+        const svgRect = this.drawingArea!.nativeElement.getBoundingClientRect();
+        const x = e.clientX - svgRect.left;
+        const y = e.clientY - svgRect.top;
+        return {x, y};
+    }
+
+    public processMouseUp(e: MouseEvent) {
+        if (e.button === 0) {
+            this._leftMouseDown = false;
+            const drawnLine = this.drawingArea?.nativeElement.getElementsByClassName('drawn-line')[0] as SVGLineElement;
+            if(drawnLine) {
+                const allLines = this.getAllLines();
+                const intersectingLines = allLines.filter(line => this.linesIntersect(drawnLine, line));
+                intersectingLines.forEach(line => line.setAttribute('stroke', 'red'));
+                this._markedEdges = intersectingLines;
+            }
+            this.removeAllDrawnLines();
+        }
+    }
+
+    private getAllLines(): SVGLineElement[] {
+        return Array.from(this.drawingArea?.nativeElement.getElementsByTagName('line') || []) as SVGLineElement[];
+    }
+
+    private linesIntersect(line1: SVGLineElement, line2: SVGLineElement): boolean {
+        const x1 = parseFloat(line1.getAttribute('x1')!);
+        const y1 = parseFloat(line1.getAttribute('y1')!);
+        const x2 = parseFloat(line1.getAttribute('x2')!);
+        const y2 = parseFloat(line1.getAttribute('y2')!);
+
+        const x3 = parseFloat(line2.getAttribute('x1')!);
+        const y3 = parseFloat(line2.getAttribute('y1')!);
+        const x4 = parseFloat(line2.getAttribute('x2')!);
+        const y4 = parseFloat(line2.getAttribute('y2')!);
+
+        const denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+        if (denominator === 0) return false;
+
+        const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denominator;
+        const u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denominator;
+
+        return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+    }
+
+
+    private removeAllDrawnLines() {
+        let lines = this.drawingArea?.nativeElement.getElementsByClassName('drawn-line');
+        if (!lines) {
+            return;
+        }
+        // need to save number of lines before removing them, because the collection gets smaller when removing
+        const numberLines = lines.length;
+        for (let i = 0; i < numberLines; i++) {
+            lines[i].remove();
+        }
+    }
+
+    public processMouseMove(e: MouseEvent) {
+        if (this._leftMouseDown) {
+            const line = this.drawingArea?.nativeElement.getElementsByClassName('drawn-line')[0];
+            if (!line) {
+                return;
+            }
+            const {x, y} = this.calculateSvgCoordinates(e);
+            line.setAttribute('x2', x.toString());
+            line.setAttribute('y2', y.toString());
         }
     }
 }

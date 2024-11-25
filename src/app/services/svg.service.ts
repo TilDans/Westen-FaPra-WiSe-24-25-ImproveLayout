@@ -26,14 +26,26 @@ export class SvgService {
 
         });
         /* petriNet.arcs.forEach(transition => {
-            
+
         }); */
 
 
 
         return result;
     }
-    
+
+    public createDrawnLine(x: number, y: number): SVGElement {
+        const line = this.createSvgElement('line');
+        line.setAttribute('class', 'drawn-line');
+        line.setAttribute('x1', x.toString());
+        line.setAttribute('y1', y.toString());
+        line.setAttribute('x2', x.toString());
+        line.setAttribute('y2', y.toString());
+        line.setAttribute('stroke', 'black');
+        line.setAttribute('stroke-width', '2');
+        return line;
+    }
+
     //erstelle Gruppen von SVG Elementen für EventLogs
     private createSVGforEventLog(eventLog: EventLog) : SVGGElement {
         const result: Array<SVGElement> = [];
@@ -53,7 +65,7 @@ export class SvgService {
         //Extract events and connections between those
         eventLog.traces.forEach(trace => {
             const events = trace.events;
-    
+
             // Iterate through each event in the trace
             events.forEach((event, index) => {
                 // Add the current event to the set of unique events
@@ -61,12 +73,12 @@ export class SvgService {
                     addedConceptNames.add(event.conceptName); // Mark this conceptName as added
                     uniqueEvents.add(event); // Store the TraceEvent itself
                 }
-    
+
                 // Create edges if there is a next event
                 if (index < events.length - 1) {
                     const nextEvent = events[index + 1];
                     const edgeKey = `${event.conceptName}->${nextEvent.conceptName}`; // Create a unique key for the edge
-                    
+
                     // Check if the edge has already been added
                     if (!edges.has(edgeKey) && event.conceptName !== nextEvent.conceptName) {
                         edges.add(edgeKey); // Add the edge key to the set
@@ -74,20 +86,20 @@ export class SvgService {
                 }
             });
         });
-    
+
         // Convert the unique events set to an array if needed
         const uniqueEventsArray = Array.from(uniqueEvents);
-    
+
         // Convert edges set to an array of objects with from and to properties
         const edgesArray = Array.from(edges).map(edge => {
             const [from, to] = edge.split('->');
             return { from, to };
         });
-    
+
         // Example output for debugging
         console.log('Unique Events:', uniqueEventsArray);
         console.log('Edges:', edgesArray);
-    
+
         // Create SVG elements for each unique event and map them
         uniqueEvents.forEach(el => {
             const newElem = new Element(el);
@@ -95,9 +107,9 @@ export class SvgService {
             group.appendChild(svgElement);
             svgElementsMap[el.conceptName] = svgElement; // Store the SVG element in the map
         });
-    
+
         console.log('Number of unique events:', uniqueEvents.size);
-    
+
         const positions = this.applySpringEmbedderLayout(uniqueEventsArray, edgesArray);
         console.log("positions: ", positions);
 
@@ -126,7 +138,7 @@ export class SvgService {
             const { from, to } = e;
             const fromElement = svgElementsMap[from]; // Get the corresponding SVG element for the "from" event
             const toElement = svgElementsMap[to]; // Get the corresponding SVG element for the "to" event
-    
+
             if (fromElement && toElement) {
                 const edgeSvg = this.createSvgForEdge(fromElement, toElement);
                 group.appendChild(edgeSvg); // Append the edge to the result
@@ -144,7 +156,7 @@ export class SvgService {
         const k = 100; // Ideal edge length
         const repulsiveForce = 5000; // Force constant for repulsion
         const step = 0.1; // Step size for position updates
-    
+
         // Initialize positions randomly within the canvas bounds
         nodes.forEach(node => {
             positions[node.conceptName] = {
@@ -152,7 +164,7 @@ export class SvgService {
                 y: Math.random() * height,
             };
         });
-    
+
         // Function to compute repulsive force between two nodes
         const computeRepulsiveForce = (pos1: { x: number; y: number }, pos2: { x: number; y: number }) => {
             const dx = pos1.x - pos2.x;
@@ -161,7 +173,7 @@ export class SvgService {
             const force = repulsiveForce / (dist * dist);
             return { fx: force * (dx / dist), fy: force * (dy / dist) };
         };
-    
+
         // Function to compute attractive force along an edge
         const computeAttractiveForce = (pos1: { x: number; y: number }, pos2: { x: number; y: number }) => {
             const dx = pos2.x - pos1.x;
@@ -170,16 +182,16 @@ export class SvgService {
             const force = (dist - k) / k;
             return { fx: force * (dx / dist), fy: force * (dy / dist) };
         };
-    
+
         // Iteratively apply forces
         for (let i = 0; i < maxIterations; i++) {
             const forces: { [key: string]: { fx: number; fy: number } } = {};
-    
+
             // Initialize forces to zero
             nodes.forEach(node => {
                 forces[node.conceptName] = { fx: 0, fy: 0 };
             });
-    
+
             // Compute repulsive forces
             for (let j = 0; j < nodes.length; j++) {
                 for (let k = j + 1; k < nodes.length; k++) {
@@ -192,7 +204,7 @@ export class SvgService {
                     forces[nodeB.conceptName].fy -= force.fy;
                 }
             }
-    
+
             // Compute attractive forces
             edges.forEach(edge => {
                 const force = computeAttractiveForce(positions[edge.from], positions[edge.to]);
@@ -201,20 +213,20 @@ export class SvgService {
                 forces[edge.to].fx -= force.fx;
                 forces[edge.to].fy -= force.fy;
             });
-    
+
             // Update positions based on forces
             nodes.forEach(node => {
                 const pos = positions[node.conceptName];
                 const force = forces[node.conceptName];
                 pos.x += force.fx * step;
                 pos.y += force.fy * step;
-    
+
                 // Keep positions within bounds
                 pos.x = Math.max(0, Math.min(width, pos.x));
                 pos.y = Math.max(0, Math.min(height, pos.y));
             });
         }
-    
+
         return positions;
     }
 
@@ -237,12 +249,12 @@ export class SvgService {
         // Retrieve the x and y coordinates from the circle elements
         const fromX = parseFloat(from.getAttribute('cx') || '0');
         const fromY = parseFloat(from.getAttribute('cy') || '0');
-        
+
         const toX = parseFloat(to.getAttribute('cx') || '0');
         const toY = parseFloat(to.getAttribute('cy') || '0');
 
         console.log('Creating edge from', from.id, 'to', to.id, 'with coordinates:', fromX, fromY, toX, toY);
-        
+
         // Set line attributes using the coordinates
         svg.setAttribute('x1', fromX.toString());
         svg.setAttribute('y1', fromY.toString());
