@@ -5,7 +5,8 @@ import {SvgService} from '../../services/svg.service';
 import {ExampleFileComponent} from "../example-file/example-file.component";
 import {FileReaderService} from "../../services/file-reader.service";
 import { HttpClient } from "@angular/common/http";
-import { EventLog } from 'src/app/classes/datastructure/event-log/event-log';
+import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
+import { InductivePetriNet } from 'src/app/classes/Datastructure/InductiveGraph/inductivePetriNet';
 
 @Component({
     selector: 'app-display',
@@ -19,7 +20,7 @@ export class DisplayComponent implements OnDestroy {
     @Output('fileContent') fileContent: EventEmitter<string>;
 
     private _sub: Subscription;
-    private _log: EventLog | undefined;
+    private _petriNet: InductivePetriNet | undefined;
 
     constructor(private _svgService: SvgService,
                 private _displayService: DisplayService,
@@ -28,10 +29,9 @@ export class DisplayComponent implements OnDestroy {
 
         this.fileContent = new EventEmitter<string>();
 
-        this._sub  = this._displayService.eventLog$.subscribe(log => {
-            console.log('new log');
+        this._sub  = this._displayService.InductivePetriNet$.subscribe(log => {
 
-            this._log = log;
+            this._petriNet = log;
             this.draw();
         });
     }
@@ -95,9 +95,19 @@ export class DisplayComponent implements OnDestroy {
         }
 
         this.clearDrawingArea();
-        const elements = this._svgService.createSvgElements(this._displayService.eventLog);
-        for (const element of elements) {
-            this.drawingArea.nativeElement.appendChild(element);
+        const petriGraph = this._petriNet?.getSVGRepresentation();
+        
+        //petriGraph = {(places), (transitions), arcs, (dfgs)}
+        if (petriGraph && Array.isArray(petriGraph)) {  // or ensure it's an iterable
+            try {
+                for (const node of petriGraph) {
+                    this.drawingArea.nativeElement.appendChild(node);
+                }
+            } catch (error) {
+                console.error("Error appending petriGraph:", error);
+            }
+        } else {
+            console.warn("No valid petriGraph found to append.");
         }
     }
 

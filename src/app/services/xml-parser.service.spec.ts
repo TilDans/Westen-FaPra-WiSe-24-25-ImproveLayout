@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { XmlParserService } from './xml-parser.service';
-import { EventLog } from '../classes/datastructure/event-log/event-log';
-import { Trace } from '../classes/datastructure/event-log/trace';
-import { TraceEvent } from '../classes/datastructure/event-log/trace-event';
+import { EventLog } from '../classes/Datastructure/event-log/event-log';
+import { Trace } from '../classes/Datastructure/event-log/trace';
+import { TraceEvent } from '../classes/Datastructure/event-log/trace-event';
 
 describe('XmlParserService', () => {
     let service: XmlParserService;

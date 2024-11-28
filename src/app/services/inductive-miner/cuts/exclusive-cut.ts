@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { EventLog } from 'src/app/classes/datastructure/event-log/event-log';
 import { InductiveMinerHelper } from '../inductive-miner-helper';
-import { DFGEdge } from 'src/app/classes/datastructure/inductiveGraph/edgeElement';
+import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
+import { DFGEdge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
 
 @Injectable({
     providedIn: 'root',

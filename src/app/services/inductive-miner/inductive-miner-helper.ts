@@ -1,7 +1,8 @@
 import { Injectable } from "@angular/core";
-import { EventLog } from "src/app/classes/datastructure/event-log/event-log";
-import { TraceEvent } from "src/app/classes/datastructure/event-log/trace-event";
-import { DFGEdge } from "src/app/classes/datastructure/inductiveGraph/edgeElement";
+import { EventLog } from "src/app/classes/Datastructure/event-log/event-log";
+import { TraceEvent } from "src/app/classes/Datastructure/event-log/trace-event";
+import { DFGEdge } from "src/app/classes/Datastructure/InductiveGraph/edgeElement";
+
 
 @Injectable({
     providedIn: 'root',

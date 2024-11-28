@@ -1,8 +1,10 @@
-import { DFGElement } from "./element";
+import { DFGElement } from "./Elements/DFGElement";
 
 export class DFGEdge {
+
     start: DFGElement;
     end: DFGElement;
+
     private _svgElement: SVGElement | undefined;
 
     constructor(start: DFGElement, end: DFGElement) {

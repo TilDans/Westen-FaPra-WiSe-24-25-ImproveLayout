@@ -1,10 +1,10 @@
 import {TestBed} from '@angular/core/testing';
 import { ExclusiveCutChecker } from '../exclusive-cut';
-import { Trace } from 'src/app/classes/datastructure/event-log/trace';
-import { TraceEvent } from 'src/app/classes/datastructure/event-log/trace-event';
-import { EventLog } from 'src/app/classes/datastructure/event-log/event-log';
-import { DFGEdge } from 'src/app/classes/datastructure/inductiveGraph/edgeElement';
-import { DFGElement } from 'src/app/classes/datastructure/inductiveGraph/element';
+import { Trace } from 'src/app/classes/Datastructure/event-log/trace';
+import { TraceEvent } from 'src/app/classes/Datastructure/event-log/trace-event';
+import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
+import { DFGEdge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
+import { DFGElement } from 'src/app/classes/Datastructure/InductiveGraph/Elements/DFGElement';
 
 describe('Exclusive Cut function', () => {
     let service: ExclusiveCutChecker;
