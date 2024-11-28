@@ -1,6 +1,6 @@
 import {Injectable, OnDestroy} from '@angular/core';
 import {BehaviorSubject, Observable} from 'rxjs';
-import { EventLog } from '../classes/event-log/event-log';
+import { EventLog } from '../classes/datastructure/event-log/event-log';
 import {Diagram} from '../classes/diagram/diagram';
 
 @Injectable({

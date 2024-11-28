@@ -1,22 +1,26 @@
 
-import { Trace } from 'src/app/classes/event-log/trace';
+import { Injectable } from '@angular/core';
+import { Trace } from 'src/app/classes/datastructure/event-log/trace';
 import { InductiveMinerHelper } from '../inductive-miner-helper';
-import { EventLog } from 'src/app/classes/event-log/event-log';
-import { TraceEvent } from 'src/app/classes/event-log/trace-event';
+import { EventLog } from 'src/app/classes/datastructure/event-log/event-log';
+import { TraceEvent } from 'src/app/classes/datastructure/event-log/trace-event';
+import { DFGEdge } from 'src/app/classes/datastructure/inductiveGraph/edgeElement';
+
+@Injectable({
+    providedIn: 'root',
+})
 
 export class SequenceCutChecker {
     constructor(private helper: InductiveMinerHelper) {}
     
-    // Aktuell geht man davon aus, dass ein cut in Form eines Arrays von Traces dargestellt wird (also ein eigener eventlog). 
-  // Beispiel: cut: Trace[] = ['AB', 'AC'] / cut: Trace[] = ['BD', 'CD']
-  public checkSequenceCut(eventlog: EventLog, edges: Trace[]): EventLog[] { // Wir übergeben einen eventlog und einen cut-Vorschlag
+  public checkSequenceCut(eventlog: EventLog, edges: DFGEdge[]): EventLog[] { // Wir übergeben einen eventlog und einen cut-Vorschlag
 
     // Deklaration neuer, geteilter eventlogs
     let A1: EventLog = new EventLog([]);
     let A2: EventLog = new EventLog([]);
 
     var cutPossible: boolean = false; // Abbruchbedingung, wenn in einem Trace keine Kante gefunden wurde
-    let usedEdges: Set<Trace> = new Set<Trace>; // Hilfsvariable, um zu prüfen, ob alle übergebenen Kanten verwendet wurden
+    let usedEdges: Set<DFGEdge> = new Set<DFGEdge>; // Hilfsvariable, um zu prüfen, ob alle übergebenen Kanten verwendet wurden
 
     for (const cEventLogTrace of eventlog.traces) { // Traversiere durch jeden Trace im eventlog
         cutPossible = false; // Initial ist noch keine Kante im akt. trace im eventlog gefunden
@@ -30,7 +34,7 @@ export class SequenceCutChecker {
             let indexOfCutInTrace: number = -1; 
             for (let i = 0; i < cEventLogTrace.events.length; i++) {
 
-                if (cEventLogTrace.events[i].conceptName == cEdge.events[0].conceptName && cEventLogTrace.events[i+1].conceptName == cEdge.events[1].conceptName ) {
+                if (cEventLogTrace.events[i].conceptName == cEdge.start.id && cEventLogTrace.events[i+1].conceptName == cEdge.end.id ) {
                     indexOfCutInTrace = i;
                 }
             }
@@ -64,7 +68,7 @@ export class SequenceCutChecker {
     } // End-Loop: Traces in eventlog
 
     // Wenn einer der Kanten nicht im Eventlog zu finden war, abbrechen:
-    let originalEdges: Set<Trace> = new Set(edges);
+    const originalEdges: Set<DFGEdge> = new Set(edges);
     if (!(usedEdges.size === originalEdges.size && [...usedEdges].every((x) => originalEdges.has(x)))) return []; // Konvertiere Kanten zu Set und vergleiche
 
     // Bedingungen prüfen

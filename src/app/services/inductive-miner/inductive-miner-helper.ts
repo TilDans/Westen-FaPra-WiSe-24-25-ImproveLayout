@@ -1,6 +1,11 @@
-import { EventLog } from "src/app/classes/event-log/event-log";
-import { TraceEvent } from "src/app/classes/event-log/trace-event";
+import { Injectable } from "@angular/core";
+import { EventLog } from "src/app/classes/datastructure/event-log/event-log";
+import { TraceEvent } from "src/app/classes/datastructure/event-log/trace-event";
+import { DFGEdge } from "src/app/classes/datastructure/inductiveGraph/edgeElement";
 
+@Injectable({
+    providedIn: 'root',
+})
 
 export class InductiveMinerHelper {
     
@@ -130,4 +135,26 @@ export class InductiveMinerHelper {
         }
         return activities;
     }
+
+    // Mappe START-Kanten an STOP-Kanten
+    public mapEdgesStartToStop(edges: DFGEdge[]): [string, string][] {
+        let startEdges: DFGEdge[] = [];
+        let stopEdges: DFGEdge[] = [];
+
+        // Fülle Arrays mit START und STOP Kanten
+        for (const edge of edges) {
+            if (edge.start.id == '' && (edge.end)) startEdges.push(edge);
+            if ((edge.start) && edge.end.id == '') stopEdges.push(edge);
+        }
+
+        // Erzeuge Paare von START Kanten mit STOP Kanten
+        let pairedEdges: [string, string][] = [];
+        for (const startEdge of startEdges) {
+            for (const stopEdge of stopEdges) {
+                pairedEdges.push([startEdge.end.id, stopEdge.start.id]);
+            }
+        }
+
+        return pairedEdges;
+    } 
 }

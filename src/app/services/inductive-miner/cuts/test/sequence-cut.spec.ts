@@ -1,8 +1,10 @@
 import {TestBed} from '@angular/core/testing';
-import {EventLog} from '../../../classes/event-log/event-log';
-import {Trace} from '../../../classes/event-log/trace';
-import {TraceEvent} from '../../../classes/event-log/trace-event';
-import { SequenceCutChecker } from './sequence-cut';
+import { SequenceCutChecker } from '../sequence-cut';
+import { Trace } from 'src/app/classes/datastructure/event-log/trace';
+import { TraceEvent } from 'src/app/classes/datastructure/event-log/trace-event';
+import { EventLog } from 'src/app/classes/datastructure/event-log/event-log';
+import { DFGEdge } from 'src/app/classes/datastructure/inductiveGraph/edgeElement';
+import { DFGElement } from 'src/app/classes/datastructure/inductiveGraph/element';
 
 describe('Sequence Cut function', () => {
     let service: SequenceCutChecker;
@@ -32,12 +34,8 @@ describe('Sequence Cut function', () => {
 
                                     
         // 1. Sequence cut: A-->
-        const edge1: Trace[] = [
-                                new Trace(
-                                    [new TraceEvent("A"), new TraceEvent("B")]),
-                                new Trace(
-                                    [new TraceEvent("A"), new TraceEvent("C")])
-                            ]
+        const edge1: DFGEdge[] = [new DFGEdge(new DFGElement(new TraceEvent("A")), new DFGElement(new TraceEvent("B"))),
+                                  new DFGEdge(new DFGElement(new TraceEvent("A")), new DFGElement(new TraceEvent("C")))]
 
         const resultA: EventLog[] = service.checkSequenceCut(eventlog, edge1);
         expect(resultA.length).toBe(2);
@@ -69,12 +67,8 @@ describe('Sequence Cut function', () => {
 
 
         // 2. Sequence cut: B-->D / C-->D
-        const edge2: Trace[] = [
-            new Trace(
-                [new TraceEvent("B"), new TraceEvent("D")]),
-            new Trace(
-                [new TraceEvent("C"), new TraceEvent("D")])
-        ]
+        const edge2: DFGEdge[] = [new DFGEdge(new DFGElement(new TraceEvent("B")), new DFGElement(new TraceEvent("D"))),
+                                  new DFGEdge(new DFGElement(new TraceEvent("C")), new DFGElement(new TraceEvent("D")))]
 
         const resultB: EventLog[] = service.checkSequenceCut(eventlog, edge2);
         expect(resultB.length).toBe(2);
@@ -104,7 +98,7 @@ describe('Sequence Cut function', () => {
         }
     });
 
-    it('should return two valid Eventlogs when a sequence cut is made', () => {
+    it('should return empty array when no Sequence Cut was found', () => {
 
 
     });

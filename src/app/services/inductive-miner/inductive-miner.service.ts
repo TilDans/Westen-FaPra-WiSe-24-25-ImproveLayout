@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { EventLog } from '../../classes/event-log/event-log';
-import { Trace } from '../../classes/event-log/trace';
+import { EventLog } from '../../classes/datastructure/event-log/event-log';
 import { InductiveMinerHelper } from './inductive-miner-helper';
 import { ExclusiveCutChecker } from './cuts/exclusive-cut';
 import { SequenceCutChecker } from './cuts/sequence-cut';
+import { DFGEdge } from 'src/app/classes/datastructure/inductiveGraph/edgeElement';
 
 @Injectable({
     providedIn: 'root',
@@ -16,9 +16,9 @@ export class InductiveMinerService {
         private sequenceCutChecker: SequenceCutChecker
     ) {}
 
-    public applyInductiveMiner(eventlog: EventLog, edges: Trace[]): EventLog[] {
-    const splitEventlogs: EventLog[] = this.checkSequenceCut(eventlog, edges); // WIP
-    //const checkExclusiveCut: EventLog[] = this.checkExclusiveCut(eventlog, edges[0].events); // Hier erstmal aus mit UI-Kanten weitermachen
+    public applyInductiveMiner(eventlog: EventLog, edges: DFGEdge[]): EventLog[] {
+    const splitEventlogs: EventLog[] = this.sequenceCutChecker.checkSequenceCut(eventlog, edges);
+    const checkExclusiveCut: EventLog[] = this.exclusiveCutChecker.checkExclusiveCut(eventlog, edges);
     
     return splitEventlogs;
     

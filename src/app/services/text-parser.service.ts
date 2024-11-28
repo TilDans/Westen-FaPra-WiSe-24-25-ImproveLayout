@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
-import {EventLog} from '../classes/event-log/event-log';
-import {Trace} from '../classes/event-log/trace';
-import {TraceEvent} from '../classes/event-log/trace-event';
+import {EventLog} from '../classes/datastructure/event-log/event-log';
+import {Trace} from '../classes/datastructure/event-log/trace';
+import {TraceEvent} from '../classes/datastructure/event-log/trace-event';
 
 @Injectable({
     providedIn: 'root'

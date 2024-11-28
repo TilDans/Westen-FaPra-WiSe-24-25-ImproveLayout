@@ -5,7 +5,7 @@ import {SvgService} from '../../services/svg.service';
 import {ExampleFileComponent} from "../example-file/example-file.component";
 import {FileReaderService} from "../../services/file-reader.service";
 import { HttpClient } from "@angular/common/http";
-import { EventLog } from 'src/app/classes/event-log/event-log';
+import { EventLog } from 'src/app/classes/datastructure/event-log/event-log';
 
 @Component({
     selector: 'app-display',
