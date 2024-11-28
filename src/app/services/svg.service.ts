@@ -253,6 +253,9 @@ export class SvgService {
         const toX = parseFloat(to.getAttribute('cx') || '0');
         const toY = parseFloat(to.getAttribute('cy') || '0');
 
+        const fromId = from.getAttribute('id') || '';
+        const toId = to.getAttribute('id') || '';
+
         console.log('Creating edge from', from.id, 'to', to.id, 'with coordinates:', fromX, fromY, toX, toY);
 
         // Set line attributes using the coordinates
@@ -262,6 +265,9 @@ export class SvgService {
         svg.setAttribute('y2', toY.toString());
         svg.setAttribute('stroke', 'black');       // Line color
         svg.setAttribute('stroke-width', '2');     // Line thickness
+        svg.setAttribute('from', fromId);
+        svg.setAttribute('to', toId);
+
         return svg;
     }
 

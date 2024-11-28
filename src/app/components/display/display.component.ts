@@ -152,7 +152,7 @@ export class DisplayComponent implements OnDestroy {
                 const allLines = this.getAllLines();
                 const intersectingLines = allLines.filter(line => this.linesIntersect(drawnLine, line));
                 intersectingLines.forEach(line => line.setAttribute('stroke', 'red'));
-                this._markedEdges = intersectingLines;
+                this._markedEdges.push(...intersectingLines);
             }
             this.removeAllDrawnLines();
         }
@@ -205,5 +205,14 @@ export class DisplayComponent implements OnDestroy {
             line.setAttribute('x2', x.toString());
             line.setAttribute('y2', y.toString());
         }
+    }
+
+    public resetCut() {
+        this._markedEdges.forEach(edge => edge.setAttribute('stroke', 'black'));
+        this._markedEdges = [];
+    }
+
+    public performCut() {
+
     }
 }
