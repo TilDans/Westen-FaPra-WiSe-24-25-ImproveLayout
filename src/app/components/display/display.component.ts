@@ -30,7 +30,6 @@ export class DisplayComponent implements OnDestroy {
         this.fileContent = new EventEmitter<string>();
 
         this._sub  = this._displayService.InductivePetriNet$.subscribe(log => {
-            console.log('new log');
 
             this._petriNet = log;
             this.draw();
@@ -96,10 +95,8 @@ export class DisplayComponent implements OnDestroy {
         }
 
         this.clearDrawingArea();
-        var petriGraph = new Array<SVGElement>;
-        if (this._petriNet) {
-            petriGraph = this._svgService?.createSvgElements(this._petriNet);
-        }
+        const petriGraph = this._petriNet?.getSVGRepresentation();
+        
         //petriGraph = {(places), (transitions), arcs, (dfgs)}
         if (petriGraph && Array.isArray(petriGraph)) {  // or ensure it's an iterable
             try {

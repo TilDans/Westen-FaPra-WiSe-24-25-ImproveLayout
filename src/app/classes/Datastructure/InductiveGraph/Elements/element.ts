@@ -1,21 +1,21 @@
-import { TraceEvent } from "../event-log/trace-event";
+import { TraceEvent } from "../../event-log/trace-event";
 
-export class Element {
-    private readonly _id: string;
+export class CustomElement {
+    private _id: string = "";
     private _x: number;
     private _y: number;
     private _svgElement: SVGElement | undefined;
-    private _traceEvent: TraceEvent;
 
-    constructor(traceEvent: TraceEvent) {
-        this._id = traceEvent.conceptName;
+    constructor() {
         this._x = 0;
         this._y = 0;
-        this._traceEvent = traceEvent;
     }
 
-    get id(): string {
+    public get id(): string {
         return this._id;
+    }
+    public set id(value: string) {
+        this._id = value;
     }
 
     get x(): number {
@@ -32,14 +32,6 @@ export class Element {
 
     set y(value: number) {
         this._y = value;
-    }
-
-    get traceEvent(): TraceEvent {
-        return this._traceEvent;
-    }
-
-    set traceEvent(event: TraceEvent) {
-        this._traceEvent = event;
     }
 
     public registerSvg(svg: SVGElement) {
