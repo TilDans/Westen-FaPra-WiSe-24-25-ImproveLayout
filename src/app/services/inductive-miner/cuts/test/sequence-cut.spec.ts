@@ -1,15 +1,15 @@
 import {TestBed} from '@angular/core/testing';
-import {InductiveMinerService} from './inductive-miner.service';
-import {EventLog} from '../classes/event-log/event-log';
-import {Trace} from '../classes/event-log/trace';
-import {TraceEvent} from '../classes/event-log/trace-event';
+import {EventLog} from '../../../classes/event-log/event-log';
+import {Trace} from '../../../classes/event-log/trace';
+import {TraceEvent} from '../../../classes/event-log/trace-event';
+import { SequenceCutChecker } from './sequence-cut';
 
-describe('InductiveMinerService', () => {
-    let service: InductiveMinerService;
+describe('Sequence Cut function', () => {
+    let service: SequenceCutChecker;
 
     beforeEach(() => {
         TestBed.configureTestingModule({});
-        service = TestBed.inject(InductiveMinerService);
+        service = TestBed.inject(SequenceCutChecker);
     });
 
     it('should be created', () => {
@@ -39,7 +39,7 @@ describe('InductiveMinerService', () => {
                                     [new TraceEvent("A"), new TraceEvent("C")])
                             ]
 
-        const resultA: EventLog[] = service.applyInductiveMiner(eventlog, edge1);
+        const resultA: EventLog[] = service.checkSequenceCut(eventlog, edge1);
         expect(resultA.length).toBe(2);
 
         // Checks for A1
@@ -76,7 +76,7 @@ describe('InductiveMinerService', () => {
                 [new TraceEvent("C"), new TraceEvent("D")])
         ]
 
-        const resultB: EventLog[] = service.applyInductiveMiner(eventlog, edge2);
+        const resultB: EventLog[] = service.checkSequenceCut(eventlog, edge2);
         expect(resultB.length).toBe(2);
 
         // Checks for A1
