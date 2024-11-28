@@ -1,34 +1,42 @@
 <div class="flexColumnAlignStartStretch">
     <!--  Header  -->
     <div class="flexRowAlignCenterCenter">
-        <a href="https://www.fernuni-hagen.de/ilovepetrinets/"><h1>I <span class="red">❤</span> Petri Nets</h1></a>
+        <a href="https://www.fernuni-hagen.de/ilovepetrinets/">
+            <h1>I <span class="red">❤</span> Petri Nets</h1>
+        </a>
     </div>
     <h2>
         <i>Fachpraktikum Programmiersysteme WiSe24/25</i> by<br>
-        ..., ..., ..., ... and ...
+        Douglas, Lukas, Ramzan and Tilman
     </h2>
 
     <!--    Main content    -->
     <app-display class="padding full-size" (fileContent)="processSourceChange($event)"></app-display>
 
+    <div class="sampleFile">
 
-    <div class="flexRowAlignSpaceEvenlyStart">
+        <div class="flexRowAlignSpaceEvenlyStart">
+            <app-example-file title="XES-File" link="assets/example.xes"
+                description="An example .xes log file"></app-example-file>
+            <app-example-file title="production example" link="assets/Production.xes"
+                description="production sample .xes log file"></app-example-file>
+            <app-example-file title="Reviewing Example" link="assets/reviewing.xes"
+                description="reviewing .xes log file"></app-example-file>
+            <app-example-file title="repair Example" link="assets/repairExample.xes"
+                description="repair .xes log file"></app-example-file>
+        </div>
 
-        <app-example-file title="XES-File" link="assets/example.xes" description="An example .xes log file"></app-example-file>
+        <div class="inputFeature">
+            <app-event-log-input (eventLogChange)="parseEventLog($event)"></app-event-log-input>
 
-        <app-event-log-input (eventLogChange)="parseEventLog($event)"></app-event-log-input>
+            <mat-form-field appearance="outline" class="textarea">
+                <mat-label>File content</mat-label>
+                <textarea matInput cdkTextareaAutosize cdkAutosizeMinRows="10" cdkAutosizeMaxRows="20"
+                    [formControl]="textareaFc"></textarea>
+            </mat-form-field>
+        </div>
 
-        <mat-form-field appearance="outline"
-                        class="textarea">
-            <mat-label>File content</mat-label>
-            <textarea matInput
-                      cdkTextareaAutosize
-                      cdkAutosizeMinRows="10"
-                      cdkAutosizeMaxRows="20"
-                      [formControl]="textareaFc"></textarea>
-        </mat-form-field>
     </div>
-
     <!--  Footer  -->
     <hr>
     <app-footer></app-footer>

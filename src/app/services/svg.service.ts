@@ -1,10 +1,11 @@
 import {Injectable} from '@angular/core';
-import {Element} from '../classes/Datastructure/InductiveGraph/element';
+import {CustomElement} from '../classes/Datastructure/InductiveGraph/Elements/element';
 import { EventLog } from '../classes/Datastructure/event-log/event-log';
 import { Trace } from '../classes/Datastructure/event-log/trace';
 import { TraceEvent } from '../classes/Datastructure/event-log/trace-event';
 import { InductivePetriNet } from '../classes/Datastructure/InductiveGraph/inductivePetriNet';
 import { transition } from '@angular/animations';
+import { DFGElement } from '../classes/Datastructure/InductiveGraph/Elements/DFGElement';
 
 @Injectable({
     providedIn: 'root'
@@ -47,13 +48,14 @@ export class SvgService {
     }
 
     //erstelle Gruppen von SVG Elementen für EventLogs
-    private createSVGforEventLog(eventLog: EventLog) : SVGGElement {
+    public createSVGforEventLog(eventLog: EventLog) : SVGGElement {
         const result: Array<SVGElement> = [];
         const uniqueEvents = new Set<TraceEvent>();
         const addedConceptNames = new Set<string>(); // To track unique concept names
         const edges = new Set<string>(); // To track unique edges as a string representation
         const svgElementsMap: { [key: string]: SVGElement } = {}; // Map to hold SVG elements by concept name
         const group = this.createSvgElement('g') as SVGGElement;
+
 
         // Add a rectangle as background/container
         const rectangle = this.createSvgElement('rect');
@@ -73,7 +75,14 @@ export class SvgService {
                     addedConceptNames.add(event.conceptName); // Mark this conceptName as added
                     uniqueEvents.add(event); // Store the TraceEvent itself
                 }
+if (index == 0) {
+                    const edgeKey = `playNodeInDFG->${event.conceptName}`; // Create a unique key for the edge
 
+                    // Check if the edge has already been added
+                    if (!edges.has(edgeKey)) {
+                        edges.add(edgeKey); // Add the edge key to the set
+                    }
+                }
                 // Create edges if there is a next event
                 if (index < events.length - 1) {
                     const nextEvent = events[index + 1];
@@ -81,6 +90,13 @@ export class SvgService {
 
                     // Check if the edge has already been added
                     if (!edges.has(edgeKey) && event.conceptName !== nextEvent.conceptName) {
+                        edges.add(edgeKey); // Add the edge key to the set
+                    }
+                } else { //Index == events.length - 1 == highest index in array
+                    const edgeKey = `${event.conceptName}->stopNodeInDFG`; // Create a unique key for the edge
+
+                    // Check if the edge has already been added
+                    if (!edges.has(edgeKey)) {
                         edges.add(edgeKey); // Add the edge key to the set
                     }
                 }
@@ -102,12 +118,19 @@ export class SvgService {
 
         // Create SVG elements for each unique event and map them
         uniqueEvents.forEach(el => {
-            const newElem = new Element(el);
+            const newElem = new DFGElement(el);
             const svgElement = this.createSvgForEvent(newElem); // Create SVG for each event
             group.appendChild(svgElement);
             svgElementsMap[el.conceptName] = svgElement; // Store the SVG element in the map
         });
-
+const svgStart = this.createStartSVG();
+        group.appendChild(svgStart);
+        svgElementsMap['playNodeInDFG'] = svgStart;
+        const svgEnd = this.createEndSVG();
+        group.appendChild(svgEnd);
+        svgElementsMap['stopNodeInDFG'] = svgEnd;
+        uniqueEventsArray.push(new TraceEvent('playNodeInDFG'));
+        uniqueEventsArray.push(new TraceEvent('stopNodeInDFG'));
         console.log('Number of unique events:', uniqueEvents.size);
 
         const positions = this.applySpringEmbedderLayout(uniqueEventsArray, edgesArray);
@@ -152,11 +175,10 @@ export class SvgService {
         const positions: { [key: string]: { x: number; y: number } } = {};
         const width = 1000; // Canvas width
         const height = 800; // Canvas height
-        const maxIterations = 500; // Number of iterations for the layout
+        const maxIterations = 300; // Number of iterations for the layout
         const k = 100; // Ideal edge length
-        const repulsiveForce = 5000; // Force constant for repulsion
-        const step = 0.1; // Step size for position updates
-
+        const repulsiveForce = 6000; // Force constant for repulsion
+        const step = 0.3; // Step size for position updates
         // Initialize positions randomly within the canvas bounds
         nodes.forEach(node => {
             positions[node.conceptName] = {
@@ -230,21 +252,41 @@ export class SvgService {
         return positions;
     }
 
-    private createSvgForEvent(element: Element): SVGElement {
+    private createSvgForEvent(element: DFGElement): SVGElement {
         const svg = this.createSvgElement('circle');
-        const currX = 50 + this.offset
         svg.setAttribute('id', element.id);
-        svg.setAttribute('cx', currX.toString());
-        svg.setAttribute('cy', `50`);
+        svg.setAttribute('cx', '0');
+        svg.setAttribute('cy', `0`);
         svg.setAttribute('r', '15');
         svg.setAttribute('fill', 'black');
 
         element.registerSvg(svg);
-        this.offset += 50;
+        return svg;
+    }
+
+    private createStartSVG(): SVGElement {
+        const svg = this.createSvgElement('circle');
+        const currX = 50 + this.offset
+        svg.setAttribute('id', 'play');
+        svg.setAttribute('cx', '0');
+        svg.setAttribute('cy', `0`);
+        svg.setAttribute('r', '15');
+        svg.setAttribute('fill', 'green');
+        return svg;
+    }
+
+    private createEndSVG(): SVGElement {
+        const svg = this.createSvgElement('circle');
+        svg.setAttribute('id', 'stop');
+        svg.setAttribute('cx', '0');
+        svg.setAttribute('cy', `0`);
+        svg.setAttribute('r', '15');
+        svg.setAttribute('fill', 'red');
         return svg;
     }
 
     private createSvgForEdge(from: SVGElement, to: SVGElement): SVGElement {
+
         const svg = this.createSvgElement('line');
         // Retrieve the x and y coordinates from the circle elements
         const fromX = parseFloat(from.getAttribute('cx') || '0');
@@ -274,4 +316,7 @@ export class SvgService {
     private createSvgElement(name: string): SVGElement {
         return document.createElementNS('http://www.w3.org/2000/svg', name);
     }
+
 }
+
+
