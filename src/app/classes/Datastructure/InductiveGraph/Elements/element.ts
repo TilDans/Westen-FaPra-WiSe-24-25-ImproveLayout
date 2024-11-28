@@ -1,17 +1,21 @@
-export class Element {
-    private readonly _id: string;
+import { TraceEvent } from "../../event-log/trace-event";
+
+export class CustomElement {
+    private _id: string = "";
     private _x: number;
     private _y: number;
     private _svgElement: SVGElement | undefined;
 
-    constructor(id: string) {
-        this._id = id;
+    constructor() {
         this._x = 0;
         this._y = 0;
     }
 
-    get id(): string {
+    public get id(): string {
         return this._id;
+    }
+    public set id(value: string) {
+        this._id = value;
     }
 
     get x(): number {
