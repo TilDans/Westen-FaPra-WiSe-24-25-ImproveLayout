@@ -18,10 +18,14 @@ export class InductiveMinerService {
     ) {}
 
     public applyInductiveMiner(eventlog: EventLog, edges: DFGEdge[]): EventLog[] {
-    const splitEventlogs: EventLog[] = this.sequenceCutChecker.checkSequenceCut(eventlog, edges);
-    const checkExclusiveCut: EventLog[] = this.exclusiveCutChecker.checkExclusiveCut(eventlog, edges);
+        let splitEventlogs: EventLog[];
+        
+        splitEventlogs = this.sequenceCutChecker.checkSequenceCut(eventlog, edges);
+        if (splitEventlogs.length == 0) {
+            splitEventlogs = this.exclusiveCutChecker.checkExclusiveCut(eventlog, edges);
+        }
     
-    return splitEventlogs;
+        return splitEventlogs;
     
     //...
     }
