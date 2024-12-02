@@ -1,5 +1,3 @@
-import { TraceEvent } from "../../event-log/trace-event";
-
 export class CustomElement {
     private _id: string = "";
     private _x: number;
