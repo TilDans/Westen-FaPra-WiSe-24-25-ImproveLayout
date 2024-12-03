@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { InductiveMinerHelper } from '../inductive-miner-helper';
 import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
-import { DFGEdge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
+import { Edge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
 import { Trace } from 'src/app/classes/Datastructure/event-log/trace';
 import { TraceEvent } from 'src/app/classes/Datastructure/event-log/trace-event';
 
@@ -12,14 +12,14 @@ import { TraceEvent } from 'src/app/classes/Datastructure/event-log/trace-event'
 export class SequenceCutChecker {
     constructor(private helper: InductiveMinerHelper) {}
     
-  public checkSequenceCut(eventlog: EventLog, edges: DFGEdge[]): EventLog[] { // Wir übergeben einen eventlog und einen cut-Vorschlag
+  public checkSequenceCut(eventlog: EventLog, edges: Edge[]): EventLog[] { // Wir übergeben einen eventlog und einen cut-Vorschlag
 
     // Deklaration neuer, geteilter eventlogs
     let A1: EventLog = new EventLog([]);
     let A2: EventLog = new EventLog([]);
 
     var cutPossible: boolean = false; // Abbruchbedingung, wenn in einem Trace keine Kante gefunden wurde
-    let usedEdges: Set<DFGEdge> = new Set<DFGEdge>; // Hilfsvariable, um zu prüfen, ob alle übergebenen Kanten verwendet wurden
+    let usedEdges: Set<Edge> = new Set<Edge>; // Hilfsvariable, um zu prüfen, ob alle übergebenen Kanten verwendet wurden
 
     for (const cEventLogTrace of eventlog.traces) { // Traversiere durch jeden Trace im eventlog
         cutPossible = false; // Initial ist noch keine Kante im akt. trace im eventlog gefunden
@@ -67,7 +67,7 @@ export class SequenceCutChecker {
     } // End-Loop: Traces in eventlog
 
     // Wenn einer der Kanten nicht im Eventlog zu finden war, abbrechen:
-    const originalEdges: Set<DFGEdge> = new Set(edges);
+    const originalEdges: Set<Edge> = new Set(edges);
     if (!(usedEdges.size === originalEdges.size && [...usedEdges].every((x) => originalEdges.has(x)))) return []; // Konvertiere Kanten zu Set und vergleiche
 
     // Bedingungen prüfen

@@ -1,18 +1,23 @@
 import { DFGElement } from "./Elements/DFGElement";
+import { CustomElement } from "./Elements/element";
 
-export class DFGEdge {
+export class Edge {
 
-    start: DFGElement;
-    end: DFGElement;
+    start: CustomElement;
+    end: CustomElement;
 
     private _svgElement: SVGElement | undefined;
 
-    constructor(start: DFGElement, end: DFGElement) {
+    constructor(start: CustomElement, end: CustomElement) {
         this.start = start;
         this.end = end;
     }
 
     public registerSvg(svg: SVGElement) {
         this._svgElement = svg;
+    }
+
+    public getSvg() {
+        return this._svgElement
     }
 }
