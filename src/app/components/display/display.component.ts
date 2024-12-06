@@ -101,7 +101,7 @@ export class DisplayComponent implements OnDestroy {
         if (petriGraph && Array.isArray(petriGraph)) {  // or ensure it's an iterable
             try {
                 for (const node of petriGraph) {
-                    this.drawingArea.nativeElement.appendChild(node);
+                    this.drawingArea.nativeElement.prepend(node);
                 }
             } catch (error) {
                 console.error("Error appending petriGraph:", error);

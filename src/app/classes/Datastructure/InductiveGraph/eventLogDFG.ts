@@ -6,22 +6,39 @@ import { CustomElement } from "./Elements/element";
 
 
 export class EventLogDFG extends CustomElement{
+    static logCounter: number = 0;
     eventLog: EventLog;
-    dfgRepresentation: SVGGElement;
+    private _dfgRepresentation: SVGGElement;
+
     
     constructor(private _svgService: SvgService, 
                         eventLog: EventLog) {
         super();
         this.eventLog = eventLog;
-        const id = eventLog.traces.at(0)?.events.at(0)?.conceptName;
-        if (id !== undefined) {
-            this.id = id;
-        }
-        this.dfgRepresentation = this._svgService?.createSVGforEventLog(this.eventLog)
+        this.id = 'eventLogNumber' + (EventLogDFG.logCounter).toString();
+        EventLogDFG.logCounter ++;
+        this._dfgRepresentation = this._svgService?.createSVGforEventLog(this.eventLog, this.id)
     }
 
     public override getSvg() : SVGGElement {
-        return this.dfgRepresentation;
+        return this._dfgRepresentation;
+    }
+
+    public set dfgRepresentation(value: SVGGElement) {
+        this._dfgRepresentation = value;
+    }
+
+    setXYonSVG(xNew: number, yNew: number) {
+        this._dfgRepresentation.setAttribute('transform', 'translate(' + xNew + ',' + yNew + ')');
+    }
+
+    getWidth(): number {
+        const element = this._dfgRepresentation.getAttribute('width');
+        return parseFloat(element || '0');
+    }
+    getHeight(): number {
+        const element = this._dfgRepresentation.getAttribute('height');
+        return parseFloat(element || '0');
     }
 }
 

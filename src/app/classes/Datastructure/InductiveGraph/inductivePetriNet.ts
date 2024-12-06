@@ -17,14 +17,15 @@ export class InductivePetriNet{
     _svgService : SvgService = new SvgService ();
     
     constructor(eventLog: EventLog) {
+        EventLogDFG.logCounter = 0; // counter der logs für neues Netz resetten
         //zwei Stellen zum Start generieren und die entsprechenden Kanten einfügen
         this.eventLogDFGs = [new EventLogDFG(this._svgService, eventLog)];
         this.genStartEndPlaceAndGenArcs();
     }
 
     public genStartEndPlaceAndGenArcs() {
-        const start = this.genPlace('p' + (this.places.length).toString);
-        const end = this.genPlace('p');
+        const start = this.genPlace('p' + (this.places.length).toString());
+        const end = this.genPlace('p' + (this.places.length).toString());
         const firstEventLogDFG = this.eventLogDFGs.at(0);
         if (firstEventLogDFG !== undefined){
             this.genArc(start, firstEventLogDFG);
@@ -48,8 +49,8 @@ export class InductivePetriNet{
 
     public getSVGRepresentation(): SVGElement[] {
         //Layout für das Petrinetz durchführen, Koordinaten für SVGs der Stellen, Transitionen und zugehöriger Kanten setzen.
-
         const result: Array<SVGElement> = [];
+
         this.eventLogDFGs.forEach(eventLogDFG => {
             result.push(eventLogDFG.getSvg());
         });
@@ -71,7 +72,6 @@ export class InductivePetriNet{
                 result.push(svgRep);
             }            
         });
-
 
 
         return result;
