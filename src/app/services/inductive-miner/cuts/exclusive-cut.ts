@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { InductiveMinerHelper } from '../inductive-miner-helper';
 import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
-import { DFGEdge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
+import { Edge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
 
 @Injectable({
     providedIn: 'root',
@@ -12,7 +12,7 @@ export class ExclusiveCutChecker {
 
     // Unterscheidung zwischen Kanten, die aus START kommen und Kanten die in STOP enden:
     // Werden Start-Kanten START A,B und STOP-Kanten C,D an, müssen die Traces im Eventlog auf eine Multiplikation dieser untersucht werden: A..C, A..D, B..C, B..D
-    public checkExclusiveCut(eventlog: EventLog, edges: DFGEdge[]): EventLog[] {
+    public checkExclusiveCut(eventlog: EventLog, edges: Edge[]): EventLog[] {
         // Deklaration neuer, geteilter eventlogs
         let A1: EventLog = new EventLog([]);
         let A2: EventLog = new EventLog([]);

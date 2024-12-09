@@ -2,7 +2,7 @@ export class CustomElement {
     private _id: string = "";
     private _x: number;
     private _y: number;
-    private _svgElement: SVGElement | undefined;
+    protected _svgElement: SVGElement | undefined;
 
     constructor() {
         this._x = 0;
@@ -34,26 +34,9 @@ export class CustomElement {
 
     public registerSvg(svg: SVGElement) {
         this._svgElement = svg;
-        this._svgElement.onmousedown = (event) => {
-            this.processMouseDown(event);
-        };
-        this._svgElement.onmouseup = (event) => {
-            this.processMouseUp(event);
-        };
     }
 
-    private processMouseDown(event: MouseEvent) {
-        if (this._svgElement === undefined) {
-            return;
-        }
-        this._svgElement.setAttribute('fill', 'red');
+    public getSvg() {
+        return this._svgElement
     }
-
-    private processMouseUp(event: MouseEvent) {
-        if (this._svgElement === undefined) {
-            return;
-        }
-        this._svgElement.setAttribute('fill', 'black');
-    }
-
 }
