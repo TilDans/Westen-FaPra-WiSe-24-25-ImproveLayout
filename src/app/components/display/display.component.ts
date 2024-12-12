@@ -4,9 +4,13 @@ import {catchError, of, Subscription, take} from 'rxjs';
 import {SvgService} from '../../services/svg.service';
 import {ExampleFileComponent} from "../example-file/example-file.component";
 import {FileReaderService} from "../../services/file-reader.service";
-import { HttpClient } from "@angular/common/http";
-import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
-import { InductivePetriNet } from 'src/app/classes/Datastructure/InductiveGraph/inductivePetriNet';
+import {HttpClient} from "@angular/common/http";
+import {EventLog} from 'src/app/classes/Datastructure/event-log/event-log';
+import {InductivePetriNet} from 'src/app/classes/Datastructure/InductiveGraph/inductivePetriNet';
+import {InductiveMinerService} from "../../services/inductive-miner/inductive-miner.service";
+import {TraceEvent} from "../../classes/Datastructure/event-log/trace-event";
+import {Edge} from "../../classes/Datastructure/InductiveGraph/edgeElement";
+import {DFGElement} from "../../classes/Datastructure/InductiveGraph/Elements/DFGElement";
 
 @Component({
     selector: 'app-display',
@@ -21,15 +25,21 @@ export class DisplayComponent implements OnDestroy {
 
     private _sub: Subscription;
     private _petriNet: InductivePetriNet | undefined;
+    private _leftMouseDown = false;
+
+    private _markedEdges: SVGLineElement[] = [];
+    // to keep track in which event log the lines are drawn
+    private _selectedEventLogId?: string;
 
     constructor(private _svgService: SvgService,
                 private _displayService: DisplayService,
                 private _fileReaderService: FileReaderService,
+                private _inductiveMinerService: InductiveMinerService,
                 private _http: HttpClient) {
 
         this.fileContent = new EventEmitter<string>();
 
-        this._sub  = this._displayService.InductivePetriNet$.subscribe(log => {
+        this._sub = this._displayService.InductivePetriNet$.subscribe(log => {
 
             this._petriNet = log;
             this.draw();
@@ -59,7 +69,7 @@ export class DisplayComponent implements OnDestroy {
     }
 
     private fetchFile(link: string) {
-        this._http.get(link,{
+        this._http.get(link, {
             responseType: 'text'
         }).pipe(
             catchError(err => {
@@ -94,9 +104,12 @@ export class DisplayComponent implements OnDestroy {
             return;
         }
 
+        this._markedEdges = [];
+        this._selectedEventLogId = undefined;
+
         this.clearDrawingArea();
         const petriGraph = this._petriNet?.getSVGRepresentation();
-        
+
         //petriGraph = {(places), (transitions), arcs, (dfgs)}
         if (petriGraph && Array.isArray(petriGraph)) {  // or ensure it's an iterable
             try {
@@ -120,5 +133,143 @@ export class DisplayComponent implements OnDestroy {
         while (drawingArea.childElementCount > 0) {
             drawingArea.removeChild(drawingArea.lastChild as ChildNode);
         }
+    }
+
+    public processMouseDown(e: MouseEvent) {
+        if (e.button === 0 && this.drawingArea) {
+            this._leftMouseDown = true;
+            this.removeAllDrawnLines();
+            const {x, y} = this.calculateSvgCoordinates(e);
+            this.drawingArea.nativeElement.appendChild(this._svgService.createDrawnLine(x, y));
+        }
+    }
+
+    private calculateSvgCoordinates(e: MouseEvent) {
+        const svgRect = this.drawingArea!.nativeElement.getBoundingClientRect();
+        const x = e.clientX - svgRect.left;
+        const y = e.clientY - svgRect.top;
+        return {x, y};
+    }
+
+    public processMouseUp(e: MouseEvent) {
+        if (e.button === 0) {
+            this._leftMouseDown = false;
+            const drawnLine = this.drawingArea?.nativeElement.getElementsByClassName('drawn-line')[0] as SVGLineElement;
+            if (drawnLine) {
+                const allLines = this.getAllLines();
+                const intersectingLines = allLines.filter(line => this.linesIntersect(drawnLine, line));
+                for (const line of intersectingLines) {
+                    if (!this.isInEventLog(line)) {
+                        console.warn("Line is not in the same event log");
+                        continue;
+                    }
+                    line.setAttribute('stroke', 'red');
+                    this._markedEdges.push(line);
+                }
+            }
+            this.removeAllDrawnLines();
+        }
+    }
+
+    private isInEventLog(line: SVGLineElement): boolean {
+        if (this._selectedEventLogId === undefined) {
+            this._selectedEventLogId = line.parentElement?.getAttribute('id') || undefined;
+            return this._selectedEventLogId !== undefined;
+        }
+        return this._selectedEventLogId === line.parentElement!.getAttribute('id');
+    }
+
+    private getAllLines(): SVGLineElement[] {
+        return Array.from(this.drawingArea?.nativeElement.getElementsByTagName('line') || []) as SVGLineElement[];
+    }
+
+    private linesIntersect(line1: SVGLineElement, line2: SVGLineElement): boolean {
+        const x1 = parseFloat(line1.getAttribute('x1')!);
+        const y1 = parseFloat(line1.getAttribute('y1')!);
+        const x2 = parseFloat(line1.getAttribute('x2')!);
+        const y2 = parseFloat(line1.getAttribute('y2')!);
+
+        const x3 = parseFloat(line2.getAttribute('x1')!);
+        const y3 = parseFloat(line2.getAttribute('y1')!);
+        const x4 = parseFloat(line2.getAttribute('x2')!);
+        const y4 = parseFloat(line2.getAttribute('y2')!);
+
+        const denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+        if (denominator === 0) return false;
+
+        const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denominator;
+        const u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denominator;
+
+        return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+    }
+
+
+    private removeAllDrawnLines() {
+        let lines = this.drawingArea?.nativeElement.getElementsByClassName('drawn-line');
+        if (!lines) {
+            return;
+        }
+        // need to save number of lines before removing them, because the collection gets smaller when removing
+        const numberLines = lines.length;
+        for (let i = 0; i < numberLines; i++) {
+            lines[i].remove();
+        }
+    }
+
+    public processMouseMove(e: MouseEvent) {
+        if (this._leftMouseDown) {
+            const line = this.drawingArea?.nativeElement.getElementsByClassName('drawn-line')[0];
+            if (!line) {
+                return;
+            }
+            const {x, y} = this.calculateSvgCoordinates(e);
+            line.setAttribute('x2', x.toString());
+            line.setAttribute('y2', y.toString());
+        }
+    }
+
+    public resetCut() {
+        this._markedEdges.forEach(edge => edge.setAttribute('stroke', 'black'));
+        this._markedEdges = [];
+        this._selectedEventLogId = undefined;
+    }
+
+    public performCut() {
+        if (this._markedEdges.length === 0 || this._selectedEventLogId === undefined) {
+            alert('No edges marked')
+            return;
+        }
+
+        const markedEdges: Edge[] = []
+        for (const edge of this._markedEdges) {
+            const from = edge.getAttribute('from')
+            const to = edge.getAttribute('to')
+            if (from === null || to === null) {
+                console.log('from or to is null', edge)
+                continue;
+            }
+
+            markedEdges.push(new Edge(new DFGElement(new TraceEvent(from)), new DFGElement(new TraceEvent(to))));
+        }
+
+        console.log('markedEdges', markedEdges)
+
+        const eventLog = this.getMarkedEventLog();
+        const result = this._inductiveMinerService.applyInductiveMiner(eventLog, markedEdges);
+        if (result.length === 0) {
+            alert('No cut possible')
+        }
+        console.log('result', result)
+
+    }
+
+    private getMarkedEventLog() {
+        for (const eventLog of this._petriNet!.eventLogDFGs) {
+            if (eventLog?.id === this._selectedEventLogId) {
+                return eventLog?.eventLog;
+            }
+        }
+        // should not happen
+        throw new Error('No event log found for id ' + this._selectedEventLogId);
     }
 }
