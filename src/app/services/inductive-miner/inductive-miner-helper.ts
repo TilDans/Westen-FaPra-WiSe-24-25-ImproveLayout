@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { EventLog } from "src/app/classes/Datastructure/event-log/event-log";
 import { TraceEvent } from "src/app/classes/Datastructure/event-log/trace-event";
-import { DFGEdge } from "src/app/classes/Datastructure/InductiveGraph/edgeElement";
+import { Edge } from "src/app/classes/Datastructure/InductiveGraph/edgeElement";
 
 
 @Injectable({
@@ -138,9 +138,9 @@ export class InductiveMinerHelper {
     }
 
     // Mappe START-Kanten an STOP-Kanten
-    public mapEdgesStartToStop(edges: DFGEdge[]): [string, string][] {
-        let startEdges: DFGEdge[] = [];
-        let stopEdges: DFGEdge[] = [];
+    public mapEdgesStartToStop(edges: Edge[]): [string, string][] {
+        let startEdges: Edge[] = [];
+        let stopEdges: Edge[] = [];
 
         // Fülle Arrays mit START und STOP Kanten
         for (const edge of edges) {
