@@ -28,6 +28,8 @@ export class DisplayComponent implements OnDestroy {
     private _leftMouseDown = false;
 
     private _markedEdges: SVGLineElement[] = [];
+    // to keep track in which event log the lines are drawn
+    private _selectedEventLogId?: string;
 
     constructor(private _svgService: SvgService,
                 private _displayService: DisplayService,
@@ -102,6 +104,9 @@ export class DisplayComponent implements OnDestroy {
             return;
         }
 
+        this._markedEdges = [];
+        this._selectedEventLogId = undefined;
+
         this.clearDrawingArea();
         const petriGraph = this._petriNet?.getSVGRepresentation();
 
@@ -153,11 +158,25 @@ export class DisplayComponent implements OnDestroy {
             if (drawnLine) {
                 const allLines = this.getAllLines();
                 const intersectingLines = allLines.filter(line => this.linesIntersect(drawnLine, line));
-                intersectingLines.forEach(line => line.setAttribute('stroke', 'red'));
-                this._markedEdges.push(...intersectingLines);
+                for (const line of intersectingLines) {
+                    if (!this.isInEventLog(line)) {
+                        console.warn("Line is not in the same event log");
+                        continue;
+                    }
+                    line.setAttribute('stroke', 'red');
+                    this._markedEdges.push(line);
+                }
             }
             this.removeAllDrawnLines();
         }
+    }
+
+    private isInEventLog(line: SVGLineElement): boolean {
+        if (this._selectedEventLogId === undefined) {
+            this._selectedEventLogId = line.parentElement?.getAttribute('id') || undefined;
+            return this._selectedEventLogId !== undefined;
+        }
+        return this._selectedEventLogId === line.parentElement!.getAttribute('id');
     }
 
     private getAllLines(): SVGLineElement[] {
@@ -212,11 +231,16 @@ export class DisplayComponent implements OnDestroy {
     public resetCut() {
         this._markedEdges.forEach(edge => edge.setAttribute('stroke', 'black'));
         this._markedEdges = [];
+        this._selectedEventLogId = undefined;
     }
 
     public performCut() {
-        const markedEdges: Edge[] = []
+        if (this._markedEdges.length === 0 || this._selectedEventLogId === undefined) {
+            alert('No edges marked')
+            return;
+        }
 
+        const markedEdges: Edge[] = []
         for (const edge of this._markedEdges) {
             const from = edge.getAttribute('from')
             const to = edge.getAttribute('to')
@@ -230,13 +254,22 @@ export class DisplayComponent implements OnDestroy {
 
         console.log('markedEdges', markedEdges)
 
-        //TODO Find proper eventlog
-        const eventLog = this._petriNet?.eventLogDFGs[0]!.eventLog!;
+        const eventLog = this.getMarkedEventLog();
         const result = this._inductiveMinerService.applyInductiveMiner(eventLog, markedEdges);
         if (result.length === 0) {
             alert('No cut possible')
         }
         console.log('result', result)
 
+    }
+
+    private getMarkedEventLog() {
+        for (const eventLog of this._petriNet!.eventLogDFGs) {
+            if (eventLog?.id === this._selectedEventLogId) {
+                return eventLog?.eventLog;
+            }
+        }
+        // should not happen
+        throw new Error('No event log found for id ' + this._selectedEventLogId);
     }
 }

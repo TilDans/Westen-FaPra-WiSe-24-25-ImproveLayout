@@ -330,8 +330,10 @@ export class SvgService {
         line.setAttribute('y1', y.toString());
         line.setAttribute('x2', x.toString());
         line.setAttribute('y2', y.toString());
-        line.setAttribute('stroke', 'black');
-        line.setAttribute('stroke-width', '2');
+        line.setAttribute('stroke', 'red'); // Line color
+        line.setAttribute('stroke-width', '2'); // Line thickness
+        line.setAttribute('stroke-dasharray', '5,5'); // Dashed line pattern
+        line.setAttribute('stroke-opacity', '0.8'); // L
         line.setAttribute('class', 'drawn-line');
         return line;
     }
