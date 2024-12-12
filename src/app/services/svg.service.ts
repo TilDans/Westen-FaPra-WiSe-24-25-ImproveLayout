@@ -58,7 +58,7 @@ export class SvgService {
         //Extract events and connections between those
         eventLog.traces.forEach(trace => {
             const events = trace.events;
-    
+
             // Iterate through each event in the trace
             events.forEach((event, index) => {
                 // Add the current event to the set of unique events
@@ -68,7 +68,7 @@ export class SvgService {
                 }
                 if (index == 0) {
                     const edgeKey = `playNodeInDFG->${event.conceptName}`; // Create a unique key for the edge
-                    
+
                     // Check if the edge has already been added
                     if (!edges.has(edgeKey)) {
                         edges.add(edgeKey); // Add the edge key to the set
@@ -78,14 +78,14 @@ export class SvgService {
                 if (index < events.length - 1) {
                     const nextEvent = events[index + 1];
                     const edgeKey = `${event.conceptName}->${nextEvent.conceptName}`; // Create a unique key for the edge
-                    
+
                     // Check if the edge has already been added
                     if (!edges.has(edgeKey) && event.conceptName !== nextEvent.conceptName) {
                         edges.add(edgeKey); // Add the edge key to the set
                     }
                 } else { //Index == events.length - 1 == highest index in array
                     const edgeKey = `${event.conceptName}->stopNodeInDFG`; // Create a unique key for the edge
-                    
+
                     // Check if the edge has already been added
                     if (!edges.has(edgeKey)) {
                         edges.add(edgeKey); // Add the edge key to the set
@@ -93,20 +93,20 @@ export class SvgService {
                 }
             });
         });
-    
+
         // Convert the unique events set to an array if needed
         const uniqueEventsArray = Array.from(uniqueEvents);
-    
+
         // Convert edges set to an array of objects with from and to properties
         const edgesArray = Array.from(edges).map(edge => {
             const [from, to] = edge.split('->');
             return { from, to };
         });
-    
+
         // Example output for debugging
         console.log('Unique Events:', uniqueEventsArray);
         console.log('Edges:', edgesArray);
-    
+
         // Create SVG elements for each unique event and map them
         uniqueEvents.forEach(el => {
             const newElem = new DFGElement(el);
@@ -114,7 +114,7 @@ export class SvgService {
             //group.appendChild(svgElement);
             svgElementsMap[el.conceptName] = svgElement; // Store the SVG element in the map
         });
-        
+
         //play und stop generieren
         const svgStart = this.createStartSVG();
         //group.appendChild(svgStart);
@@ -124,7 +124,7 @@ export class SvgService {
         svgElementsMap['stopNodeInDFG'] = svgEnd;
         uniqueEventsArray.push(new TraceEvent('playNodeInDFG'));
         uniqueEventsArray.push(new TraceEvent('stopNodeInDFG'));
-    
+
         const conceptNameArray = uniqueEventsArray.map(event => event.conceptName);
         const positions = this.applySpringEmbedderLayout(conceptNameArray, edgesArray);
         console.log("positions: ", positions);
@@ -156,7 +156,7 @@ export class SvgService {
             const { from, to } = e;
             const fromElement = svgElementsMap[from]; // Get the corresponding SVG element for the "from" event
             const toElement = svgElementsMap[to]; // Get the corresponding SVG element for the "to" event
-    
+
             if (fromElement && toElement) {
                 const edgeSvg = this.createSvgForEdge(fromElement, toElement);
                 group.append(edgeSvg); // Append the edge to the result
@@ -177,7 +177,7 @@ export class SvgService {
         const k = 60; // Ideal edge length
         const repulsiveForce = 2000; // Force constant for repulsion
         const step = 2; // Step size for position updates
-    
+
         // Initialize positions randomly within the canvas bounds
         nodes.forEach(node => {
             positions[node] = {
@@ -185,7 +185,7 @@ export class SvgService {
                 y: Math.random() * height,
             };
         });
-    
+
         // Function to compute repulsive force between two nodes
         const computeRepulsiveForce = (pos1: { x: number; y: number }, pos2: { x: number; y: number }) => {
             const dx = pos1.x - pos2.x;
@@ -194,7 +194,7 @@ export class SvgService {
             const force = repulsiveForce / (dist * dist);
             return { fx: force * (dx / dist), fy: force * (dy / dist) };
         };
-    
+
         // Function to compute attractive force along an edge
         const computeAttractiveForce = (pos1: { x: number; y: number }, pos2: { x: number; y: number }) => {
             const dx = pos2.x - pos1.x;
@@ -203,16 +203,16 @@ export class SvgService {
             const force = (dist - k) / k;
             return { fx: force * (dx / dist), fy: force * (dy / dist) };
         };
-    
+
         // Iteratively apply forces
         for (let i = 0; i < maxIterations; i++) {
             const forces: { [key: string]: { fx: number; fy: number } } = {};
-    
+
             // Initialize forces to zero
             nodes.forEach(node => {
                 forces[node] = { fx: 0, fy: 0 };
             });
-    
+
             // Compute repulsive forces
             for (let j = 0; j < nodes.length; j++) {
                 for (let k = j + 1; k < nodes.length; k++) {
@@ -225,7 +225,7 @@ export class SvgService {
                     forces[nodeB].fy -= force.fy;
                 }
             }
-    
+
             // Compute attractive forces
             edges.forEach(edge => {
                 const force = computeAttractiveForce(positions[edge.from], positions[edge.to]);
@@ -234,20 +234,20 @@ export class SvgService {
                 forces[edge.to].fx -= force.fx;
                 forces[edge.to].fy -= force.fy;
             });
-    
+
             // Update positions based on forces
             nodes.forEach(node => {
                 const pos = positions[node];
                 const force = forces[node];
                 pos.x += force.fx * step;
                 pos.y += force.fy * step;
-    
+
                 // Keep positions within bounds
                 pos.x = Math.max(0, Math.min(width, pos.x));
                 pos.y = Math.max(0, Math.min(height, pos.y));
             });
         }
-    
+
         return positions;
     }
 
@@ -324,6 +324,17 @@ export class SvgService {
         return document.createElementNS('http://www.w3.org/2000/svg', name);
     }
 
+    public createDrawnLine(x: number, y: number) {
+        const line = this.createSvgElement('line');
+        line.setAttribute('x1', x.toString());
+        line.setAttribute('y1', y.toString());
+        line.setAttribute('x2', x.toString());
+        line.setAttribute('y2', y.toString());
+        line.setAttribute('stroke', 'black');
+        line.setAttribute('stroke-width', '2');
+        line.setAttribute('class', 'drawn-line');
+        return line;
+    }
 }
 
 

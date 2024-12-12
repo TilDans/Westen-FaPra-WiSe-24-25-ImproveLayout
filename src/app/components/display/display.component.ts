@@ -7,6 +7,10 @@ import {FileReaderService} from "../../services/file-reader.service";
 import {HttpClient} from "@angular/common/http";
 import {EventLog} from 'src/app/classes/Datastructure/event-log/event-log';
 import {InductivePetriNet} from 'src/app/classes/Datastructure/InductiveGraph/inductivePetriNet';
+import {InductiveMinerService} from "../../services/inductive-miner/inductive-miner.service";
+import {TraceEvent} from "../../classes/Datastructure/event-log/trace-event";
+import {Edge} from "../../classes/Datastructure/InductiveGraph/edgeElement";
+import {DFGElement} from "../../classes/Datastructure/InductiveGraph/Elements/DFGElement";
 
 @Component({
     selector: 'app-display',
@@ -28,6 +32,7 @@ export class DisplayComponent implements OnDestroy {
     constructor(private _svgService: SvgService,
                 private _displayService: DisplayService,
                 private _fileReaderService: FileReaderService,
+                private _inductiveMinerService: InductiveMinerService,
                 private _http: HttpClient) {
 
         this.fileContent = new EventEmitter<string>();
@@ -145,7 +150,7 @@ export class DisplayComponent implements OnDestroy {
         if (e.button === 0) {
             this._leftMouseDown = false;
             const drawnLine = this.drawingArea?.nativeElement.getElementsByClassName('drawn-line')[0] as SVGLineElement;
-            if(drawnLine) {
+            if (drawnLine) {
                 const allLines = this.getAllLines();
                 const intersectingLines = allLines.filter(line => this.linesIntersect(drawnLine, line));
                 intersectingLines.forEach(line => line.setAttribute('stroke', 'red'));
@@ -210,6 +215,28 @@ export class DisplayComponent implements OnDestroy {
     }
 
     public performCut() {
+        const markedEdges: Edge[] = []
+
+        for (const edge of this._markedEdges) {
+            const from = edge.getAttribute('from')
+            const to = edge.getAttribute('to')
+            if (from === null || to === null) {
+                console.log('from or to is null', edge)
+                continue;
+            }
+
+            markedEdges.push(new Edge(new DFGElement(new TraceEvent(from)), new DFGElement(new TraceEvent(to))));
+        }
+
+        console.log('markedEdges', markedEdges)
+
+        //TODO Find proper eventlog
+        const eventLog = this._petriNet?.eventLogDFGs[0]!.eventLog!;
+        const result = this._inductiveMinerService.applyInductiveMiner(eventLog, markedEdges);
+        if (result.length === 0) {
+            alert('No cut possible')
+        }
+        console.log('result', result)
 
     }
 }

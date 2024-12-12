@@ -11,7 +11,7 @@ import { TraceEvent } from 'src/app/classes/Datastructure/event-log/trace-event'
 
 export class SequenceCutChecker {
     constructor(private helper: InductiveMinerHelper) {}
-    
+
   public checkSequenceCut(eventlog: EventLog, edges: Edge[]): EventLog[] { // Wir übergeben einen eventlog und einen cut-Vorschlag
 
     // Deklaration neuer, geteilter eventlogs
@@ -30,9 +30,10 @@ export class SequenceCutChecker {
         for (const cEdge of edges) { // Prüfe jede Kante einzeln
             // Überprüfe, ob akt. Kante im akt. eventlog trace ist
 
-            let indexOfCutInTrace: number = -1; 
+            let indexOfCutInTrace: number = -1;
             for (let i = 0; i < cEventLogTrace.events.length; i++) {
 
+                //TODO Events i+1 can be out of bounds
                 if (cEventLogTrace.events[i].conceptName == cEdge.start.id && cEventLogTrace.events[i+1].conceptName == cEdge.end.id ) {
                     indexOfCutInTrace = i;
                 }
@@ -43,7 +44,7 @@ export class SequenceCutChecker {
                 usedEdges.add(cEdge);
 
                 // Fülle den linken Trace
-                // Traversiere dafür vom vom Anfang des akt. eventlog-traces bis zum INDEX DES JEWEILIGEN CUTS 
+                // Traversiere dafür vom vom Anfang des akt. eventlog-traces bis zum INDEX DES JEWEILIGEN CUTS
                 for (let i = 0; i <= indexOfCutInTrace; i++) {
                     A1Trace.events.push(new TraceEvent(cEventLogTrace.events[i].conceptName))
                 }
@@ -57,9 +58,9 @@ export class SequenceCutChecker {
                 // Befülle neue, geteilte eventlogs mit konstruierten traces
                 A1.traces.push(A1Trace);
                 A2.traces.push(A2Trace)
-                
+
                 break; // Wenn akt. Kante in akt. trace gefunden, können restliche Kanten im akt. trace übersprungen werden
-            } 
+            }
 
         }; // End-Loop: Cut-Vorschläge
         if (!cutPossible) return []; // Wenn in einem trace keiner der vorgeschlagenen Kanten zu finden war, Loop unterbrechen
@@ -112,7 +113,7 @@ export class SequenceCutChecker {
     //     }
     //     console.log(x)
     // }
-    
+
     // Wenn alle Bedingungen erfolgreich: Returne zwei eventlogs
     return [A1, A2];
     }
