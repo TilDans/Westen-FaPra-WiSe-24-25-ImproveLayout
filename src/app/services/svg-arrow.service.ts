@@ -51,6 +51,9 @@ export class SvgArrowService {
                     return intersection
                 }
             }
+            console.warn('could not find line intersection for rect', to)
+        } else {
+            console.warn('Unknown element type', to)
         }
 
         return {x: x2, y: y2}
