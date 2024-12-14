@@ -295,11 +295,13 @@ export class SvgService {
         // Retrieve the x and y coordinates from the circle elements
         const { x: fromX, y: fromY } = this.calculateStartEndCoordinate(from);
         const { x: toX, y: toY } = this.calculateStartEndCoordinate(to);
+
+        const intersection = this.calculateIntersection(fromX, fromY, toX, toY, to);
         // Set line attributes using the coordinates
         svg.setAttribute('x1', fromX.toString());
         svg.setAttribute('y1', fromY.toString());
-        svg.setAttribute('x2', toX.toString());
-        svg.setAttribute('y2', toY.toString());
+        svg.setAttribute('x2', intersection.x.toString());
+        svg.setAttribute('y2', intersection.y.toString());
         svg.setAttribute('stroke', 'black');       // Line color
         svg.setAttribute('stroke-width', '2');     // Line thickness
         svg.setAttribute('marker-end', 'url(#arrow)'); // Arrow marker
@@ -347,7 +349,7 @@ export class SvgService {
         marker.setAttribute('id', 'arrow');
         marker.setAttribute('markerWidth', '10');
         marker.setAttribute('markerHeight', '10');
-        marker.setAttribute('refX', '15'); // this is the offset for the circle
+        marker.setAttribute('refX', '9'); // this is the size of the arrow head
         marker.setAttribute('refY', '3');
         marker.setAttribute('orient', 'auto');
         marker.setAttribute('markerUnits', 'strokeWidth');
@@ -358,6 +360,46 @@ export class SvgService {
         path.setAttribute('fill', 'black');
         marker.appendChild(path);
         return defs
+    }
+
+    private calculateIntersection(x1: number, y1: number, x2: number, y2: number, to: SVGElement): {x: number, y: number} {
+        if(to instanceof SVGCircleElement) {
+            //TODO
+        } else if(to instanceof SVGGElement) {
+            const rectX = parseFloat(to.getAttribute('cx') || '0');
+            const rectY = parseFloat(to.getAttribute('cy') || '0');
+            const rectWidth = parseFloat(to.getAttribute('width') || '0');
+            const rectHeight = parseFloat(to.getAttribute('height') || '0');
+
+            const lines = [
+                {x1: rectX, y1: rectY, x2: rectX + rectWidth, y2: rectY},
+                {x1: rectX + rectWidth, y1: rectY, x2: rectX + rectWidth, y2: rectY + rectHeight},
+                {x1: rectX + rectWidth, y1: rectY + rectHeight, x2: rectX, y2: rectY + rectHeight},
+                {x1: rectX, y1: rectY + rectHeight, x2: rectX, y2: rectY},
+            ]
+
+            for(const line of lines) {
+                const intersection = this.calculateLineIntersection(x1, y1, x2, y2, line.x1, line.y1, line.x2, line.y2)
+                if(intersection) {
+                    return intersection
+                }
+            }
+        }
+
+        return {x: x2, y: y2}
+    }
+
+    private calculateLineIntersection(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) {
+       const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+        if (denom === 0) return null;
+
+        const intersectX = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / denom;
+        const intersectY = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / denom;
+
+        if (intersectX < Math.min(x1, x2) || intersectX > Math.max(x1, x2) || intersectX < Math.min(x3, x4) || intersectX > Math.max(x3, x4)) return null;
+        if (intersectY < Math.min(y1, y2) || intersectY > Math.max(y1, y2) || intersectY < Math.min(y3, y4) || intersectY > Math.max(y3, y4)) return null;
+
+        return { x: intersectX, y: intersectY };
     }
 }
 
