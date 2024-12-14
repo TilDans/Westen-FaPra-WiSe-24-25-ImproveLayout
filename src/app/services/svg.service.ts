@@ -55,6 +55,7 @@ export class SvgService {
         rectangle.setAttribute('cx', '0');
         rectangle.setAttribute('cy', '0');
         rectangle.setAttribute('fill', 'lightblue'); // Example background color
+        rectangle.classList.add('group-background')
         group.append(rectangle);
 
         //Extract events and connections between those

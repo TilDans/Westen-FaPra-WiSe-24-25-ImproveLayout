@@ -34,8 +34,7 @@ export class SvgArrowService {
             return this.calculateCircleIntersection(x1, y1, x2, y2, to);
         } else if (to instanceof SVGGElement) {
             //TODO cx and cy do not exist on the g element. Maybe try to find the rect within this g?
-            const rectX = parseFloat(to.getAttribute('cx') || '0');
-            const rectY = parseFloat(to.getAttribute('cy') || '0');
+            const {rectX, rectY} = this.getRectPosition(to);
             const rectWidth = parseFloat(to.getAttribute('width') || '0');
             const rectHeight = parseFloat(to.getAttribute('height') || '0');
 
@@ -58,6 +57,24 @@ export class SvgArrowService {
         }
 
         return {x: x2, y: y2}
+    }
+
+    private getRectPosition(to: SVGGElement): { rectY: number; rectX: number } {
+        const bgRectangle = to.querySelector(".group-background");
+        if(bgRectangle) {
+            const x = parseFloat(bgRectangle.getAttribute('x') || '0');
+            const y = parseFloat(bgRectangle.getAttribute('y') || '0')
+            return {
+                rectX: x,
+                rectY: y
+            }
+        }
+
+        console.warn('No background rectangle found for group. Position is probably inaccurate', to)
+
+        const rectX = parseFloat(to.getAttribute('cx') || '0');
+        const rectY = parseFloat(to.getAttribute('cy') || '0');
+        return {rectX, rectY};
     }
 
     private calculateCircleIntersection(x1: number, y1: number, x2: number, y2: number, to: SVGCircleElement) {
