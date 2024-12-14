@@ -167,6 +167,8 @@ export class DisplayComponent implements OnDestroy {
                         continue;
                     }
                     line.setAttribute('stroke', 'red');
+                    line.setAttribute('marker-end', 'url(#arrow-selected)'); // Arrow marker
+
                     this._markedEdges.push(line);
                 }
             }
@@ -226,7 +228,10 @@ export class DisplayComponent implements OnDestroy {
     }
 
     public resetCut() {
-        this._markedEdges.forEach(edge => edge.setAttribute('stroke', 'black'));
+        this._markedEdges.forEach(edge => {
+            edge.setAttribute('stroke', 'black')
+            edge.setAttribute('marker-end', 'url(#arrow)'); // Arrow marker
+        });
         this._markedEdges = [];
         this._selectedEventLogId = undefined;
     }

@@ -13,8 +13,13 @@ export class SvgArrowService {
 
     public appendArrowMarker(parent: SVGElement): void {
         const defs = parent.getElementsByTagName('defs')[0] || this.createDefsElement(parent);
+        this.createMarker(defs, 'arrow', 'black');
+        this.createMarker(defs, 'arrow-selected', 'red');
+    }
+
+    private createMarker(defs: SVGElement, id: string, fill: string) {
         const marker = this.createSvgElement('marker');
-        marker.setAttribute('id', 'arrow');
+        marker.setAttribute('id', id);
         marker.setAttribute('markerWidth', '10');
         marker.setAttribute('markerHeight', '10');
         marker.setAttribute('refX', '9'); // this is the size of the arrow head
@@ -25,7 +30,7 @@ export class SvgArrowService {
 
         const path = this.createSvgElement('path');
         path.setAttribute('d', 'M0,0 L0,6 L9,3 z');
-        path.setAttribute('fill', 'black');
+        path.setAttribute('fill', fill);
         marker.appendChild(path);
     }
 
