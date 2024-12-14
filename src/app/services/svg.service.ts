@@ -48,6 +48,8 @@ export class SvgService {
         const group = this.createSvgElement('g') as SVGGElement;
         group.setAttribute('id', id);
 
+        group.append(this.createArrowMarker());
+
         // Add a rectangle as background/container
         const rectangle = this.createSvgElement('rect');
         rectangle.setAttribute('cx', '0');
@@ -300,6 +302,7 @@ export class SvgService {
         svg.setAttribute('y2', toY.toString());
         svg.setAttribute('stroke', 'black');       // Line color
         svg.setAttribute('stroke-width', '2');     // Line thickness
+        svg.setAttribute('marker-end', 'url(#arrow)'); // Arrow marker
         return svg;
     }
 
@@ -336,6 +339,25 @@ export class SvgService {
         line.setAttribute('stroke-opacity', '0.8'); // L
         line.setAttribute('class', 'drawn-line');
         return line;
+    }
+
+    private createArrowMarker(): SVGElement {
+        const defs = this.createSvgElement('defs');
+        const marker = this.createSvgElement('marker');
+        marker.setAttribute('id', 'arrow');
+        marker.setAttribute('markerWidth', '10');
+        marker.setAttribute('markerHeight', '10');
+        marker.setAttribute('refX', '15'); // this is the offset for the circle
+        marker.setAttribute('refY', '3');
+        marker.setAttribute('orient', 'auto');
+        marker.setAttribute('markerUnits', 'strokeWidth');
+        defs.append(marker);
+
+        const path = this.createSvgElement('path');
+        path.setAttribute('d', 'M0,0 L0,6 L9,3 z');
+        path.setAttribute('fill', 'black');
+        marker.appendChild(path);
+        return defs
     }
 }
 
