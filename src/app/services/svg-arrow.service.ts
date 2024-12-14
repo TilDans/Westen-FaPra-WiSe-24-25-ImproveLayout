@@ -41,7 +41,6 @@ export class SvgArrowService {
         if (to instanceof SVGCircleElement) {
             return this.calculateCircleIntersection(x1, y1, x2, y2, to);
         } else if (to instanceof SVGGElement) {
-            //TODO cx and cy do not exist on the g element. Maybe try to find the rect within this g?
             const {rectX, rectY} = this.getRectPosition(to);
             const rectWidth = parseFloat(to.getAttribute('width') || '0');
             const rectHeight = parseFloat(to.getAttribute('height') || '0');
