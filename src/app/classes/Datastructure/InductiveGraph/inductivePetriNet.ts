@@ -6,6 +6,7 @@ import {Transition} from "./Elements/transition";
 import {Edge} from "./edgeElement";
 import {CustomElement} from "./Elements/element";
 import {SvgArrowService} from "../../../services/svg-arrow.service";
+import {IntersectionCalculatorService} from "../../../services/intersection-calculator.service";
 
 
 export class InductivePetriNet{
@@ -14,7 +15,7 @@ export class InductivePetriNet{
     arcs: Edge[] = new Array<Edge>;
     eventLogDFGs: EventLogDFG[]; //wenn diese hier eingefügt sind, sind sie fertig berechnet (Knoten, Kanten, Koordinaten, Größe)
 
-    _svgService : SvgService = new SvgService (new SvgArrowService());
+    _svgService : SvgService = new SvgService (new SvgArrowService(new IntersectionCalculatorService()));
 
     constructor(eventLog: EventLog) {
         EventLogDFG.logCounter = 0; // counter der logs für neues Netz resetten
