@@ -1,6 +1,6 @@
 import { EventLogDFG } from "./eventLogDFG";
 
-export class CustomElement {
+export abstract class CustomElement {
     private _id: string = "";
     private _x: number;
     private _y: number;
@@ -61,4 +61,7 @@ export class CustomElement {
         this._svgElement!.setAttribute('cx', xNew.toString());
         this._svgElement!.setAttribute('cy', yNew.toString());
     }
+
+    public abstract getCenterXY(): { x: number, y: number} 
+
 }

@@ -20,10 +20,10 @@ export class Edge {
         this._start = value;
     }
     public get end(): CustomElement {
-        return this._start;
+        return this._end;
     }
     public set end(value: CustomElement) {
-        this._start = value;
+        this._end = value;
     }
 
     public registerSvg(svg: SVGElement) {

@@ -8,14 +8,10 @@ import { Trace } from '../classes/Datastructure/event-log/trace';
     providedIn: 'root'
 })
 export class DisplayService implements OnDestroy {
-    inductivePetriNet(inductivePetriNet: any) {
-        throw new Error('Method not implemented.');
-    }
-
     private _petriNet$: BehaviorSubject<InductivePetriNet>;
 
     constructor() {
-        this._petriNet$ = new BehaviorSubject<InductivePetriNet>(new InductivePetriNet(new EventLog(new Array<Trace>)));
+        this._petriNet$ = new BehaviorSubject<InductivePetriNet>(new InductivePetriNet());
     }
 
     ngOnDestroy(): void {

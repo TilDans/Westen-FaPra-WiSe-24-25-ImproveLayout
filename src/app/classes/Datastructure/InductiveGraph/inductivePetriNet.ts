@@ -14,20 +14,24 @@ export class InductivePetriNet{
     places: Place[]= new Array<Place>;
     transitions: Transition[] = new Array<Transition>;
     arcs: Edge[] = new Array<Edge>;
-    eventLogDFGs: EventLogDFG[]; //wenn diese hier eingefügt sind, sind sie fertig berechnet (Knoten, Kanten, Koordinaten, Größe)
-    petriLayersContained: PetriLayerContainer;
+    eventLogDFGs?: EventLogDFG[]; //wenn diese hier eingefügt sind, sind sie fertig berechnet (Knoten, Kanten, Koordinaten, Größe)
+    petriLayersContained?: PetriLayerContainer;
 
     _svgService : SvgService = new SvgService (new SvgArrowService(new IntersectionCalculatorService()));
 
     static horizontalOffset = 150;
     static verticalOffset = 150;
 
-    constructor(eventLog: EventLog) {
+    constructor() {
         EventLogDFG.logCounter = 0; // counter der logs für neues Netz resetten
+    }
+
+    init(eventLog: EventLog) : InductivePetriNet {
         //zwei Stellen zum Start generieren und die entsprechenden Kanten einfügen
         this.eventLogDFGs = [new EventLogDFG(this._svgService, eventLog)];
         this.petriLayersContained = new PetriLayerContainer(this.eventLogDFGs[0]);
         this.genStartEndPlaceAndGenArcs();
+        return this;
     }
 
     public genStartEndPlaceAndGenArcs() {
@@ -35,7 +39,7 @@ export class InductivePetriNet{
         const start = this.genPlace('startPlace');
         start.x = InductivePetriNet.horizontalOffset/2;
         const end = this.genPlace('endPlace');
-        const firstEventLogDFG = this.eventLogDFGs.at(0);
+        const firstEventLogDFG = this.eventLogDFGs![0];
         if (firstEventLogDFG !== undefined){
             this.genArc(start, firstEventLogDFG);
             this.genArc(firstEventLogDFG, end);
@@ -66,7 +70,7 @@ export class InductivePetriNet{
     private layoutPetriNet() {        
         //maxY insgesamt bestimmen, um das gesamte Netz mittig platzieren zu können 
         let maxY = 0;
-        this.petriLayersContained.forEach(layer => {
+        this.petriLayersContained!.forEach(layer => {
             let yValInLayer = layer.length * InductivePetriNet.verticalOffset;
             layer.forEach(element => {
                 yValInLayer += element.getHeight();
@@ -74,7 +78,6 @@ export class InductivePetriNet{
             maxY = (yValInLayer > maxY ? yValInLayer : maxY);
         });
         const yOffset = maxY / 2;
-
         //y Wert der Start- und Endstellen setzen
         // Start- und Endstelle wurden in dieser Reihenfolge erzeugt
         this.places[0].y = yOffset;
@@ -82,7 +85,7 @@ export class InductivePetriNet{
 
 
         let currLayerXOffSet = InductivePetriNet.horizontalOffset;
-        this.petriLayersContained.forEach(layer => {
+        this.petriLayersContained!.forEach(layer => {
             //Für jedes Layer Gesamthöhe und Breite berechnen und diese zentrieren
             let totalLayerHeight = layer.length * InductivePetriNet.verticalOffset;
             let layerMaxWidth = 0;
@@ -91,7 +94,7 @@ export class InductivePetriNet{
                 totalLayerHeight += element.getHeight();
             });
             //subtrahiere aktuelle von maximaler Höhe um die Differenz zu erhalten, teilen zum mittig platzieren.
-            let currLayerYOffset = (maxY - totalLayerHeight / 2);
+            let currLayerYOffset = (((maxY - totalLayerHeight) / 2) + (InductivePetriNet.verticalOffset / 2));
             
             //für jedes Element x und y Werte setzen
             layer.forEach(element => {
@@ -103,7 +106,7 @@ export class InductivePetriNet{
                 element.setXYonSVG(xValToSet, yValToSet);
                 currLayerYOffset += (InductivePetriNet.verticalOffset + currElemHeight);
             });
-            currLayerXOffSet += InductivePetriNet.horizontalOffset;
+            currLayerXOffSet += (InductivePetriNet.horizontalOffset + layerMaxWidth);
         });
         //alle Koordinaten der Layer gesetzt, daher kann nun die Endstelle horizontal platziert werden.
         this.places[1].x = currLayerXOffSet - (InductivePetriNet.horizontalOffset / 2);
@@ -116,16 +119,34 @@ export class InductivePetriNet{
                 const beforePlace = (this.arcs.filter(edge => edge.end == place)).map(arc => arc.start);
                 //bestimme alle Kanten, welche an der gegebenen Stelle starten und ziehe daraus die Elemente nach dieser Stelle
                 const afterPlace = (this.arcs.filter(edge => edge.start == place)).map(arc => arc.end);
-
                 //X und Y Werte für die Stellen berechnen.
-
+                let xValToSet = 0;
+                let yValToSet = 0;
+                beforePlace.forEach(element => {
+                    const centerCoord = element.getCenterXY();
+                    xValToSet += centerCoord.x;
+                    yValToSet += centerCoord.y;
+                });
+                afterPlace.forEach(element => {
+                    const centerCoord = element.getCenterXY();
+                    xValToSet += centerCoord.x;
+                    yValToSet += centerCoord.y;
+                });
+                const totalBeforeAndAfter = beforePlace.length + afterPlace.length;
+                xValToSet = xValToSet / totalBeforeAndAfter;
+                yValToSet = yValToSet / totalBeforeAndAfter;
+                
+                //Kanten erzeugen nachdem die Positionen berechnet wurden.
+                this.arcs.filter(edge => edge.end == place || edge.start == place).forEach(
+                    edge => this._svgService.createSVGForArc(edge)
+                );
             }
         });
     }
 
     private concatSVGReps() {
         const result: Array<SVGElement> = [];
-        this.eventLogDFGs.forEach(eventLogDFG => {
+        this.eventLogDFGs!.forEach(eventLogDFG => {
             result.push(eventLogDFG.getSvg());
         });
         this.transitions.forEach(transition => {

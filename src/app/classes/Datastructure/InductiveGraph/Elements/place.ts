@@ -5,4 +5,8 @@ export class Place extends CustomElement {
         super();
         this.id = name;
     }
+
+    public override getCenterXY(): { x: number; y: number; } {
+        return {x: this.x, y: this.y};
+    }
 }

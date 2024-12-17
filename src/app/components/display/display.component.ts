@@ -42,9 +42,8 @@ export class DisplayComponent implements OnDestroy {
 
         this.fileContent = new EventEmitter<string>();
 
-        this._sub = this._displayService.InductivePetriNet$.subscribe(log => {
-
-            this._petriNet = log;
+        this._sub = this._displayService.InductivePetriNet$.subscribe(newNet => {
+            this._petriNet = newNet;
             this.draw();
         });
     }
@@ -271,7 +270,7 @@ export class DisplayComponent implements OnDestroy {
     }
 
     private getMarkedEventLog() {
-        for (const eventLog of this._petriNet!.eventLogDFGs) {
+        for (const eventLog of this._petriNet!.eventLogDFGs!) {
             if (eventLog?.id === this._selectedEventLogId) {
                 return eventLog?.eventLog;
             }
