@@ -8,7 +8,6 @@ import { CustomElement } from "./element";
 export class EventLogDFG extends CustomElement{
     static logCounter: number = 0;
     eventLog: EventLog;
-    private _dfgRepresentation: SVGGElement;
 
     
     constructor(private _svgService: SvgService, 
@@ -17,28 +16,19 @@ export class EventLogDFG extends CustomElement{
         this.eventLog = eventLog;
         this.id = 'eventLogNumber' + (EventLogDFG.logCounter).toString();
         EventLogDFG.logCounter ++;
-        this._dfgRepresentation = this._svgService?.createSVGforEventLog(this.eventLog, this.id)
+        this._svgElement = this._svgService.createSVGforEventLog(this.eventLog, this.id)
     }
 
-    public override getSvg() : SVGGElement {
-        return this._dfgRepresentation;
+    public override getSvg() : SVGElement {
+        return this._svgElement!;
     }
 
-    public set dfgRepresentation(value: SVGGElement) {
-        this._dfgRepresentation = value;
+    public set dfgRepresentation(value: SVGElement) {
+        this._svgElement = value;
     }
 
-    setXYonSVG(xNew: number, yNew: number) {
-        this._dfgRepresentation.setAttribute('transform', 'translate(' + xNew + ',' + yNew + ')');
-    }
-
-    getWidth(): number {
-        const element = this._dfgRepresentation.getAttribute('width');
-        return parseFloat(element || '0');
-    }
-    getHeight(): number {
-        const element = this._dfgRepresentation.getAttribute('height');
-        return parseFloat(element || '0');
+    override setXYonSVG(xNew: number, yNew: number) {
+        this._svgElement!.setAttribute('transform', 'translate(' + xNew + ',' + yNew + ')');
     }
 }
 

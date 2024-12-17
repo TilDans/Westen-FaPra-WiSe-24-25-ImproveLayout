@@ -4,6 +4,11 @@ import { PetriLayer } from "./petriLayer";
 
 export class PetriLayerContainer extends Array<PetriLayer> {
     
+    constructor(firstElement: CustomElement) {
+        super();
+        this[0] = new PetriLayer(firstElement);
+    }
+
     // Layer bis zum genannten item nach hinten schieben sowie neues mit dem Element einfügen davor
     public insertToNewLayerBeforeCurrentElement(formerElement: CustomElement, replacingElement: CustomElement, newElement: CustomElement) {
         const layerIndex = this.findIndex(petriLayer => petriLayer.includes(formerElement));

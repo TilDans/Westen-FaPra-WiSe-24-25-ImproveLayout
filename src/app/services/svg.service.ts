@@ -21,7 +21,7 @@ export class SvgService {
         svg.setAttribute('id', placeToGen.id);
         svg.setAttribute('cx', '500');
         svg.setAttribute('cy', (50 + this.offset).toString());
-        svg.setAttribute('r', '25');
+        svg.setAttribute('r', '20');
         svg.setAttribute('fill', 'yellow');
         svg.setAttribute('stroke', 'black');
         svg.setAttribute('stroke-width', '4');
@@ -249,7 +249,6 @@ export class SvgService {
                 pos.y = Math.max(0, Math.min(height, pos.y));
             });
         }
-
         return positions;
     }
 
@@ -268,6 +267,7 @@ export class SvgService {
     private createStartSVG(): SVGElement {
         const svg = this.createSvgElement('circle');
         svg.setAttribute('id', 'play');
+        svg.setAttribute('class', 'playStop');
         svg.setAttribute('cx', '0');
         svg.setAttribute('cy', `0`);
         svg.setAttribute('r', '15');
@@ -278,6 +278,7 @@ export class SvgService {
     private createEndSVG(): SVGElement {
         const svg = this.createSvgElement('circle');
         svg.setAttribute('id', 'stop');
+        svg.setAttribute('class', 'playStop');
         svg.setAttribute('cx', '0');
         svg.setAttribute('cy', `0`);
         svg.setAttribute('r', '15');
