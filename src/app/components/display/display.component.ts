@@ -11,6 +11,7 @@ import {InductiveMinerService} from "../../services/inductive-miner/inductive-mi
 import {TraceEvent} from "../../classes/Datastructure/event-log/trace-event";
 import {Edge} from "../../classes/Datastructure/InductiveGraph/edgeElement";
 import {DFGElement} from "../../classes/Datastructure/InductiveGraph/Elements/DFGElement";
+import {IntersectionCalculatorService} from "../../services/intersection-calculator.service";
 
 @Component({
     selector: 'app-display',
@@ -35,7 +36,9 @@ export class DisplayComponent implements OnDestroy {
                 private _displayService: DisplayService,
                 private _fileReaderService: FileReaderService,
                 private _inductiveMinerService: InductiveMinerService,
-                private _http: HttpClient) {
+                private _http: HttpClient,
+                private _intersectionCalculatorService: IntersectionCalculatorService
+    ) {
 
         this.fileContent = new EventEmitter<string>();
 
@@ -164,6 +167,8 @@ export class DisplayComponent implements OnDestroy {
                         continue;
                     }
                     line.setAttribute('stroke', 'red');
+                    line.setAttribute('marker-end', 'url(#arrow-selected)'); // Arrow marker
+
                     this._markedEdges.push(line);
                 }
             }
@@ -194,13 +199,7 @@ export class DisplayComponent implements OnDestroy {
         const x4 = parseFloat(line2.getAttribute('x2')!);
         const y4 = parseFloat(line2.getAttribute('y2')!);
 
-        const denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-        if (denominator === 0) return false;
-
-        const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denominator;
-        const u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denominator;
-
-        return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+        return this._intersectionCalculatorService.calculateLineIntersection(x1, y1, x2, y2, x3, y3, x4, y4) !== null;
     }
 
 
@@ -229,7 +228,10 @@ export class DisplayComponent implements OnDestroy {
     }
 
     public resetCut() {
-        this._markedEdges.forEach(edge => edge.setAttribute('stroke', 'black'));
+        this._markedEdges.forEach(edge => {
+            edge.setAttribute('stroke', 'black')
+            edge.setAttribute('marker-end', 'url(#arrow)'); // Arrow marker
+        });
         this._markedEdges = [];
         this._selectedEventLogId = undefined;
     }

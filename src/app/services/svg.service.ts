@@ -1,19 +1,19 @@
 import {Injectable} from '@angular/core';
-import {CustomElement} from '../classes/Datastructure/InductiveGraph/Elements/element';
-import { EventLog } from '../classes/Datastructure/event-log/event-log';
-import { Trace } from '../classes/Datastructure/event-log/trace';
-import { TraceEvent } from '../classes/Datastructure/event-log/trace-event';
-import { InductivePetriNet } from '../classes/Datastructure/InductiveGraph/inductivePetriNet';
-import { transition } from '@angular/animations';
-import { DFGElement } from '../classes/Datastructure/InductiveGraph/Elements/DFGElement';
-import { Place } from '../classes/Datastructure/InductiveGraph/Elements/place';
-import { Edge } from '../classes/Datastructure/InductiveGraph/edgeElement';
-import { catchError } from 'rxjs';
+import {EventLog} from '../classes/Datastructure/event-log/event-log';
+import {TraceEvent} from '../classes/Datastructure/event-log/trace-event';
+import {DFGElement} from '../classes/Datastructure/InductiveGraph/Elements/DFGElement';
+import {Place} from '../classes/Datastructure/InductiveGraph/Elements/place';
+import {Edge} from '../classes/Datastructure/InductiveGraph/edgeElement';
+import {SvgArrowService} from "./svg-arrow.service";
 
 @Injectable({
     providedIn: 'root'
 })
 export class SvgService {
+
+    constructor(private readonly svgArrowService: SvgArrowService) {
+    }
+
     offset = 0;
 
     createSVGForPlace(placeToGen: Place) {
@@ -48,11 +48,14 @@ export class SvgService {
         const group = this.createSvgElement('g') as SVGGElement;
         group.setAttribute('id', id);
 
+        this.svgArrowService.appendArrowMarker(group);
+
         // Add a rectangle as background/container
         const rectangle = this.createSvgElement('rect');
         rectangle.setAttribute('cx', '0');
         rectangle.setAttribute('cy', '0');
         rectangle.setAttribute('fill', 'lightblue'); // Example background color
+        rectangle.classList.add('group-background')
         group.append(rectangle);
 
         //Extract events and connections between those
@@ -293,13 +296,16 @@ export class SvgService {
         // Retrieve the x and y coordinates from the circle elements
         const { x: fromX, y: fromY } = this.calculateStartEndCoordinate(from);
         const { x: toX, y: toY } = this.calculateStartEndCoordinate(to);
+
+        const intersection = this.svgArrowService.calculateIntersection(fromX, fromY, toX, toY, to);
         // Set line attributes using the coordinates
         svg.setAttribute('x1', fromX.toString());
         svg.setAttribute('y1', fromY.toString());
-        svg.setAttribute('x2', toX.toString());
-        svg.setAttribute('y2', toY.toString());
+        svg.setAttribute('x2', intersection.x.toString());
+        svg.setAttribute('y2', intersection.y.toString());
         svg.setAttribute('stroke', 'black');       // Line color
         svg.setAttribute('stroke-width', '2');     // Line thickness
+        svg.setAttribute('marker-end', 'url(#arrow)'); // Arrow marker
         return svg;
     }
 
@@ -337,6 +343,8 @@ export class SvgService {
         line.setAttribute('class', 'drawn-line');
         return line;
     }
+
+
 }
 
 
