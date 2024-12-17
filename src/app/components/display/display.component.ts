@@ -127,6 +127,11 @@ export class DisplayComponent implements OnDestroy {
         }
     }
 
+    public dropLines() {
+        const lines = Array.from(this.drawingArea!.nativeElement.getElementsByTagName('line'));
+        lines.forEach(line => line.parentNode?.removeChild(line));
+    }
+
     private clearDrawingArea() {
         const drawingArea = this.drawingArea?.nativeElement;
         if (drawingArea?.childElementCount === undefined) {

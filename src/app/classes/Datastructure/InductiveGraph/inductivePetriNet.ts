@@ -1,5 +1,5 @@
 import {EventLog} from "../event-log/event-log";
-import {EventLogDFG} from "./eventLogDFG";
+import {EventLogDFG} from "./Elements/eventLogDFG";
 import {SvgService} from "src/app/services/svg.service";
 import {Place} from "./Elements/place";
 import {Transition} from "./Elements/transition";
@@ -34,6 +34,7 @@ export class InductivePetriNet{
         }
     }
 
+    //bereits generierte Elemente verbinden
     private genArc(start: CustomElement, end: CustomElement) {
         const edgeToGen = new Edge(start, end);
         this._svgService.createSVGForArc(edgeToGen);

@@ -30,12 +30,11 @@ export class SvgService {
     }
 
     public createSVGForArc(edge: Edge) {
-        const from = edge.start.getSvg();
-        const to = edge.end.getSvg();
-        if (from != undefined && to != undefined) {
-            const svg = this.createSvgForEdge(from, to);
-            edge.registerSvg(svg);
-        }
+        const from = edge.start.getSvg()!;
+        const to = edge.end.getSvg()!;
+        const svg = this.createSvgForEdge(from, to);
+        //svg an Kante hinterlegen
+        edge.registerSvg(svg);
     }
 
     //erstelle Gruppen von SVG Elementen für EventLogs
@@ -287,9 +286,8 @@ export class SvgService {
     }
 
     private createSvgForEdge(from: SVGElement, to: SVGElement): SVGElement {
-
         const svg = this.createSvgElement('line');
-        svg.setAttribute('id', from.id + ':' + to.id)
+        svg.setAttribute('id', from.id + ':' + to.id);
         svg.setAttribute('from', from.id);
         svg.setAttribute('to', to.id);
 
