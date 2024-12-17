@@ -1,11 +1,12 @@
-import { transition } from "@angular/animations";
-import { EventLog } from "../event-log/event-log";
-import { EventLogDFG } from "./eventLogDFG";
-import { SvgService } from "src/app/services/svg.service";
-import { Place } from "./Elements/place";
-import { Transition } from "./Elements/transition";
-import { Edge } from "./edgeElement";
-import { CustomElement } from "./Elements/element";
+import {EventLog} from "../event-log/event-log";
+import {EventLogDFG} from "./eventLogDFG";
+import {SvgService} from "src/app/services/svg.service";
+import {Place} from "./Elements/place";
+import {Transition} from "./Elements/transition";
+import {Edge} from "./edgeElement";
+import {CustomElement} from "./Elements/element";
+import {SvgArrowService} from "../../../services/svg-arrow.service";
+import {IntersectionCalculatorService} from "../../../services/intersection-calculator.service";
 
 
 export class InductivePetriNet{
@@ -13,9 +14,9 @@ export class InductivePetriNet{
     transitions: Transition[] = new Array<Transition>;
     arcs: Edge[] = new Array<Edge>;
     eventLogDFGs: EventLogDFG[]; //wenn diese hier eingefügt sind, sind sie fertig berechnet (Knoten, Kanten, Koordinaten, Größe)
-    
-    _svgService : SvgService = new SvgService ();
-    
+
+    _svgService : SvgService = new SvgService (new SvgArrowService(new IntersectionCalculatorService()));
+
     constructor(eventLog: EventLog) {
         EventLogDFG.logCounter = 0; // counter der logs für neues Netz resetten
         //zwei Stellen zum Start generieren und die entsprechenden Kanten einfügen
@@ -70,7 +71,7 @@ export class InductivePetriNet{
             const svgRep = arc.getSvg();
             if (svgRep != undefined){
                 result.push(svgRep);
-            }            
+            }
         });
 
 
