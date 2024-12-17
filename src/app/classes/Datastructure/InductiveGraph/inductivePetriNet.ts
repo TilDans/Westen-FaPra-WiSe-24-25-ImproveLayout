@@ -26,7 +26,7 @@ export class InductivePetriNet{
         EventLogDFG.logCounter = 0; // counter der logs für neues Netz resetten
     }
 
-    init(eventLog: EventLog) : InductivePetriNet {
+    init(eventLog: EventLog): InductivePetriNet {
         //zwei Stellen zum Start generieren und die entsprechenden Kanten einfügen
         this.eventLogDFGs = [new EventLogDFG(this._svgService, eventLog)];
         this.petriLayersContained = new PetriLayerContainer(this.eventLogDFGs[0]);
@@ -135,13 +135,14 @@ export class InductivePetriNet{
                 const totalBeforeAndAfter = beforePlace.length + afterPlace.length;
                 xValToSet = xValToSet / totalBeforeAndAfter;
                 yValToSet = yValToSet / totalBeforeAndAfter;
-                
-                //Kanten erzeugen nachdem die Positionen berechnet wurden.
-                this.arcs.filter(edge => edge.end == place || edge.start == place).forEach(
-                    edge => this._svgService.createSVGForArc(edge)
-                );
             }
         });
+        this.places.forEach(place => {
+            //Kanten erzeugen nachdem die Positionen berechnet wurden.
+            this.arcs.filter(edge => edge.start == place).forEach(
+                edge => this._svgService.createSVGForArc(edge)
+            );
+        })
     }
 
     private concatSVGReps() {

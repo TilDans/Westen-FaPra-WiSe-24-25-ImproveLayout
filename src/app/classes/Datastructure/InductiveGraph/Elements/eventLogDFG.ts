@@ -30,7 +30,22 @@ export class EventLogDFG extends CustomElement{
     override setXYonSVG(xNew: number, yNew: number) {
         this.x = xNew;
         this.y = yNew;
+
+        //Variante A: Ausnutzen von transform translate bzgl der Gruppe
         this._svgElement!.setAttribute('transform', 'translate(' + xNew + ',' + yNew + ')');
+
+        //Variante B: OffSet der einzelnen Elemente und des Rectangles einzeln
+        /* const container = Array.from(this._svgElement!.children!);
+        container.forEach(element => {
+            console.log(xNew, yNew);
+            //x und y koordinaten der enthaltenen Elemente anpassen
+            const xInRectangle = parseFloat(element.getAttribute('cx') || '0');
+            const yInRectangle = parseFloat(element.getAttribute('cy') || '0');
+            element.setAttribute('cx', (xInRectangle + xNew).toString());
+            element.setAttribute('cy', (yInRectangle + yNew).toString());
+        });
+        const rects = this._svgElement!.getElementsByTagName('rect');
+        rects[0].setAttribute('transform', 'translate(' + xNew + ',' + yNew + ')'); */
     }
     
     public override getCenterXY(): { x: number; y: number; } {
