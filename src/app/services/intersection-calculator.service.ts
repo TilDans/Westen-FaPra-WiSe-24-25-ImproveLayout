@@ -24,4 +24,19 @@ export class IntersectionCalculatorService {
 
         return {x: intersectX, y: intersectY};
     }
+
+    public getAbsolutePoint(line: SVGLineElement, xAttr: string, yAttr: string): DOMPoint {
+        const svg = line.ownerSVGElement as SVGSVGElement;
+        const pt = svg.createSVGPoint();
+        pt.x = parseFloat(line.getAttribute(xAttr)!);
+        pt.y = parseFloat(line.getAttribute(yAttr)!);
+
+        const ctm = line.getScreenCTM();
+        if (ctm) {
+            return pt.matrixTransform(ctm);
+        } else {
+            console.warn("Could not get screen CTM for line", line);
+            return pt;
+        }
+    }
 }

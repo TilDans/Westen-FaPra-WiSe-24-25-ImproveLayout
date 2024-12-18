@@ -194,19 +194,32 @@ export class DisplayComponent implements OnDestroy {
     }
 
     private linesIntersect(line1: SVGLineElement, line2: SVGLineElement): boolean {
-        const x1 = parseFloat(line1.getAttribute('x1')!);
-        const y1 = parseFloat(line1.getAttribute('y1')!);
-        const x2 = parseFloat(line1.getAttribute('x2')!);
-        const y2 = parseFloat(line1.getAttribute('y2')!);
+        /*const getTransformedPoint = (line: SVGLineElement, xAttr: string, yAttr: string): DOMPoint => {
+            const svg = this.drawingArea?.nativeElement as SVGSVGElement;
+            const pt = svg.createSVGPoint();
+            pt.x = parseFloat(line.getAttribute(xAttr)!);
+            pt.y = parseFloat(line.getAttribute(yAttr)!);
 
-        const x3 = parseFloat(line2.getAttribute('x1')!);
-        const y3 = parseFloat(line2.getAttribute('y1')!);
-        const x4 = parseFloat(line2.getAttribute('x2')!);
-        const y4 = parseFloat(line2.getAttribute('y2')!);
+            const ctm = line.getScreenCTM();
+            if (ctm) {
+                return pt.matrixTransform(ctm);
+            } else {
+                console.warn("Could not get screen CTM for line", line);
+                return pt;
+            }
+        };*/
 
-        return this._intersectionCalculatorService.calculateLineIntersection(x1, y1, x2, y2, x3, y3, x4, y4) !== null;
+        // Get the transformed points for each line
+        const p1Line1 = this._intersectionCalculatorService.getAbsolutePoint(line1, 'x1', 'y1');
+        const p2Line1 = this._intersectionCalculatorService.getAbsolutePoint(line1, 'x2', 'y2');
+        const p1Line2 = this._intersectionCalculatorService.getAbsolutePoint(line2, 'x1', 'y1');
+        const p2Line2 = this._intersectionCalculatorService.getAbsolutePoint(line2, 'x2', 'y2');
+
+        return this._intersectionCalculatorService.calculateLineIntersection(
+            p1Line1.x, p1Line1.y, p2Line1.x, p2Line1.y,
+            p1Line2.x, p1Line2.y, p2Line2.x, p2Line2.y
+        ) !== null;
     }
-
 
     private removeAllDrawnLines() {
         let lines = this.drawingArea?.nativeElement.getElementsByClassName('drawn-line');
