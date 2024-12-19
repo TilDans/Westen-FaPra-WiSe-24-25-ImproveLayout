@@ -274,22 +274,12 @@ export class DisplayComponent implements OnDestroy {
 
         console.log('markedEdges', markedEdges)
 
-        const eventLog = this.getMarkedEventLog();
+        const eventLog = this._petriNet!.getMarkedEventLog(this._selectedEventLogId!);
         const result = this._inductiveMinerService.applyInductiveMiner(eventLog, markedEdges);
         if (result.length === 0) {
             alert('No cut possible')
         }
         console.log('result', result)
 
-    }
-
-    private getMarkedEventLog() {
-        for (const eventLog of this._petriNet!.eventLogDFGs!) {
-            if (eventLog?.id === this._selectedEventLogId) {
-                return eventLog?.eventLog;
-            }
-        }
-        // should not happen
-        throw new Error('No event log found for id ' + this._selectedEventLogId);
     }
 }
