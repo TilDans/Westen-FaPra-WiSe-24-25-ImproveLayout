@@ -33,6 +33,9 @@ export class EventLogDFG extends CustomElement{
 
         //Variante A: Ausnutzen von transform translate bzgl der Gruppe
         this._svgElement!.setAttribute('transform', 'translate(' + xNew + ',' + yNew + ')');
+        this._svgElement!.setAttribute('cx', xNew.toString());
+        this._svgElement!.setAttribute('cy', yNew.toString());
+
 
         //Variante B: OffSet der einzelnen Elemente und des Rectangles einzeln
         /* const container = Array.from(this._svgElement!.children!);

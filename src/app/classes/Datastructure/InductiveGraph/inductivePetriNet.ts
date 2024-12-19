@@ -59,7 +59,7 @@ export class InductivePetriNet{
     //bereits generierte Elemente verbinden
     private genArc(start: CustomElement, end: CustomElement) {
         const edgeToGen = new Edge(start, end);
-        this._svgService.createSVGForArc(edgeToGen);
+        //this._svgService.createSVGForArc(edgeToGen);
         this._arcs.push(edgeToGen);
     }
 
@@ -132,6 +132,7 @@ export class InductivePetriNet{
                 //X und Y Werte für die Stellen berechnen.
                 let xValToSet = 0;
                 let yValToSet = 0;
+                //Summiere alle x und y Werte der Elemente vor und nach der Stelle
                 beforePlace.forEach(element => {
                     const centerCoord = element.getCenterXY();
                     xValToSet += centerCoord.x;
@@ -142,6 +143,7 @@ export class InductivePetriNet{
                     xValToSet += centerCoord.x;
                     yValToSet += centerCoord.y;
                 });
+                //Teile die Summe durch die gesamte Anzahl der Elemente um die Stelle mittig zu platzieren
                 const totalBeforeAndAfter = beforePlace.length + afterPlace.length;
                 xValToSet = xValToSet / totalBeforeAndAfter;
                 yValToSet = yValToSet / totalBeforeAndAfter;
@@ -149,7 +151,8 @@ export class InductivePetriNet{
         });
         this._places.forEach(place => {
             //Kanten erzeugen nachdem die Positionen berechnet wurden.
-            this._arcs.filter(edge => edge.start == place).forEach(
+            // Stellen sind nicht mit Stellen verbunden! Daher für aus- und eingegende Kanten Verbindungen einfügen
+            this._arcs.filter(edge => edge.start == place || edge.end == place).forEach(
                 edge => this._svgService.createSVGForArc(edge)
             );
         })
