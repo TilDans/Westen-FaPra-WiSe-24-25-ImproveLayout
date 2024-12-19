@@ -43,4 +43,10 @@ export class DFGElement extends CustomElement {
         }
         this._svgElement.setAttribute('fill', 'black');
     }
+    
+    public override getCenterXY(): { x: number; y: number; } {
+        let centerX = (this.x + this.getWidth()) / 2
+        let centerY = (this.y + this.getHeight()) / 2
+        return {x: centerX, y: centerY};
+    }
 }

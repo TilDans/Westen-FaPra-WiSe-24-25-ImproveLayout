@@ -5,11 +5,14 @@ import {DFGElement} from '../classes/Datastructure/InductiveGraph/Elements/DFGEl
 import {Place} from '../classes/Datastructure/InductiveGraph/Elements/place';
 import {Edge} from '../classes/Datastructure/InductiveGraph/edgeElement';
 import {SvgArrowService} from "./svg-arrow.service";
+import { SvgLayoutService } from './svg-layout.service';
 
 @Injectable({
     providedIn: 'root'
 })
+
 export class SvgService {
+    private _layouter = new SvgLayoutService();
 
     constructor(private readonly svgArrowService: SvgArrowService) {
     }
@@ -21,7 +24,7 @@ export class SvgService {
         svg.setAttribute('id', placeToGen.id);
         svg.setAttribute('cx', '500');
         svg.setAttribute('cy', (50 + this.offset).toString());
-        svg.setAttribute('r', '25');
+        svg.setAttribute('r', '20');
         svg.setAttribute('fill', 'yellow');
         svg.setAttribute('stroke', 'black');
         svg.setAttribute('stroke-width', '4');
@@ -30,12 +33,11 @@ export class SvgService {
     }
 
     public createSVGForArc(edge: Edge) {
-        const from = edge.start.getSvg();
-        const to = edge.end.getSvg();
-        if (from != undefined && to != undefined) {
-            const svg = this.createSvgForEdge(from, to);
-            edge.registerSvg(svg);
-        }
+        const from = edge.start.getSvg()!;
+        const to = edge.end.getSvg()!;
+        const svg = this.createSvgForEdge(from, to);
+        //svg an Kante hinterlegen
+        edge.registerSvg(svg);
     }
 
     //erstelle Gruppen von SVG Elementen für EventLogs
@@ -54,7 +56,6 @@ export class SvgService {
         const rectangle = this.createSvgElement('rect');
         rectangle.setAttribute('cx', '0');
         rectangle.setAttribute('cy', '0');
-        rectangle.setAttribute('fill', 'lightblue'); // Example background color
         rectangle.classList.add('group-background')
         group.append(rectangle);
 
@@ -129,7 +130,8 @@ export class SvgService {
         uniqueEventsArray.push(new TraceEvent('stopNodeInDFG'));
 
         const conceptNameArray = uniqueEventsArray.map(event => event.conceptName);
-        const positions = this.applySpringEmbedderLayout(conceptNameArray, edgesArray);
+        //const positions = this.applySpringEmbedderLayout(conceptNameArray, edgesArray);
+        const positions = this._layouter.applyLayout(conceptNameArray, edgesArray);
         console.log("positions: ", positions);
 
         //group.setAttribute('transform', 'translate(200, 100)');
@@ -172,13 +174,13 @@ export class SvgService {
         return group;
     }
 
-    private applySpringEmbedderLayout(nodes: Array<string>, edges: Array<{ from: string; to: string }>) {
+    /* private applySpringEmbedderLayout(nodes: Array<string>, edges: Array<{ from: string; to: string }>) {
         const positions: { [key: string]: { x: number; y: number } } = {};
         const width = 1000; // Canvas width
         const height = 800; // Canvas height
         const maxIterations = 300; // Number of iterations for the layout
-        const k = 60; // Ideal edge length
-        const repulsiveForce = 2000; // Force constant for repulsion
+        const k = 150; // Ideal edge length
+        const repulsiveForce = 800; // Force constant for repulsion
         const step = 2; // Step size for position updates
 
         // Initialize positions randomly within the canvas bounds
@@ -250,9 +252,8 @@ export class SvgService {
                 pos.y = Math.max(0, Math.min(height, pos.y));
             });
         }
-
         return positions;
-    }
+    } */
 
     private createSvgForEvent(element: DFGElement): SVGElement {
         const svg = this.createSvgElement('circle');
@@ -260,7 +261,7 @@ export class SvgService {
         svg.setAttribute('cx', '0');
         svg.setAttribute('cy', `0`);
         svg.setAttribute('r', '15');
-        svg.setAttribute('fill', 'black');
+        svg.setAttribute('class', 'dfgNode');
 
         element.registerSvg(svg);
         return svg;
@@ -269,27 +270,28 @@ export class SvgService {
     private createStartSVG(): SVGElement {
         const svg = this.createSvgElement('circle');
         svg.setAttribute('id', 'play');
+        svg.setAttribute('class', 'playStop');
         svg.setAttribute('cx', '0');
         svg.setAttribute('cy', `0`);
         svg.setAttribute('r', '15');
-        svg.setAttribute('fill', 'green');
+        svg.setAttribute('class', 'dfgPlayNode');
         return svg;
     }
 
     private createEndSVG(): SVGElement {
         const svg = this.createSvgElement('circle');
         svg.setAttribute('id', 'stop');
+        svg.setAttribute('class', 'playStop');
         svg.setAttribute('cx', '0');
         svg.setAttribute('cy', `0`);
         svg.setAttribute('r', '15');
-        svg.setAttribute('fill', 'red');
+        svg.setAttribute('class', 'dfgStopNode');
         return svg;
     }
 
     private createSvgForEdge(from: SVGElement, to: SVGElement): SVGElement {
-
         const svg = this.createSvgElement('line');
-        svg.setAttribute('id', from.id + ':' + to.id)
+        svg.setAttribute('id', from.id + ':' + to.id);
         svg.setAttribute('from', from.id);
         svg.setAttribute('to', to.id);
 
@@ -303,9 +305,7 @@ export class SvgService {
         svg.setAttribute('y1', fromY.toString());
         svg.setAttribute('x2', intersection.x.toString());
         svg.setAttribute('y2', intersection.y.toString());
-        svg.setAttribute('stroke', 'black');       // Line color
-        svg.setAttribute('stroke-width', '2');     // Line thickness
-        svg.setAttribute('marker-end', 'url(#arrow)'); // Arrow marker
+        svg.setAttribute('class', 'edge');
         return svg;
     }
 
@@ -336,10 +336,6 @@ export class SvgService {
         line.setAttribute('y1', y.toString());
         line.setAttribute('x2', x.toString());
         line.setAttribute('y2', y.toString());
-        line.setAttribute('stroke', 'red'); // Line color
-        line.setAttribute('stroke-width', '2'); // Line thickness
-        line.setAttribute('stroke-dasharray', '5,5'); // Dashed line pattern
-        line.setAttribute('stroke-opacity', '0.8'); // L
         line.setAttribute('class', 'drawn-line');
         return line;
     }

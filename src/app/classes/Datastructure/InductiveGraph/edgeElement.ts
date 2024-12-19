@@ -3,14 +3,27 @@ import { CustomElement } from "./Elements/element";
 
 export class Edge {
 
-    start: CustomElement;
-    end: CustomElement;
+    private _start: CustomElement;
+    private _end: CustomElement;
 
     private _svgElement: SVGElement | undefined;
 
     constructor(start: CustomElement, end: CustomElement) {
-        this.start = start;
-        this.end = end;
+        this._start = start;
+        this._end = end;
+    }
+
+    public get start(): CustomElement {
+        return this._start;
+    }
+    public set start(value: CustomElement) {
+        this._start = value;
+    }
+    public get end(): CustomElement {
+        return this._end;
+    }
+    public set end(value: CustomElement) {
+        this._end = value;
     }
 
     public registerSvg(svg: SVGElement) {

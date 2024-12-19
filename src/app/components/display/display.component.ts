@@ -42,9 +42,8 @@ export class DisplayComponent implements OnDestroy {
 
         this.fileContent = new EventEmitter<string>();
 
-        this._sub = this._displayService.InductivePetriNet$.subscribe(log => {
-
-            this._petriNet = log;
+        this._sub = this._displayService.InductivePetriNet$.subscribe(newNet => {
+            this._petriNet = newNet;
             this.draw();
         });
     }
@@ -111,6 +110,7 @@ export class DisplayComponent implements OnDestroy {
         this._selectedEventLogId = undefined;
 
         this.clearDrawingArea();
+        this.dropLines();
         const petriGraph = this._petriNet?.getSVGRepresentation();
 
         //petriGraph = {(places), (transitions), arcs, (dfgs)}
@@ -125,6 +125,11 @@ export class DisplayComponent implements OnDestroy {
         } else {
             console.warn("No valid petriGraph found to append.");
         }
+    }
+
+    public dropLines() {
+        const lines = Array.from(this.drawingArea!.nativeElement.getElementsByTagName('line'));
+        lines.forEach(line => line.parentNode?.removeChild(line));
     }
 
     private clearDrawingArea() {
@@ -166,9 +171,7 @@ export class DisplayComponent implements OnDestroy {
                         console.warn("Line is not in the same event log");
                         continue;
                     }
-                    line.setAttribute('stroke', 'red');
-                    line.setAttribute('marker-end', 'url(#arrow-selected)'); // Arrow marker
-
+                    line.classList.add('selectedEdge');
                     this._markedEdges.push(line);
                 }
             }
@@ -189,19 +192,32 @@ export class DisplayComponent implements OnDestroy {
     }
 
     private linesIntersect(line1: SVGLineElement, line2: SVGLineElement): boolean {
-        const x1 = parseFloat(line1.getAttribute('x1')!);
-        const y1 = parseFloat(line1.getAttribute('y1')!);
-        const x2 = parseFloat(line1.getAttribute('x2')!);
-        const y2 = parseFloat(line1.getAttribute('y2')!);
+        /*const getTransformedPoint = (line: SVGLineElement, xAttr: string, yAttr: string): DOMPoint => {
+            const svg = this.drawingArea?.nativeElement as SVGSVGElement;
+            const pt = svg.createSVGPoint();
+            pt.x = parseFloat(line.getAttribute(xAttr)!);
+            pt.y = parseFloat(line.getAttribute(yAttr)!);
 
-        const x3 = parseFloat(line2.getAttribute('x1')!);
-        const y3 = parseFloat(line2.getAttribute('y1')!);
-        const x4 = parseFloat(line2.getAttribute('x2')!);
-        const y4 = parseFloat(line2.getAttribute('y2')!);
+            const ctm = line.getScreenCTM();
+            if (ctm) {
+                return pt.matrixTransform(ctm);
+            } else {
+                console.warn("Could not get screen CTM for line", line);
+                return pt;
+            }
+        };*/
 
-        return this._intersectionCalculatorService.calculateLineIntersection(x1, y1, x2, y2, x3, y3, x4, y4) !== null;
+        // Get the transformed points for each line
+        const p1Line1 = this._intersectionCalculatorService.getAbsolutePoint(line1, 'x1', 'y1');
+        const p2Line1 = this._intersectionCalculatorService.getAbsolutePoint(line1, 'x2', 'y2');
+        const p1Line2 = this._intersectionCalculatorService.getAbsolutePoint(line2, 'x1', 'y1');
+        const p2Line2 = this._intersectionCalculatorService.getAbsolutePoint(line2, 'x2', 'y2');
+
+        return this._intersectionCalculatorService.calculateLineIntersection(
+            p1Line1.x, p1Line1.y, p2Line1.x, p2Line1.y,
+            p1Line2.x, p1Line2.y, p2Line2.x, p2Line2.y
+        ) !== null;
     }
-
 
     private removeAllDrawnLines() {
         let lines = this.drawingArea?.nativeElement.getElementsByClassName('drawn-line');
@@ -229,8 +245,7 @@ export class DisplayComponent implements OnDestroy {
 
     public resetCut() {
         this._markedEdges.forEach(edge => {
-            edge.setAttribute('stroke', 'black')
-            edge.setAttribute('marker-end', 'url(#arrow)'); // Arrow marker
+            edge.classList.remove('selectedEdge');
         });
         this._markedEdges = [];
         this._selectedEventLogId = undefined;
@@ -256,22 +271,12 @@ export class DisplayComponent implements OnDestroy {
 
         console.log('markedEdges', markedEdges)
 
-        const eventLog = this.getMarkedEventLog();
+        const eventLog = this._petriNet!.getMarkedEventLog(this._selectedEventLogId!);
         const result = this._inductiveMinerService.applyInductiveMiner(eventLog, markedEdges);
         if (result.length === 0) {
             alert('No cut possible')
         }
         console.log('result', result)
 
-    }
-
-    private getMarkedEventLog() {
-        for (const eventLog of this._petriNet!.eventLogDFGs) {
-            if (eventLog?.id === this._selectedEventLogId) {
-                return eventLog?.eventLog;
-            }
-        }
-        // should not happen
-        throw new Error('No event log found for id ' + this._selectedEventLogId);
     }
 }
