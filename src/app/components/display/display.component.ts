@@ -171,9 +171,7 @@ export class DisplayComponent implements OnDestroy {
                         console.warn("Line is not in the same event log");
                         continue;
                     }
-                    line.setAttribute('stroke', 'red');
-                    line.setAttribute('marker-end', 'url(#arrow-selected)'); // Arrow marker
-
+                    line.classList.add('selectedEdge');
                     this._markedEdges.push(line);
                 }
             }
@@ -247,8 +245,7 @@ export class DisplayComponent implements OnDestroy {
 
     public resetCut() {
         this._markedEdges.forEach(edge => {
-            edge.setAttribute('stroke', 'black')
-            edge.setAttribute('marker-end', 'url(#arrow)'); // Arrow marker
+            edge.classList.remove('selectedEdge');
         });
         this._markedEdges = [];
         this._selectedEventLogId = undefined;
