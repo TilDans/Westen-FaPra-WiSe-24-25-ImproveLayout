@@ -69,7 +69,6 @@ export class SvgArrowService {
     private getRectPosition(to: SVGGElement): { rectY: number; rectX: number } {
             const x = parseFloat(to.getAttribute('cx') || '0');
             const y = parseFloat(to.getAttribute('cy') || '0');
-            console.log(x,y);
             return {
                 rectX: x,
                 rectY: y
