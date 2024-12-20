@@ -27,6 +27,10 @@ export class InductivePetriNet{
         EventLogDFG.logCounter = 0; // counter der logs für neues Netz resetten
     }
 
+    ////////////////////////////////
+    /* ----- INITIALIZATION ----- */
+    ////////////////////////////////
+
     init(eventLog: EventLog): InductivePetriNet {
         //zwei Stellen zum Start generieren und die entsprechenden Kanten einfügen
         this._eventLogDFGs = [new EventLogDFG(this._svgService, eventLog)];
@@ -34,6 +38,22 @@ export class InductivePetriNet{
         this.genStartEndPlaceAndGenArcs();
         return this;
     }
+
+    private genStartEndPlaceAndGenArcs() {
+        //Reihenfolge der Stellenerzeugung ist wichtig!!! Diese werden im Layout genutzt
+        const start = this.genPlace('startPlace');
+        start.x = InductivePetriNet.horizontalOffset/2;
+        const end = this.genPlace('endPlace');
+        const firstEventLogDFG = this._eventLogDFGs![0];
+        if (firstEventLogDFG !== undefined){
+            this.genArc(start, firstEventLogDFG);
+            this.genArc(firstEventLogDFG, end);
+        }
+    }
+
+    ////////////////////////////////////
+    /* ----- CUT HANDLING Start ----- */
+    ////////////////////////////////////
 
     public handleCutResult(cutType: Cuts, toRemove: EventLog, toInsertFirst: EventLog, toInsertSecond: EventLog){
         const eventLogDFGToRemove = this._eventLogDFGs!.find(element => element.eventLog === toRemove)!;
@@ -51,11 +71,35 @@ export class InductivePetriNet{
 
     //Elemente hintereinander
     public applySequenceCut(toRemove: EventLogDFG, toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG){
-        throw new Error('Sequence Cut not implemented yet');
+        //Verbundene Kanten finden
+        const connecionsInNet = this.getConnectedArcs(toRemove);
+
+        //für eingehende Kanten das erste einzufügende Element als Ziel setzen
+        connecionsInNet.edgesToElem.forEach(edge => {
+            edge.end = toInsertFirst;
+        });
+
+        //Kanten und Stelle zur Verbindung der DFGs einfügen 1. -- 2. 
+        this.connectLogsByPlace(toInsertFirst, toInsertSecond);
+
+        //für ausgehende Kanten das zweite einzufügende Element als Start setzen
+        connecionsInNet.edgesFromElem.forEach(edge => {
+            edge.start = toInsertSecond;
+        });
+
+        //Layout aktualisieren
+        this._petriLayersContained?.insertToNewLayerAfterCurrentElement(toRemove, toInsertFirst, toInsertSecond);
+
+        //zu entfernendes Element ersetzen und zweites Element an das Ende des Arrays pushen.
+        this._eventLogDFGs![this._eventLogDFGs!.findIndex(elem => elem === toRemove)] = toInsertFirst;
+        this._eventLogDFGs!.push(toInsertSecond);
     }
 
     //Elemente übereinander
     public applyExclusiveCut(toRemove: EventLogDFG, toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG){
+        //Verbundene Kanten finden
+        const connecionsInNet = this.getConnectedArcs(toRemove);
+
         throw new Error('Excusive Cut not implemented yet');
     }
 
@@ -66,8 +110,22 @@ export class InductivePetriNet{
 
     //??????????
     public applyLoopCut(toRemove: EventLogDFG, toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG){
+        //Verbundene Kanten finden
+        const connecionsInNet = this.getConnectedArcs(toRemove);
+
         throw new Error('Loop Cut not implemented yet');
     }
+
+    private connectLogsByPlace(toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG) {
+        const connectingPlace = this.genPlace();
+        this.genArc(toInsertFirst, connectingPlace);
+        this.genArc(connectingPlace, toInsertSecond);
+    }
+
+    //////////////////////////////////
+    /* ----- CUT HANDLING END ----- */
+    //////////////////////////////////
+
 
     public getMarkedEventLog(eventLogID: string) {
         for (const eventLog of this._eventLogDFGs!) {
@@ -79,31 +137,17 @@ export class InductivePetriNet{
         throw new Error('No event log found for id ' + eventLogID);
     }
 
-    public genStartEndPlaceAndGenArcs() {
-        //Reihenfolge der Stellenerzeugung ist wichtig!!! Diese werden im Layout genutzt
-        const start = this.genPlace('startPlace');
-        start.x = InductivePetriNet.horizontalOffset/2;
-        const end = this.genPlace('endPlace');
-        const firstEventLogDFG = this._eventLogDFGs![0];
-        if (firstEventLogDFG !== undefined){
-            this.genArc(start, firstEventLogDFG);
-            this.genArc(firstEventLogDFG, end);
-        }
+    private getConnectedArcs(node: CustomElement): {edgesToElem: Edge[], edgesFromElem: Edge[] } {
+        //bestimme alle Kanten, welche an dem gegebenen Element enden und ziehe daraus die Elemente vor diesem
+        const edgesToElem = (this._arcs.filter(edge => edge.end == node));
+        //bestimme alle Kanten, welche an dem gegebenen Element starten und ziehe daraus die Elemente nach diesem
+        const edgesFromElem = (this._arcs.filter(edge => edge.start == node));
+        return {edgesToElem, edgesFromElem}
     }
 
-    //bereits generierte Elemente verbinden
-    private genArc(start: CustomElement, end: CustomElement) {
-        const edgeToGen = new Edge(start, end);
-        //this._svgService.createSVGForArc(edgeToGen);
-        this._arcs.push(edgeToGen);
-    }
-
-    private genPlace(name: string) {
-        const placeToGen = new Place(name);
-        this._svgService.createSVGForPlace(placeToGen);
-        this._places.push(placeToGen);
-        return placeToGen;
-    }
+    ////////////////////////////////////
+    /* ----- Layout / Graphical ----- */
+    ////////////////////////////////////
 
     public getSVGRepresentation(): SVGElement[] {
         //Layout für das Petrinetz durchführen, Koordinaten für SVGs der Stellen, Transitionen und zugehöriger Kanten setzen.
@@ -160,28 +204,7 @@ export class InductivePetriNet{
         this._places.forEach(place => {
             if (place.id == 'startPlace' || place.id == 'endPlace') {
             } else {
-                //bestimme alle Kanten, welche an der gegebenen Stelle enden und ziehe daraus die Elemente vor dieser Stelle
-                const beforePlace = (this._arcs.filter(edge => edge.end == place)).map(arc => arc.start);
-                //bestimme alle Kanten, welche an der gegebenen Stelle starten und ziehe daraus die Elemente nach dieser Stelle
-                const afterPlace = (this._arcs.filter(edge => edge.start == place)).map(arc => arc.end);
-                //X und Y Werte für die Stellen berechnen.
-                let xValToSet = 0;
-                let yValToSet = 0;
-                //Summiere alle x und y Werte der Elemente vor und nach der Stelle
-                beforePlace.forEach(element => {
-                    const centerCoord = element.getCenterXY();
-                    xValToSet += centerCoord.x;
-                    yValToSet += centerCoord.y;
-                });
-                afterPlace.forEach(element => {
-                    const centerCoord = element.getCenterXY();
-                    xValToSet += centerCoord.x;
-                    yValToSet += centerCoord.y;
-                });
-                //Teile die Summe durch die gesamte Anzahl der Elemente um die Stelle mittig zu platzieren
-                const totalBeforeAndAfter = beforePlace.length + afterPlace.length;
-                xValToSet = xValToSet / totalBeforeAndAfter;
-                yValToSet = yValToSet / totalBeforeAndAfter;
+                this.setPlacePosition(place);
             }
         });
         this._places.forEach(place => {
@@ -191,6 +214,29 @@ export class InductivePetriNet{
                 edge => this._svgService.createSVGForArc(edge)
             );
         })
+    }
+
+    private setPlacePosition(place: Place) {
+        const { edgesToElem: toPlace, edgesFromElem: fromPlace } = this.getConnectedArcs(place);
+        //X und Y Werte für die Stellen berechnen.
+        let xValToSet = 0;
+        let yValToSet = 0;
+        //Summiere alle x und y Werte der Elemente vor und nach der Stelle
+        toPlace.forEach(element => {
+            const centerCoord = element.start.getCenterXY();
+            xValToSet += centerCoord.x;
+            yValToSet += centerCoord.y;
+        });
+        fromPlace.forEach(element => {
+            const centerCoord = element.end.getCenterXY();
+            xValToSet += centerCoord.x;
+            yValToSet += centerCoord.y;
+        });
+        //Teile die Summe durch die gesamte Anzahl der Elemente um die Stelle mittig zu platzieren
+        const totalBeforeAndAfter = toPlace.length + fromPlace.length;
+        xValToSet = xValToSet / totalBeforeAndAfter;
+        yValToSet = yValToSet / totalBeforeAndAfter;
+        place.setXYonSVG(xValToSet, yValToSet);
     }
 
     private concatSVGReps() {
@@ -217,5 +263,22 @@ export class InductivePetriNet{
             }
         });
         return result;
+    }
+
+    ////////////////////////////////////
+    /* ----- Element Generation ----- */
+    ////////////////////////////////////
+
+    private genArc(start: CustomElement, end: CustomElement) {
+        const edgeToGen = new Edge(start, end);
+        //this._svgService.createSVGForArc(edgeToGen);
+        this._arcs.push(edgeToGen);
+    }
+
+    private genPlace(name?: string) {
+        const placeToGen = new Place(name || 'p' + (this._places.length - 2).toString());
+        this._svgService.createSVGForPlace(placeToGen);
+        this._places.push(placeToGen);
+        return placeToGen;
     }
 }

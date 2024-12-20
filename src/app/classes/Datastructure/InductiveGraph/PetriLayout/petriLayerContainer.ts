@@ -14,6 +14,10 @@ export class PetriLayerContainer extends CustomArray<PetriLayer> {
         this[this.findIndex(petriLayer => petriLayer.includes(item))].remove(item);
     }
 
+    override updateElem(item: CustomElement): void {
+        this[this.findIndex(petriLayer => petriLayer.includes(item))];
+    }
+
     // Layer bis zum genannten item nach hinten schieben sowie neues mit dem Element einfügen davor
     public insertToNewLayerBeforeCurrentElement(formerElement: CustomElement, replacingElement: CustomElement, newElement: CustomElement) {
         const layerIndex = this.findIndex(petriLayer => petriLayer.includes(formerElement));

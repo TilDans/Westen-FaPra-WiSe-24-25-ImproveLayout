@@ -9,4 +9,9 @@ export class PetriLayer extends CustomArray<CustomElement>{
         this.slice(index, index);
     }
 
+    override updateElem(toRemove: CustomElement, toInsert: CustomElement): void {
+        const index = this.findIndex(element => element === toRemove);
+        this[index] = toInsert;
+    }
+
 }
