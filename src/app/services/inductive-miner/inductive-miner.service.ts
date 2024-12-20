@@ -22,30 +22,19 @@ export class InductiveMinerService {
         let splitEventlogs: EventLog[];
         let cutMade = '';
 
-        //SEQUENCE
-        splitEventlogs = this.sequenceCutChecker.checkSequenceCut(eventlog, edges);
-        if (splitEventlogs.length != 0) {
-            return {el: splitEventlogs, cutMade: Cuts.Sequence}
+        const cutCheckers = [
+            { checker: this.sequenceCutChecker.checkSequenceCut.bind(this.sequenceCutChecker), cutType: Cuts.Sequence },
+            { checker: this.exclusiveCutChecker.checkExclusiveCut.bind(this.exclusiveCutChecker), cutType: Cuts.Exclusive },
+            //{ checker: this.parallelCutChecker.checkParallelCut.bind(this.parallelCutChecker), cutType: Cuts.Parallel },
+            //{ checker: this.loopCutChecker.checkLoopCut.bind(this.loopCutChecker), cutType: Cuts.Loop }
+        ];
+          
+        for (const { checker, cutType } of cutCheckers) {
+            const splitEventlogs = checker(eventlog, edges);
+            if (splitEventlogs.length !== 0) {
+                return { el: splitEventlogs, cutMade: cutType };
+            }
         }
-
-        //EXCLUSIVE
-        splitEventlogs = this.exclusiveCutChecker.checkExclusiveCut(eventlog, edges);
-        if (splitEventlogs.length != 0) {
-            return {el: splitEventlogs, cutMade: Cuts.Exclusive}
-        }
-
-        /* //PARALLEL
-        splitEventlogs = this.parallelCutChecker.checkParallelCut(eventlog, edges);
-        if (splitEventlogs.length != 0) {
-            return {el: splitEventlogs, cutMade: Cuts.Sequence}
-        } */
-
-        /* //LOOP
-        splitEventlogs = this.loopCutChecker.checkLoopCut(eventlog, edges);
-        if (splitEventlogs.length != 0) {
-            return {el: splitEventlogs, cutMade: Cuts.Sequence}
-        } */
-        
         throw new Error ('no cut possible');
     }
     
