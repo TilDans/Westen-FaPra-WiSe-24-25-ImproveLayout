@@ -49,18 +49,22 @@ export class InductivePetriNet{
         }
     }
 
+    //Elemente hintereinander
     public applySequenceCut(toRemove: EventLogDFG, toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG){
         throw new Error('Sequence Cut not implemented yet');
     }
 
+    //Elemente übereinander
     public applyExclusiveCut(toRemove: EventLogDFG, toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG){
         throw new Error('Excusive Cut not implemented yet');
     }
 
+    //vorgelagerte Stelle aufteilen, parallel laufen lassen
     public applyParallelCut(toRemove: EventLogDFG, toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG){
         throw new Error('Parallel Cut not implemented yet');
     }
 
+    //??????????
     public applyLoopCut(toRemove: EventLogDFG, toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG){
         throw new Error('Loop Cut not implemented yet');
     }

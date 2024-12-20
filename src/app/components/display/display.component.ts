@@ -274,7 +274,7 @@ export class DisplayComponent implements OnDestroy {
         try {
             const result = this._inductiveMinerService.applyInductiveMiner(eventLog, markedEdges);
             console.log('result', result);
-            this._petriNet?.handleCutResult(result.cutMade, result.el[0], result.el[1], result.el[2],)
+            this._petriNet?.handleCutResult(result.cutMade, eventLog, result.el[0], result.el[1])
         } catch (Error) {
             console.log('no cut possible');
         }
