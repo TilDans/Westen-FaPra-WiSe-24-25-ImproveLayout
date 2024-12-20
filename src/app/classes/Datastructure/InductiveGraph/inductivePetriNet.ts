@@ -8,6 +8,7 @@ import {CustomElement} from "./Elements/element";
 import {SvgArrowService} from "../../../services/svg-arrow.service";
 import {IntersectionCalculatorService} from "../../../services/intersection-calculator.service";
 import { PetriLayerContainer } from "./PetriLayout/petriLayerContainer";
+import { Cuts } from "../enums";
 
 
 export class InductivePetriNet{
@@ -32,6 +33,36 @@ export class InductivePetriNet{
         this._petriLayersContained = new PetriLayerContainer(this._eventLogDFGs[0]);
         this.genStartEndPlaceAndGenArcs();
         return this;
+    }
+
+    public handleCutResult(cutType: Cuts, toRemove: EventLog, toInsertFirst: EventLog, toInsertSecond: EventLog){
+        const eventLogDFGToRemove = this._eventLogDFGs!.find(element => element.eventLog === toRemove)!;
+        const eventLogDFGToInsertFirst = new EventLogDFG(this._svgService, toInsertFirst);
+        const eventLogDFGToInsertSecond = new EventLogDFG(this._svgService, toInsertSecond);
+        switch (cutType) {
+            case Cuts.Sequence: return this.applySequenceCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+            case Cuts.Exclusive: return this.applyExclusiveCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+            case Cuts.Parallel: return this.applyParallelCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+            case Cuts.Loop: return this.applyLoopCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+            default:
+                throw new Error(`Falscher Wert für Cut: ${cutType}`);
+        }
+    }
+
+    public applySequenceCut(toRemove: EventLogDFG, toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG){
+        throw new Error('Sequence Cut not implemented yet');
+    }
+
+    public applyExclusiveCut(toRemove: EventLogDFG, toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG){
+        throw new Error('Excusive Cut not implemented yet');
+    }
+
+    public applyParallelCut(toRemove: EventLogDFG, toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG){
+        throw new Error('Parallel Cut not implemented yet');
+    }
+
+    public applyLoopCut(toRemove: EventLogDFG, toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG){
+        throw new Error('Loop Cut not implemented yet');
     }
 
     public getMarkedEventLog(eventLogID: string) {
