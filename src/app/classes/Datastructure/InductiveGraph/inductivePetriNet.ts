@@ -20,7 +20,7 @@ export class InductivePetriNet{
 
     _svgService : SvgService = new SvgService (new SvgArrowService(new IntersectionCalculatorService()));
 
-    static horizontalOffset = 150;
+    static horizontalOffset = 250;
     static verticalOffset = 150;
 
     constructor() {
@@ -195,6 +195,8 @@ export class InductivePetriNet{
                 element.setXYonSVG(xValToSet, yValToSet);
                 currLayerYOffset += (InductivePetriNet.verticalOffset + currElemHeight);
             });
+            layer.minX = currLayerXOffSet;
+            layer.maxX = currLayerXOffSet + layerMaxWidth;
             currLayerXOffSet += (InductivePetriNet.horizontalOffset + layerMaxWidth);
         });
         //alle Koordinaten der Layer gesetzt, daher kann nun die Endstelle horizontal platziert werden.
@@ -221,21 +223,30 @@ export class InductivePetriNet{
         //X und Y Werte für die Stellen berechnen.
         let xValToSet = 0;
         let yValToSet = 0;
-        //Summiere alle x und y Werte der Elemente vor und nach der Stelle
-        toPlace.forEach(element => {
-            const centerCoord = element.start.getCenterXY();
-            xValToSet += centerCoord.x;
-            yValToSet += centerCoord.y;
-        });
-        fromPlace.forEach(element => {
-            const centerCoord = element.end.getCenterXY();
-            xValToSet += centerCoord.x;
-            yValToSet += centerCoord.y;
-        });
-        //Teile die Summe durch die gesamte Anzahl der Elemente um die Stelle mittig zu platzieren
-        const totalBeforeAndAfter = toPlace.length + fromPlace.length;
-        xValToSet = xValToSet / totalBeforeAndAfter;
-        yValToSet = yValToSet / totalBeforeAndAfter;
+        if (toPlace.length === 1 && fromPlace.length === 1) {
+            //Element der eingehenden Kante liegt links des ausgehenden
+            const before = toPlace[0].start;
+            const after = fromPlace[0].end;
+            xValToSet = (this._petriLayersContained![this._petriLayersContained!.findIndex(layer => layer.includes(after))].minX + 
+                        this._petriLayersContained![this._petriLayersContained!.findIndex(layer => layer.includes(before))].maxX) / 2;
+            yValToSet = (before.getCenterXY().y + after.getCenterXY().y) / 2
+        } else {
+            //Summiere alle x und y Werte der Elemente vor und nach der Stelle
+            toPlace.forEach(element => {
+                const centerCoord = element.start.getCenterXY();
+                xValToSet += centerCoord.x;
+                yValToSet += centerCoord.y;
+            });
+            fromPlace.forEach(element => {
+                const centerCoord = element.end.getCenterXY();
+                xValToSet += centerCoord.x;
+                yValToSet += centerCoord.y;
+            });
+            //Teile die Summe durch die gesamte Anzahl der Elemente um die Stelle mittig zu platzieren
+            const totalBeforeAndAfter = toPlace.length + fromPlace.length;
+            xValToSet = xValToSet / totalBeforeAndAfter;
+            yValToSet = yValToSet / totalBeforeAndAfter;
+        }
         place.setXYonSVG(xValToSet, yValToSet);
     }
 
