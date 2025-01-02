@@ -5,7 +5,6 @@ import {SvgService} from '../../services/svg.service';
 import {ExampleFileComponent} from "../example-file/example-file.component";
 import {FileReaderService} from "../../services/file-reader.service";
 import {HttpClient} from "@angular/common/http";
-import {EventLog} from 'src/app/classes/Datastructure/event-log/event-log';
 import {InductivePetriNet} from 'src/app/classes/Datastructure/InductiveGraph/inductivePetriNet';
 import {InductiveMinerService} from "../../services/inductive-miner/inductive-miner.service";
 import {TraceEvent} from "../../classes/Datastructure/event-log/trace-event";
@@ -272,11 +271,16 @@ export class DisplayComponent implements OnDestroy {
         console.log('markedEdges', markedEdges)
 
         const eventLog = this._petriNet!.getMarkedEventLog(this._selectedEventLogId!);
-        const result = this._inductiveMinerService.applyInductiveMiner(eventLog, markedEdges);
-        if (result.length === 0) {
-            alert('No cut possible')
+        try {
+            const result = this._inductiveMinerService.applyInductiveMiner(eventLog, markedEdges);
+            console.log('result', result);
+            this._petriNet?.handleCutResult(result.cutMade, eventLog, result.el[0], result.el[1])
+            this.draw();
+        } catch (Error) {
+            console.log('no cut possible');
         }
-        console.log('result', result)
+        
+
 
     }
 }

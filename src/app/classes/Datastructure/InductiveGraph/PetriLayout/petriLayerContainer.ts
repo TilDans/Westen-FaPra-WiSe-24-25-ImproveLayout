@@ -1,12 +1,21 @@
+import { CustomArray } from "../../customArray";
 import { CustomElement } from "../Elements/element";
 import { PetriLayer } from "./petriLayer";
 
 
-export class PetriLayerContainer extends Array<PetriLayer> {
+export class PetriLayerContainer extends CustomArray<PetriLayer> {
     
     constructor(firstElement: CustomElement) {
         super();
         this[0] = new PetriLayer(firstElement);
+    }
+
+    override remove(item: CustomElement) {
+        this[this.findIndex(petriLayer => petriLayer.includes(item))].remove(item);
+    }
+
+    override updateElem(item: CustomElement): void {
+        this[this.findIndex(petriLayer => petriLayer.includes(item))];
     }
 
     // Layer bis zum genannten item nach hinten schieben sowie neues mit dem Element einfügen davor
