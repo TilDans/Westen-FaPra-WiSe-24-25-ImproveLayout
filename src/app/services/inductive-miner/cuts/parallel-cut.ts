@@ -17,12 +17,13 @@ export class ParallelCutChecker {
         let A1: EventLog = new EventLog([]);
         let A2: EventLog = new EventLog([]);
 
-        // Hilfsvariable, um Bidirektionale Verbindungen zu unterscheiden
+        // Hilfsvariable, um Bidirektionale Verbindungen zu speichern
         let bidirectionalActivities: Set <string> = new Set<string>(); 
+        // Hilfsvariablen, um geschnittene START-/STOP-Knoten zu speichern
         let cutStartEdges: Edge[] = [];
         let cutStopEdges: Edge[] = [];
 
-        // Definiere Liste von markierten Start-/Stop-Knoten
+        // Fülle Array mit geschnittenen START-/STOP-Knoten
         for (const edge of edges) {
             if (edge.start.id == '' && (edge.end.id)) {
                 cutStartEdges.push(edge);
@@ -35,33 +36,31 @@ export class ParallelCutChecker {
         // Wenn gar kein Start-Knoten markiert wurde, sofort returnen
         if (cutStartEdges.length == 0) return [];
     
-        // Identifiziere Start-Knoten und direkte Verbindungen zu diesem
+        // Verwende beliebigen START-Knoten als initiale Aktivität, um bidirektional-verbundene Knoten identifizieren zu können
         let initialActivity: string = cutStartEdges[0].end.id;
+        
+        // Identifiziere geschnittene(!) bidirektionale Verbindungen
         const neighbors: string[] = this.helper.parseEventlogToNodes(eventlog).get(initialActivity) || [];
-    
-        // Prüfe geschnittene(!) bidirektionale Verbindungen
         for (const neighbor of neighbors) {
-            // Zählt die Anzahl der geschnittenen Verbindungen zu einem Knoten. Sind es 2, ist es eine bidirektionale Verbindung.
+            // Zähle die Anzahl der geschnittenen Verbindungen zu einem Knoten. Sind es 2, ist es eine bidirektionale Verbindung.
             let bidirectionalCounter: number = 0;
-            //let helperEdge: Edge;
             for (const edge of edges) {
                 if ((edge.start.id == initialActivity && edge.end.id == neighbor) || (edge.start.id == neighbor && edge.end.id == initialActivity)) {
                     bidirectionalCounter++;
-                    //if (bidirectionalCounter == 1) helperEdge = edge;
                 }
                 if (bidirectionalCounter == 2) {
                     bidirectionalActivities.add(neighbor); // Knoten ist bidirektional verbunden
-                    // // Entferne gefundene bidirektionale Kanten
-                    // edges = edges.filter(item => item !== edge) 
-                    // edges = edges.filter(item => item !== helperEdge)
-                    continue;
+                    break; // Übrige Kanten können übersprungen werden
                 }
             }
         }
 
+        // Identiziere auszuschneidende Knoten: Alle die, die keine bidirektional-geschnittenen Knoten sind
         let uniqueActivities = this.helper.getUniqueActivities(eventlog);
         let cutoutActivities = new Set([...uniqueActivities].filter(activity => !bidirectionalActivities.has(activity)));
 
+        // Prüfe für jeden auszuschneidenen Knoten, ob entsprechende bidirektionale Verbindungen markiert wurden
+        // Gehe dafür für jeden auszuschneidenen Knoten jede bidirektional-verbundenen Knoten durch und prüfe, ob Kanten markiert wurden
         for (const cutoutActivity of cutoutActivities) {
             if (cutoutActivity == initialActivity) continue;
 
@@ -74,7 +73,7 @@ export class ParallelCutChecker {
                     }
                     if (bidirectionalCounter == 2) break;
                 }
-
+                // Wenn ein bidirektional-verbundener Knoten nicht markiert wurde, sofort returnen
                 if (bidirectionalCounter < 2) return []
             }
         }
@@ -83,7 +82,7 @@ export class ParallelCutChecker {
         let startActivites: Set<string>  = new Set<string>();
         let stopActivites: Set<string>  = new Set<string>();
         
-        // Identifiziere alle Start-/Stop-Kanten, die ausgeschnitten werden sollen
+        // Identifiziere alle Start-/Stop-Kanten, die ausgeschnitten werden sollen. Verwende dafür die identifizierten cutoutAcitivities
         for (const trace of eventlog.traces) {
             if (cutoutActivities.has(trace.events[0].conceptName)) {
                 startActivites.add(trace.events[0].conceptName);
@@ -92,22 +91,14 @@ export class ParallelCutChecker {
                 stopActivites.add(trace.events[trace.events.length-1].conceptName);
             }
         }
-        // Vergleiche alle tatsächlichen Start-/Stop-kanten mit denen, die markiert wurden 
+        // Vergleiche alle tatsächlich zu schneidenden START-/STOP-Kanten mit denen, die markiert wurden 
         const cutStartEdgesSet: Set<string> = new Set(cutStartEdges.map(edge => edge.end.id));
         if (!(startActivites.size === cutStartEdgesSet.size && [...startActivites].every(x => cutStartEdgesSet.has(x)))) return [];
 
         const cutStopEdgesSet: Set<string> = new Set(cutStopEdges.map(edge => edge.start.id));
         if (!(stopActivites.size === cutStopEdgesSet.size && [...stopActivites].every(x => cutStopEdgesSet.has(x)))) return [];
 
-        // // Entferne Start-/Stop-Kanten, die markiert wurden
-        // for (const edge of edges) {
-        //     if ((edge.start.id == null && cutoutActivities.has(edge.end.id)) || (edge.end.id == null && cutoutActivities.has(edge.start.id))) {
-        //         edges = edges.filter(item => item !== edge) // Entferne gefundene Kante
-        //     }
-        // }
-        // if (edges.length !== 0) return [] // Returne, wenn nicht alle Kanten verwendet wurden
-
-
+        // Befülle Teilmengen A1 und A2
         for (const cTrace of eventlog.traces) {
 
             let A1Trace: Trace = new Trace([]);
@@ -145,7 +136,6 @@ export class ParallelCutChecker {
         
         // 3:
         if (this.helper.checkPathInSublog(eventlog, this.helper.parseEventlogToSet(A1))) return [];
-
         // 4:
         if (this.helper.checkPathInSublog(eventlog, this.helper.parseEventlogToSet(A2))) return [];
 
