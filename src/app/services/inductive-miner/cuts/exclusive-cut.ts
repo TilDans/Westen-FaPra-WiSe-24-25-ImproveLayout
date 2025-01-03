@@ -13,6 +13,7 @@ export class ExclusiveCutChecker {
     // Unterscheidung zwischen Kanten, die aus START kommen und Kanten die in STOP enden:
     // Werden Start-Kanten START A,B und STOP-Kanten C,D an, müssen die Traces im Eventlog auf eine Multiplikation dieser untersucht werden: A..C, A..D, B..C, B..D
     public checkExclusiveCut(eventlog: EventLog, edges: Edge[]): EventLog[] {
+        console.log('start checking for an exclusive cut with ', eventlog, edges)
         // Deklaration neuer, geteilter eventlogs
         let A1: EventLog = new EventLog([]);
         let A2: EventLog = new EventLog([]);

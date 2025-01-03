@@ -31,7 +31,7 @@ export class SequenceCutChecker {
             // Überprüfe, ob akt. Kante im akt. eventlog trace ist
 
             let indexOfCutInTrace: number = -1;
-            for (let i = 0; i < cEventLogTrace.events.length; i++) {
+            for (let i = 0; i < cEventLogTrace.events.length - 1; i++) {
 
                 //TODO Events i+1 can be out of bounds
                 if (cEventLogTrace.events[i].conceptName == cEdge.start.id && cEventLogTrace.events[i+1].conceptName == cEdge.end.id ) {
