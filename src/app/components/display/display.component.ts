@@ -261,11 +261,8 @@ export class DisplayComponent implements OnDestroy {
             console.log('result', result);
             this._petriNet?.handleCutResult(result.cutMade, eventLog, result.el[0], result.el[1])
             this.draw();
-        } catch (Error) {
-            console.log('no cut possible');
+        } catch (error) {
+            console.log('no cut possible', error);
         }
-        
-
-
     }
 }

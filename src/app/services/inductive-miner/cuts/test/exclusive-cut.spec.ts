@@ -26,6 +26,7 @@ describe('Exclusive Cut function', () => {
          * AFC
          * AFE
          * AFEC
+         * B,D+X,B,D+A,C+A,F,C+A,F,E+A,F,E,C+
          */
         const eventlog: EventLog = new EventLog([ 
                                         new Trace([new TraceEvent("B"),new TraceEvent("D")]),
