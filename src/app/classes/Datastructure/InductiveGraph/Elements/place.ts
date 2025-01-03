@@ -1,4 +1,4 @@
-import { CustomElement } from "./customElement";
+import { CustomElement } from "./element";
 
 export class Place extends CustomElement {
     constructor(name: string) {

@@ -2,7 +2,7 @@ import { SvgService } from "src/app/services/svg.service";
 import { EventLog } from "../../event-log/event-log";
 import { TraceEvent } from "../../event-log/trace-event";
 import { Edge } from "../edgeElement";
-import { CustomElement } from "./customElement";
+import { CustomElement } from "./element";
 
 
 export class EventLogDFG extends CustomElement{

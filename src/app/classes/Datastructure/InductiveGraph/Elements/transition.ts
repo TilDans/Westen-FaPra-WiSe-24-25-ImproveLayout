@@ -1,4 +1,4 @@
-import { CustomElement } from "./customElement";
+import { CustomElement } from "./element";
 
 export class Transition extends CustomElement {
     static TRANSITIONHEIGHT = 50;

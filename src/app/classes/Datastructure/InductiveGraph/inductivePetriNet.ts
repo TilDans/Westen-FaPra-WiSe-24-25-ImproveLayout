@@ -4,7 +4,7 @@ import {SvgService} from "src/app/services/svg.service";
 import {Place} from "./Elements/place";
 import {Transition} from "./Elements/transition";
 import {Edge} from "./edgeElement";
-import {CustomElement} from "./Elements/customElement";
+import {CustomElement} from "./Elements/element";
 import {SvgArrowService} from "../../../services/svg-arrow.service";
 import {IntersectionCalculatorService} from "../../../services/intersection-calculator.service";
 import { PetriLayerContainer } from "./PetriLayout/petriLayerContainer";

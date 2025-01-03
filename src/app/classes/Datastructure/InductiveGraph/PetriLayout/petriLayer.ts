@@ -1,5 +1,5 @@
 import { BehaviorSubject } from "rxjs";
-import { CustomElement } from "../Elements/customElement";
+import { CustomElement } from "../Elements/element";
 import { CustomArray } from "../../customArray";
 
 export class PetriLayer extends CustomArray<CustomElement>{

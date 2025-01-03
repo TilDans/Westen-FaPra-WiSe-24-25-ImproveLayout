@@ -1,5 +1,5 @@
 import { TraceEvent } from "../../event-log/trace-event";
-import { CustomElement } from "./customElement";
+import { CustomElement } from "./element";
 
 export class DFGElement extends CustomElement {
     private _traceEvent?: TraceEvent;

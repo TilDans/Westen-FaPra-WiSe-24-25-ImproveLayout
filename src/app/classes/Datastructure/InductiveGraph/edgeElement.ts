@@ -1,5 +1,5 @@
 import { DFGElement } from "./Elements/DFGElement";
-import { CustomElement } from "./Elements/customElement";
+import { CustomElement } from "./Elements/element";
 
 export class Edge {
 
