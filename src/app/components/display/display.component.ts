@@ -191,21 +191,6 @@ export class DisplayComponent implements OnDestroy {
     }
 
     private linesIntersect(line1: SVGLineElement, line2: SVGLineElement): boolean {
-        /*const getTransformedPoint = (line: SVGLineElement, xAttr: string, yAttr: string): DOMPoint => {
-            const svg = this.drawingArea?.nativeElement as SVGSVGElement;
-            const pt = svg.createSVGPoint();
-            pt.x = parseFloat(line.getAttribute(xAttr)!);
-            pt.y = parseFloat(line.getAttribute(yAttr)!);
-
-            const ctm = line.getScreenCTM();
-            if (ctm) {
-                return pt.matrixTransform(ctm);
-            } else {
-                console.warn("Could not get screen CTM for line", line);
-                return pt;
-            }
-        };*/
-
         // Get the transformed points for each line
         const p1Line1 = this._intersectionCalculatorService.getAbsolutePoint(line1, 'x1', 'y1');
         const p2Line1 = this._intersectionCalculatorService.getAbsolutePoint(line1, 'x2', 'y2');

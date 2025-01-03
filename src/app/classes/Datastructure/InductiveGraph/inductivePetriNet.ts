@@ -113,7 +113,24 @@ export class InductivePetriNet{
         //Verbundene Kanten finden
         const connecionsInNet = this.getConnectedArcs(toRemove);
 
-        throw new Error('Excusive Cut not implemented yet');
+        //für eingehende Kanten das erste einzufügende Element als Ziel setzen
+        connecionsInNet.edgesToElem.forEach(edge => {
+            edge.end = toInsertFirst;
+            this.genArc(edge.start, toInsertSecond);
+        });
+
+        //für ausgehende Kanten das zweite einzufügende Element als Start setzen
+        connecionsInNet.edgesFromElem.forEach(edge => {
+            edge.start = toInsertFirst;
+            this.genArc(toInsertSecond, edge.end);
+        });
+
+        //Layout aktualisieren
+        this._petriLayersContained?.insertToExistingLayerAfterCurrentElement(toRemove, toInsertFirst, toInsertSecond);
+
+        //zu entfernendes Element ersetzen und zweites Element an das Ende des Arrays pushen.
+        this._eventLogDFGs![this._eventLogDFGs!.findIndex(elem => elem === toRemove)] = toInsertFirst;
+        this._eventLogDFGs!.push(toInsertSecond);
     }
 
     //vorgelagerte Stelle aufteilen, parallel laufen lassen
@@ -203,7 +220,6 @@ export class InductivePetriNet{
                 const currElemWidth = element.getWidth();
                 let yValToSet = currLayerYOffset;
                 let xValToSet = currLayerXOffSet + ((layerMaxWidth - currElemWidth) / 2);
-                console.log(element, currElemHeight, currElemWidth, yValToSet, xValToSet);
                 
                 element.setXYonSVG(xValToSet, yValToSet);
                 currLayerYOffset += (InductivePetriNet.verticalOffset + currElemHeight);
