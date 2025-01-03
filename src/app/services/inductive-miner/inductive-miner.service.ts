@@ -28,7 +28,7 @@ export class InductiveMinerService {
             //{ checker: this.parallelCutChecker.checkParallelCut.bind(this.parallelCutChecker), cutType: Cuts.Parallel },
             //{ checker: this.loopCutChecker.checkLoopCut.bind(this.loopCutChecker), cutType: Cuts.Loop }
         ];
-        
+          
         for (const { checker, cutType } of cutCheckers) {
             const splitEventlogs = checker(eventlog, edges);
             if (splitEventlogs.length !== 0) {
