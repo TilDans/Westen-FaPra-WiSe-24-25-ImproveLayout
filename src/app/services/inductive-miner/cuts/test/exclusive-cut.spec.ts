@@ -40,9 +40,9 @@ describe('Exclusive Cut function', () => {
                                     
         // 1. Exclusive Cut: -->A, C-->, E-->
         const edge1: Edge[] = [
-                                new Edge(new DFGElement(new TraceEvent('')), new DFGElement(new TraceEvent("A"))),
-                                new Edge(new DFGElement(new TraceEvent("C")), new DFGElement(new TraceEvent(''))),
-                                new Edge(new DFGElement(new TraceEvent("E")), new DFGElement(new TraceEvent('')))]
+                                new Edge(new DFGElement(new TraceEvent('play')), new DFGElement(new TraceEvent("A"))),
+                                new Edge(new DFGElement(new TraceEvent("C")), new DFGElement(new TraceEvent('stop'))),
+                                new Edge(new DFGElement(new TraceEvent("E")), new DFGElement(new TraceEvent('stop')))]
 
         const resultA: EventLog[] = service.checkExclusiveCut(eventlog, edge1);
         expect(resultA.length).toBe(2);
