@@ -60,14 +60,14 @@ export class ExclusiveCutChecker {
         for (const cTrace of A1.traces) {
             for (const cEvent of cTrace.events) {
                 const reachableActivities = this.helper.getAllReachableActivities(eventlogMap, cEvent);
-                if (this.helper.isSubset(reachableActivities, this.helper.parseEventlogToSet(A2))) return []; // Aus A1 darf nichts von A2 erreichbar sein
+                if (this.helper.isSubset(reachableActivities, this.helper.getUniqueActivities(A2))) return []; // Aus A1 darf nichts von A2 erreichbar sein
             }
         }
         // 2.
         for (const cTrace of A2.traces) {
             for (const cEvent of cTrace.events) {
                 const reachableActivities = this.helper.getAllReachableActivities(eventlogMap, cEvent);
-                if (this.helper.isSubset(reachableActivities, this.helper.parseEventlogToSet(A1))) return []; // Aus A2 darf nichts von A1 erreichbar sein
+                if (this.helper.isSubset(reachableActivities, this.helper.getUniqueActivities(A1))) return []; // Aus A2 darf nichts von A1 erreichbar sein
             }
         }
 

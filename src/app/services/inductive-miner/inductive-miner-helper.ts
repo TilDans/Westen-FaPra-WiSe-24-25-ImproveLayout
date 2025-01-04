@@ -17,8 +17,8 @@ export class InductiveMinerHelper {
     }
 
     public hasIntersection(A1: EventLog, A2: EventLog): boolean {
-        const A1Set: Set<string> = this.parseEventlogToSet(A1);
-        const A2Set: Set<string> = this.parseEventlogToSet(A2);
+        const A1Set: Set<string> = this.getUniqueActivities(A1);
+        const A2Set: Set<string> = this.getUniqueActivities(A2);
 
         for (const e of A1Set) {
             if (A2Set.has(e)) {
@@ -29,8 +29,8 @@ export class InductiveMinerHelper {
     }
 
     public isUnion(eventlog: EventLog, A1: EventLog, A2: EventLog): boolean {
-        const A1Set: Set<string> = this.parseEventlogToSet(A1);
-        const A2Set: Set<string> = this.parseEventlogToSet(A2);
+        const A1Set: Set<string> = this.getUniqueActivities(A1);
+        const A2Set: Set<string> = this.getUniqueActivities(A2);
         
         const unionA1A2: Set<string>  = new Set([...A1Set, ...A2Set]);
         const uniqueActivities: Set<string>  = this.getUniqueActivities(eventlog);
@@ -39,7 +39,8 @@ export class InductiveMinerHelper {
         return false
     }
 
-    public parseEventlogToSet(eventlog: EventLog): Set<string> {
+    // Gibt alle einzigartigen Akitivtäten aus einem eventlog zurück
+    public getUniqueActivities(eventlog: EventLog): Set<string> {
         let eventlogSet: Set<string> = new Set();
         for (const trace of eventlog.traces) {
             for (const traceevent of trace.events) {
@@ -54,11 +55,10 @@ export class InductiveMinerHelper {
         const initialActivity: string = traceEvent.conceptName;
         const reachableActivities: Set<string> = new Set<string>();
         let isInitialActivityReachable: boolean = false;
-        
+
         function dfs(activity: string) {
             if (reachableActivities.has(activity)) return;  // Wenn traceEvent bereits besucht, überspringe 
             reachableActivities.add(activity);
-            
             const neighbors = map.get(activity);
             if (neighbors) {
                 for (const neighbor of neighbors) {
@@ -69,72 +69,46 @@ export class InductiveMinerHelper {
                 }
             }
         }
-        
+
         dfs(initialActivity);
 
         // Lösche den initialen Zustand aus den erreichbaren Zuständen, falls er nicht erreichbar ist
         if (!isInitialActivityReachable) {
             reachableActivities.delete(initialActivity);
         }
-
         return reachableActivities;
     }
 
-    // Wandelt einen eventlog in eine Map vom Typ "Map<string, string[]>" um
+    // Wandelt einen Eventlog in eine Map vom Typ "Map<string, string[]>" um
     public parseEventlogToNodes(eventlog: EventLog): Map<string, string[]> {
-        // Parse zunächst in ein Array von Strings
-        let eventlogAsArray: string[] = [];
-
-        for (const trace of eventlog.traces) {
-            let helperTrace: string = '';
-            for (const traceEvent of trace.events ) {
-                helperTrace += traceEvent.conceptName;    
-            }
-            eventlogAsArray.push(helperTrace);
-        };
-
-        // Initialisiere eine Map
         const eventlogMap = new Map<string, string[]>();
-
-        // Iteriere über jede Sequenz im Eventlog
-        eventlogAsArray.forEach(trace => {
-            // Iteriere über jeden Buchstaben im trace
-            for (let i = 0; i < trace.length; i++) {
-                const currentEvent = trace[i];
-
-                // Falls das aktuelle Ereignis noch nicht in der Map ist, initialisiere es
+    
+        // Iteriere über jeden trace im Eventlog
+        for (const trace of eventlog.traces) {
+            // Iteriere über jedes traceEvent im aktuellen trace
+            for (let i = 0; i < trace.events.length - 1; i++) {
+                const currentEvent = trace.events[i].conceptName;
+                const nextEvent = trace.events[i + 1].conceptName;
+    
+                // Falls das aktuelle traceEvent noch nicht in der Map ist, initialisiere es
                 if (!eventlogMap.has(currentEvent)) {
                     eventlogMap.set(currentEvent, []);
                 }
-
-                // Falls es ein nachfolgendes Ereignis gibt, füge es der Liste der Transitionen hinzu
-                if (i + 1 < trace.length) {
-                    const nextEvent = trace[i + 1];
-                    const currentTransitions = eventlogMap.get(currentEvent)!;
-
-                    // Nur hinzufügen, wenn es noch nicht vorhanden ist
-                    if (!currentTransitions.includes(nextEvent)) {
-                        currentTransitions.push(nextEvent);
-                    }
+    
+                // Füge das nächste Ereignis zu den Nachfolgern hinzu, falls es noch nicht enthalten ist
+                const successors = eventlogMap.get(currentEvent)!;
+                if (!successors.includes(nextEvent)) {
+                    successors.push(nextEvent);
                 }
             }
-        });
-
+        }
+    
         // Sortiere die Listen der Transitionen für konsistente Ausgaben
         eventlogMap.forEach((value, _) => {
             value.sort();
         });
 
         return eventlogMap;
-    }
-
-    // Gibt alle einzigartigen Akitivtäten aus einem eventlog zurück
-    public getUniqueActivities(eventlog: EventLog): Set<string> {
-        const activities = new Set<string>();
-        for (const trace of eventlog.traces) {
-            trace.events.forEach(traceEvent => activities.add(traceEvent.conceptName));
-        }
-        return activities;
     }
 
     // Mappe START-Kanten an STOP-Kanten

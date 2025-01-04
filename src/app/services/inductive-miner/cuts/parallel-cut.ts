@@ -25,10 +25,10 @@ export class ParallelCutChecker {
 
         // Fülle Array mit geschnittenen START-/STOP-Knoten
         for (const edge of edges) {
-            if (edge.start.id == '' && (edge.end.id)) {
+            if (edge.start.id == 'play' && (edge.end.id)) {
                 cutStartEdges.push(edge);
             } 
-            if ((edge.start.id) && edge.end.id == '') {
+            if ((edge.start.id) && edge.end.id == 'stop') {
                 cutStopEdges.push(edge);
             } 
         }
