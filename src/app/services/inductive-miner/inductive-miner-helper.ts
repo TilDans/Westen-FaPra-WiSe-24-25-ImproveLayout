@@ -157,5 +157,85 @@ export class InductiveMinerHelper {
         }
 
         return pairedEdges;
-    } 
+    }
+
+    // Prüfe, ob es in 𝐷 für jede Aktivität in 𝐴1 eine Kante zu jeder Aktivität in 𝐴2 gibt
+    public checkDirectNeighbors(eventlog: EventLog, A1: Set<string>, A2: Set<string>): boolean {
+        const eventlogMap: Map<string, string[]> = this.parseEventlogToNodes(eventlog);
+    
+        // Überprüfe für jede Aktivität in A1
+        for (const activityA1 of A1) {
+            const neighborsA1 = eventlogMap.get(activityA1) || [];
+    
+            // Für jede Aktivität in A2 prüfen, ob eine Kante von der aktuellen Aktivität aus A1 zu dieser Aktivität existiert
+            for (const activityA2 of A2) {
+                if (!neighborsA1.includes(activityA2)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    // Prüfe, ob es für jede Aktivität in 𝐴1 es einen Weg in 𝐷 von 𝑝𝑙𝑎𝑦 über diese Aktivität nach 𝑠𝑡𝑜𝑝, der nur Aktivitäten aus 𝐴1 besucht, gibt
+    public checkPathInSublog(eventlog: EventLog, activities: Set<string>): boolean {
+        const eventlogMap: Map<string, string[]> = this.parseEventlogToNodes(eventlog);
+    
+        // Sammle Start- und Stop-Knoten
+        const startEdges: Set<string> = new Set();
+        const stopEdges: Set<string> = new Set();
+        for (const trace of eventlog.traces) {
+            if (activities.has(trace.events[0].conceptName)) {
+                startEdges.add(trace.events[0].conceptName);
+            }
+            if (activities.has(trace.events[trace.events.length - 1].conceptName)) {
+                stopEdges.add(trace.events[trace.events.length - 1].conceptName);
+            }
+        }
+    
+        // Prüfe jede Aktivität aus der zu prüfenden Menge
+        for (const activity of activities) {
+            let activityReached = false; // Wurde die Aktivität auf einem gültigen Pfad erreicht?
+            let stopReached = false; // Kann nach Besuch der Aktivität ein Stop erreicht werden?
+    
+            const dfs = (current: string, visited: Set<string>, activityVisited: boolean): boolean => {
+                if (visited.has(current)) return false;
+                visited.add(current);
+    
+                // Markiere, ob die Aktivität erreicht wurde
+                if (current === activity) activityReached = true;
+    
+                // Wenn ein Stop-Knoten erreicht wird und die Aktivität vorher besucht wurde
+                if (stopEdges.has(current) && activityVisited) {
+                    stopReached = true;
+                    return true; // Ein gültiger Pfad wurde gefunden
+                }
+    
+                // Besuche Nachbarn, solange sie in der erlaubten Aktivitätsmenge liegen
+                for (const neighbor of eventlogMap.get(current) || []) {
+                    if (activities.has(neighbor)) {
+                        if (dfs(neighbor, visited, activityVisited || neighbor === activity)) {
+                            return true;
+                        }
+                    }
+                }
+    
+                return false;
+            };
+    
+            // Starte DFS von allen Startknoten
+            for (const start of startEdges) {
+                const visited = new Set<string>();
+                dfs(start, visited, false);
+    
+                // Falls ein gültiger Pfad gefunden wurde, prüfe die nächste Aktivität
+                if (activityReached && stopReached) break;
+            }
+    
+            // Wenn entweder die Aktivität nicht besucht wurde oder kein STOP-Knoten erreicht wurde
+            if (!activityReached || !stopReached) return false;
+        }
+    
+        return true; // Alle Aktivitäten wurden überprüft und erfüllen die Bedingung
+    }
 }
