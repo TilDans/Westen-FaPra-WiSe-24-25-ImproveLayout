@@ -130,14 +130,14 @@ export class ParallelCutChecker {
         */
         
         // 1:
-        if (!this.helper.checkDirectNeighbors(eventlog, this.helper.parseEventlogToSet(A1), this.helper.parseEventlogToSet(A2))) return [];
+        if (!this.helper.checkDirectNeighbors(eventlog, this.helper.getUniqueActivities(A1), this.helper.getUniqueActivities(A2))) return [];
         // 2:
-        if (!this.helper.checkDirectNeighbors(eventlog, this.helper.parseEventlogToSet(A2), this.helper.parseEventlogToSet(A1))) return [];
+        if (!this.helper.checkDirectNeighbors(eventlog, this.helper.getUniqueActivities(A2), this.helper.getUniqueActivities(A1))) return [];
         
         // 3:
-        if (this.helper.checkPathInSublog(eventlog, this.helper.parseEventlogToSet(A1))) return [];
+        if (this.helper.checkPathInSublog(eventlog, this.helper.getUniqueActivities(A1))) return [];
         // 4:
-        if (this.helper.checkPathInSublog(eventlog, this.helper.parseEventlogToSet(A2))) return [];
+        if (this.helper.checkPathInSublog(eventlog, this.helper.getUniqueActivities(A2))) return [];
 
         // Wenn alle Bedingungen erfolgreich: Returne zwei eventlogs
         return [A1, A2];
