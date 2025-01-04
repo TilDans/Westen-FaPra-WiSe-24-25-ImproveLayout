@@ -1,4 +1,4 @@
-import { EventLogDFG } from "./eventLogDFG";
+//import { EventLogDFG } from "./eventLogDFG";
 
 export abstract class CustomElement {
     private _id: string = "";
@@ -24,9 +24,9 @@ export abstract class CustomElement {
 
     set x(value: number) {
         //für Gruppenelementen (EventLogDFGs) ist ein Setzen des X Werts alleine nicht möglich.
-        if (!(this instanceof EventLogDFG)){
+        //if (!(this instanceof EventLogDFG)){
             this._svgElement!.setAttribute('cx', value.toString());
-        }
+        //}
         this._x = value;
     }
 
@@ -36,9 +36,9 @@ export abstract class CustomElement {
 
     set y(value: number) {
         //für Gruppenelementen (EventLogDFGs) ist ein Setzen des Y Werts alleine nicht möglich.
-        if (!(this instanceof EventLogDFG)){
+        //if (!(this instanceof EventLogDFG)){
             this._svgElement!.setAttribute('cy', value.toString());
-        }
+        //}
         this._y = value;
     }
 

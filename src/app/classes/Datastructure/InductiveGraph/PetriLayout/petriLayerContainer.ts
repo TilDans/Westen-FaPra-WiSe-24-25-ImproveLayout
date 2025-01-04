@@ -5,9 +5,11 @@ import { PetriLayer } from "./petriLayer";
 
 export class PetriLayerContainer extends CustomArray<PetriLayer> {
     
-    constructor(firstElement: CustomElement) {
+    constructor(firstElement: CustomElement, secondElement: CustomElement, thirdElement: CustomElement) {
         super();
         this[0] = new PetriLayer(firstElement);
+        this[1] = new PetriLayer(secondElement);
+        this[2] = new PetriLayer(thirdElement);
     }
 
     override remove(item: CustomElement) {

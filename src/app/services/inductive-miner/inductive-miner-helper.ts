@@ -144,8 +144,8 @@ export class InductiveMinerHelper {
 
         // Fülle Arrays mit START und STOP Kanten
         for (const edge of edges) {
-            if (edge.start.id == '' && (edge.end)) startEdges.push(edge);
-            if ((edge.start) && edge.end.id == '') stopEdges.push(edge);
+            if (edge.start.id == 'play' && (edge.end)) startEdges.push(edge);
+            if ((edge.start) && edge.end.id == 'stop') stopEdges.push(edge);
         }
 
         // Erzeuge Paare von START Kanten mit STOP Kanten

@@ -6,6 +6,7 @@ import {Place} from '../classes/Datastructure/InductiveGraph/Elements/place';
 import {Edge} from '../classes/Datastructure/InductiveGraph/edgeElement';
 import {SvgArrowService} from "./svg-arrow.service";
 import { SvgLayoutService } from './svg-layout.service';
+import { Transition } from '../classes/Datastructure/InductiveGraph/Elements/transition';
 
 @Injectable({
     providedIn: 'root'
@@ -17,19 +18,64 @@ export class SvgService {
     constructor(private readonly svgArrowService: SvgArrowService) {
     }
 
-    offset = 0;
-
     createSVGForPlace(placeToGen: Place) {
         const svg = this.createSvgElement('circle');
         svg.setAttribute('id', placeToGen.id);
-        svg.setAttribute('cx', '500');
-        svg.setAttribute('cy', (50 + this.offset).toString());
         svg.setAttribute('r', '20');
-        svg.setAttribute('fill', 'yellow');
-        svg.setAttribute('stroke', 'black');
-        svg.setAttribute('stroke-width', '4');
+        svg.setAttribute('class', 'place');
         placeToGen.registerSvg(svg);
-        this.offset += 100;
+    }
+
+    createSVGForTransition(transToGen: Transition) {
+        const MINHEIGHT = 20;
+        const MINWIDTH = 50;
+
+        // Create the SVG rectangle
+        const svg = this.createSvgElement('rect');
+        svg.setAttribute('id', transToGen.id);
+        svg.setAttribute('class', 'transition');
+
+        // Create a temporary SVG text element to measure the label width
+        const labelWidth = this.calcWidthOfText(transToGen.id);
+
+        // Calculate the rectangle dimensions
+        const rectWidth = Math.max(labelWidth + 10, MINWIDTH); // Add padding and ensure min width of 50
+
+        svg.setAttribute('width', rectWidth.toString());
+        svg.setAttribute('height', MINHEIGHT.toString());
+
+        // Create the SVG text element for the label
+        const text = this.createSvgElement('text');
+        text.textContent = transToGen.id;
+        text.setAttribute('x', (rectWidth / 2).toString()); // Horizontal position
+        text.setAttribute('y', (MINHEIGHT / 2).toString()); // Vertical position
+        text.setAttribute('dominant-baseline', 'middle'); // Vertical alignment
+        text.setAttribute('text-anchor', 'middle'); // Horizontal alignment
+        text.setAttribute('font-size', '12'); // Adjust font size if needed
+
+        // Group the rectangle and the text together
+        const group = this.createSvgElement('g');
+        group.appendChild(svg);
+        group.appendChild(text);
+        group.setAttribute('width', rectWidth.toString());
+        group.setAttribute('height', MINHEIGHT.toString());
+
+        // Register the group as the SVG element for the transition
+        transToGen.registerSvg(group);
+    }
+
+    private calcWidthOfText(label: string) {
+        const tempText = this.createSvgElement('text') as SVGGraphicsElement;
+        tempText.textContent = label;
+        tempText.setAttribute('font-size', '12'); // Adjust font size if needed
+
+        // Append the text to the SVG temporarily to measure its width
+        const tempSvg = this.createSvgElement('svg');
+        tempSvg.appendChild(tempText);
+        document.body.appendChild(tempSvg);
+        const labelWidth = tempText.getBBox().width;
+        document.body.removeChild(tempSvg);
+        return labelWidth;
     }
 
     public createSVGForArc(edge: Edge) {
@@ -141,10 +187,12 @@ export class SvgService {
         const maxX = Math.max(...Object.values(positions).map(pos => pos.x));
         const maxY = Math.max(...Object.values(positions).map(pos => pos.y));
 
-        rectangle.setAttribute('width', (maxX - minX + 100).toString()); // Add padding
-        rectangle.setAttribute('height', (maxY - minY + 100).toString());
-        group.setAttribute('width', (maxX - minX + 100).toString()); // Add padding
-        group.setAttribute('height', (maxY - minY + 100).toString());
+        const width = maxX - minX + 100;
+        const height = maxY - minY + 100;
+        rectangle.setAttribute('width', (width).toString()); // Add padding
+        rectangle.setAttribute('height', (height).toString());
+        group.setAttribute('width', (width).toString()); // Add padding
+        group.setAttribute('height', (height).toString());
 
         // Apply the computed positions to the SVG elements
         Object.entries(positions).forEach(([conceptName, pos]) => {
