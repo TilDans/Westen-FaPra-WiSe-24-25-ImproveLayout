@@ -25,10 +25,10 @@ export class ParallelCutChecker {
 
         // Fülle Array mit geschnittenen START-/STOP-Knoten
         for (const edge of edges) {
-            if (edge.start.id == '' && (edge.end.id)) {
+            if (edge.start.id == 'play' && (edge.end.id)) {
                 cutStartEdges.push(edge);
             } 
-            if ((edge.start.id) && edge.end.id == '') {
+            if ((edge.start.id) && edge.end.id == 'stop') {
                 cutStopEdges.push(edge);
             } 
         }
@@ -130,14 +130,14 @@ export class ParallelCutChecker {
         */
         
         // 1:
-        if (!this.helper.checkDirectNeighbors(eventlog, this.helper.parseEventlogToSet(A1), this.helper.parseEventlogToSet(A2))) return [];
+        if (!this.helper.checkDirectNeighbors(eventlog, this.helper.getUniqueActivities(A1), this.helper.getUniqueActivities(A2))) return [];
         // 2:
-        if (!this.helper.checkDirectNeighbors(eventlog, this.helper.parseEventlogToSet(A2), this.helper.parseEventlogToSet(A1))) return [];
+        if (!this.helper.checkDirectNeighbors(eventlog, this.helper.getUniqueActivities(A2), this.helper.getUniqueActivities(A1))) return [];
         
         // 3:
-        if (this.helper.checkPathInSublog(eventlog, this.helper.parseEventlogToSet(A1))) return [];
+        if (this.helper.checkPathInSublog(eventlog, this.helper.getUniqueActivities(A1))) return [];
         // 4:
-        if (this.helper.checkPathInSublog(eventlog, this.helper.parseEventlogToSet(A2))) return [];
+        if (this.helper.checkPathInSublog(eventlog, this.helper.getUniqueActivities(A2))) return [];
 
         // Wenn alle Bedingungen erfolgreich: Returne zwei eventlogs
         return [A1, A2];

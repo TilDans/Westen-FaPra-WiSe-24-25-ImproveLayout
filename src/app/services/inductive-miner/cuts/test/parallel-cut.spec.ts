@@ -1,5 +1,4 @@
 import {TestBed} from '@angular/core/testing';
-import { ExclusiveCutChecker } from '../exclusive-cut';
 import { Trace } from 'src/app/classes/Datastructure/event-log/trace';
 import { TraceEvent } from 'src/app/classes/Datastructure/event-log/trace-event';
 import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
@@ -7,7 +6,7 @@ import { Edge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
 import { DFGElement } from 'src/app/classes/Datastructure/InductiveGraph/Elements/DFGElement';
 import { ParallelCutChecker } from '../parallel-cut';
 
-describe('Exclusive Cut function', () => {
+describe('Parallel Cut function', () => {
     let service: ParallelCutChecker;
 
     beforeEach(() => {
@@ -131,7 +130,7 @@ describe('Exclusive Cut function', () => {
                                     ]);
 
                                     
-        // Parallel Cut: ...
+        // Parallel Cut: -->C, A-->C, C-->A, C-->B, B-->C, D-->A, A-->D, D-->B, B-->D, E-->A, A-->E, E-->B, B-->E, D-->, E-->
         const edge2: Edge[] = [
                             new Edge(new DFGElement(new TraceEvent('')), new DFGElement(new TraceEvent("C"))),
                             new Edge(new DFGElement(new TraceEvent('A')), new DFGElement(new TraceEvent("C"))),
@@ -221,7 +220,7 @@ describe('Exclusive Cut function', () => {
         expect(resultB[1].traces[12].events[1].conceptName).toBe("B")
     });
 
-    it('should return empty array when no Exclusive Cut was found', () => {
+    it('should return empty array when no Parallel Cut was found', () => {
 
 
     });

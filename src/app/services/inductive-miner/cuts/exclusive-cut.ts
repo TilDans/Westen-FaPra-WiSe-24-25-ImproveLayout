@@ -13,7 +13,6 @@ export class ExclusiveCutChecker {
     // Unterscheidung zwischen Kanten, die aus START kommen und Kanten die in STOP enden:
     // Werden Start-Kanten START A,B und STOP-Kanten C,D an, müssen die Traces im Eventlog auf eine Multiplikation dieser untersucht werden: A..C, A..D, B..C, B..D
     public checkExclusiveCut(eventlog: EventLog, edges: Edge[]): EventLog[] {
-        console.log('start checking for an exclusive cut with ', eventlog, edges)
         // Deklaration neuer, geteilter eventlogs
         let A1: EventLog = new EventLog([]);
         let A2: EventLog = new EventLog([]);
@@ -60,14 +59,14 @@ export class ExclusiveCutChecker {
         for (const cTrace of A1.traces) {
             for (const cEvent of cTrace.events) {
                 const reachableActivities = this.helper.getAllReachableActivities(eventlogMap, cEvent);
-                if (this.helper.isSubset(reachableActivities, this.helper.parseEventlogToSet(A2))) return []; // Aus A1 darf nichts von A2 erreichbar sein
+                if (this.helper.isSubset(reachableActivities, this.helper.getUniqueActivities(A2))) return []; // Aus A1 darf nichts von A2 erreichbar sein
             }
         }
         // 2.
         for (const cTrace of A2.traces) {
             for (const cEvent of cTrace.events) {
                 const reachableActivities = this.helper.getAllReachableActivities(eventlogMap, cEvent);
-                if (this.helper.isSubset(reachableActivities, this.helper.parseEventlogToSet(A1))) return []; // Aus A2 darf nichts von A1 erreichbar sein
+                if (this.helper.isSubset(reachableActivities, this.helper.getUniqueActivities(A1))) return []; // Aus A2 darf nichts von A1 erreichbar sein
             }
         }
 
