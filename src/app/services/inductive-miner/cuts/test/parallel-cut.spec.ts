@@ -45,13 +45,13 @@ describe('Parallel Cut function', () => {
                    
         // Parallel Cut: -->A, A-->B, B-->A, C-->B, B-->C, C-->, -->D, D-->B, B-->D
         const edge1: Edge[] = [
-                            new Edge(new DFGElement(new TraceEvent('')), new DFGElement(new TraceEvent("A"))),
+                            new Edge(new DFGElement(new TraceEvent('play')), new DFGElement(new TraceEvent("A"))),
                             new Edge(new DFGElement(new TraceEvent('A')), new DFGElement(new TraceEvent("B"))),
                             new Edge(new DFGElement(new TraceEvent('B')), new DFGElement(new TraceEvent("A"))),
                             new Edge(new DFGElement(new TraceEvent('C')), new DFGElement(new TraceEvent("B"))),
                             new Edge(new DFGElement(new TraceEvent("B")), new DFGElement(new TraceEvent('C'))),
-                            new Edge(new DFGElement(new TraceEvent("C")), new DFGElement(new TraceEvent(''))),
-                            new Edge(new DFGElement(new TraceEvent("")), new DFGElement(new TraceEvent('D'))),
+                            new Edge(new DFGElement(new TraceEvent("C")), new DFGElement(new TraceEvent('stop'))),
+                            new Edge(new DFGElement(new TraceEvent("play")), new DFGElement(new TraceEvent('D'))),
                             new Edge(new DFGElement(new TraceEvent("D")), new DFGElement(new TraceEvent('B'))),
                             new Edge(new DFGElement(new TraceEvent("B")), new DFGElement(new TraceEvent('D'))),
                         ]
@@ -132,7 +132,7 @@ describe('Parallel Cut function', () => {
                                     
         // Parallel Cut: -->C, A-->C, C-->A, C-->B, B-->C, D-->A, A-->D, D-->B, B-->D, E-->A, A-->E, E-->B, B-->E, D-->, E-->
         const edge2: Edge[] = [
-                            new Edge(new DFGElement(new TraceEvent('')), new DFGElement(new TraceEvent("C"))),
+                            new Edge(new DFGElement(new TraceEvent('play')), new DFGElement(new TraceEvent("C"))),
                             new Edge(new DFGElement(new TraceEvent('A')), new DFGElement(new TraceEvent("C"))),
                             new Edge(new DFGElement(new TraceEvent('C')), new DFGElement(new TraceEvent("A"))),
                             new Edge(new DFGElement(new TraceEvent('C')), new DFGElement(new TraceEvent("B"))),
@@ -145,8 +145,8 @@ describe('Parallel Cut function', () => {
                             new Edge(new DFGElement(new TraceEvent("A")), new DFGElement(new TraceEvent('E'))),
                             new Edge(new DFGElement(new TraceEvent("E")), new DFGElement(new TraceEvent('B'))),
                             new Edge(new DFGElement(new TraceEvent("B")), new DFGElement(new TraceEvent('E'))),
-                            new Edge(new DFGElement(new TraceEvent("D")), new DFGElement(new TraceEvent(''))),
-                            new Edge(new DFGElement(new TraceEvent("E")), new DFGElement(new TraceEvent(''))),
+                            new Edge(new DFGElement(new TraceEvent("D")), new DFGElement(new TraceEvent('stop'))),
+                            new Edge(new DFGElement(new TraceEvent("E")), new DFGElement(new TraceEvent('stop'))),
                         ]
 
         const resultB: EventLog[] = service.checkParallelCut(eventlog2, edge2);
