@@ -330,8 +330,7 @@ export class InductivePetriNet{
     }
 
     public handleBaseCases() {
-        // it is a base case, when the dfgs only have a start and stop node
-        const baseCases = this._eventLogDFGs?.filter(dfg => dfg.eventLog.traces.every(t => t.events.length === 1));
+        const baseCases = this._eventLogDFGs?.filter(dfg => dfg.eventLog.isBaseCase());
         console.log("Found base cases: ", baseCases);
         baseCases?.forEach(dfg => {
             const transitionName = dfg.eventLog.traces[0]?.events[0]?.conceptName || 'baseCase';
