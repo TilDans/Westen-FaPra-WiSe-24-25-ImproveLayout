@@ -4,11 +4,12 @@ import { CustomArray } from "../../customArray";
 
 export class PetriLayer extends CustomArray<CustomElement>{
     private _minX = 0;
-    
+
     private _maxX = 0;
-    
+
     override remove(item: CustomElement) {
         const index = this.findIndex(element => element === item);
+        // Warum zweimal index?
         this.slice(index, index);
     }
 

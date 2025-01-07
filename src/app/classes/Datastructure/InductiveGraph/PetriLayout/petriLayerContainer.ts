@@ -4,7 +4,7 @@ import { PetriLayer } from "./petriLayer";
 
 
 export class PetriLayerContainer extends CustomArray<PetriLayer> {
-    
+
     constructor(firstElement: CustomElement, secondElement: CustomElement, thirdElement: CustomElement) {
         super();
         this[0] = new PetriLayer(firstElement);
@@ -13,11 +13,18 @@ export class PetriLayerContainer extends CustomArray<PetriLayer> {
     }
 
     override remove(item: CustomElement) {
-        this[this.findIndex(petriLayer => petriLayer.includes(item))].remove(item);
+        const number = this.findIndex(petriLayer => petriLayer.includes(item));
+        if(number !== -1) {
+            this.splice(number, 1);
+        }
     }
 
     override updateElem(item: CustomElement): void {
         this[this.findIndex(petriLayer => petriLayer.includes(item))];
+    }
+
+    public replaceElement(formerElement: CustomElement, newElement: CustomElement) {
+        this[this.findIndex(petriLayer => petriLayer.includes(formerElement))].updateElem(formerElement, newElement);
     }
 
     // Layer bis zum genannten item nach hinten schieben sowie neues mit dem Element einfügen davor
@@ -26,7 +33,7 @@ export class PetriLayerContainer extends CustomArray<PetriLayer> {
         if (layerIndex == -1) {
             console.log(`Something went wrong, element not contained within the layers`);
         } else {
-            //Elemente von hinten an nach rechts schieben, jeweils auf index + 1. 
+            //Elemente von hinten an nach rechts schieben, jeweils auf index + 1.
             for (let i = this.length - 1; i >= layerIndex; i --) {
                 this [i + 1] = this [i];
             }
@@ -67,7 +74,7 @@ export class PetriLayerContainer extends CustomArray<PetriLayer> {
         } else {
             //Index des gerade zu bearbeitenden Layers
             const currentLayer = this[layerIndex];
-            //Index des zu bearbeitenden Elements 
+            //Index des zu bearbeitenden Elements
             const indexInLayer = currentLayer.indexOf(formerElement);
             if (indexInLayer == currentLayer.length - 1) { //Element befindet sich am Ende der Liste
                 //vorheriges Element durch neues ersetzen
