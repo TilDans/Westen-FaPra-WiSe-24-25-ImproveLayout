@@ -23,10 +23,8 @@ export abstract class CustomElement {
     }
 
     set x(value: number) {
-        //für Gruppenelementen (EventLogDFGs) ist ein Setzen des X Werts alleine nicht möglich.
-        //if (!(this instanceof EventLogDFG)){
-            this._svgElement!.setAttribute('cx', value.toString());
-        //}
+        //Für SVG Gruppenelemente wird der Wert nicht genutzt, kann aber gesetzt werden.
+        this._svgElement!.setAttribute('cx', value.toString());
         this._x = value;
     }
 
@@ -35,10 +33,8 @@ export abstract class CustomElement {
     }
 
     set y(value: number) {
-        //für Gruppenelementen (EventLogDFGs) ist ein Setzen des Y Werts alleine nicht möglich.
-        //if (!(this instanceof EventLogDFG)){
-            this._svgElement!.setAttribute('cy', value.toString());
-        //}
+        //Für SVG Gruppenelemente wird der Wert nicht genutzt, kann aber gesetzt werden.
+        this._svgElement!.setAttribute('cy', value.toString());
         this._y = value;
     }
 

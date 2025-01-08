@@ -11,6 +11,7 @@ import {TraceEvent} from "../../classes/Datastructure/event-log/trace-event";
 import {Edge} from "../../classes/Datastructure/InductiveGraph/edgeElement";
 import {DFGElement} from "../../classes/Datastructure/InductiveGraph/Elements/DFGElement";
 import {IntersectionCalculatorService} from "../../services/intersection-calculator.service";
+import { PNMLWriterService } from 'src/app/services/pnmlWriterService';
 
 @Component({
     selector: 'app-display',
@@ -22,6 +23,9 @@ export class DisplayComponent implements OnDestroy {
     @ViewChild('drawingArea') drawingArea: ElementRef<SVGElement> | undefined;
 
     @Output('fileContent') fileContent: EventEmitter<string>;
+
+    //Bedingung, damit der Button zum Download angezeigt wird. Siehe draw Methode
+    isPetriNetFinished: boolean = true;
 
     private _sub: Subscription;
     private _petriNet: InductivePetriNet | undefined;
@@ -36,7 +40,8 @@ export class DisplayComponent implements OnDestroy {
                 private _fileReaderService: FileReaderService,
                 private _inductiveMinerService: InductiveMinerService,
                 private _http: HttpClient,
-                private _intersectionCalculatorService: IntersectionCalculatorService
+                private _intersectionCalculatorService: IntersectionCalculatorService,
+                private _pnmlWriterService: PNMLWriterService
     ) {
 
         this.fileContent = new EventEmitter<string>();
@@ -111,20 +116,13 @@ export class DisplayComponent implements OnDestroy {
         this.clearDrawingArea();
         this.dropLines();
         this._petriNet?.handleBaseCases();
-        const petriGraph = this._petriNet?.getSVGRepresentation();
-
-        //petriGraph = {(places), (transitions), arcs, (dfgs)}
-        if (petriGraph && Array.isArray(petriGraph)) {  // or ensure it's an iterable
-            try {
-                for (const node of petriGraph) {
-                    this.drawingArea.nativeElement.prepend(node);
-                }
-            } catch (error) {
-                console.error("Error appending petriGraph:", error);
-            }
-        } else {
-            console.warn("No valid petriGraph found to append.");
+       
+        const petriGraph = this._petriNet!.getSVGRepresentation();
+        for (const node of petriGraph) {
+            this.drawingArea.nativeElement.prepend(node);
         }
+        // Netz nur herunterladbar, wenn fertig
+        // this.isPetriNetFinished = this._petriNet!.netFinished();
     }
 
     public dropLines() {
@@ -265,5 +263,15 @@ export class DisplayComponent implements OnDestroy {
         } catch (Error) {
             console.log('no cut possible', Error);
         }
+    }
+
+    downloadPetriNet() {
+        const content = this._pnmlWriterService.createPnmlForPetriNet(this._petriNet!);
+        const blob = new Blob([content], { type: 'application/xml' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'output.pnml';
+        link.click();
+        URL.revokeObjectURL(link.href);
     }
 }
