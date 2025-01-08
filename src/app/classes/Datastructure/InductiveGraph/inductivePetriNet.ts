@@ -30,6 +30,18 @@ export class InductivePetriNet{
         EventLogDFG.logCounter = 0; // counter der logs für neues Netz resetten
     }
 
+    public get Transitions() {
+        return this._transitions;
+    }
+
+    public get Places() {
+        return this._places;
+    }
+
+    public get Arcs() {
+        return this._arcs;
+    }
+
     ////////////////////////////////
     /* ----- INITIALIZATION ----- */
     ////////////////////////////////
@@ -156,6 +168,9 @@ export class InductivePetriNet{
     /* ----- CUT HANDLING END ----- */
     //////////////////////////////////
 
+    public netFinished(): boolean {
+        return (this._eventLogDFGs?.length == 0);
+    }
 
     public getMarkedEventLog(eventLogID: string) {
         for (const eventLog of this._eventLogDFGs!) {
