@@ -1,12 +1,12 @@
-import {Component, ElementRef, EventEmitter, OnDestroy, Output, ViewChild} from '@angular/core';
-import {DisplayService} from '../../services/display.service';
-import {catchError, of, Subscription, take} from 'rxjs';
-import {SvgService} from '../../services/svg.service';
-import {ExampleFileComponent} from "../example-file/example-file.component";
-import {FileReaderService} from "../../services/file-reader.service";
+import { Component, ElementRef, EventEmitter, OnDestroy, Output, Renderer2, ViewChild } from '@angular/core';
+import { DisplayService } from '../../services/display.service';
+import { catchError, of, Subscription, take } from 'rxjs';
+import { SvgService } from '../../services/svg.service';
+import { ExampleFileComponent } from "../example-file/example-file.component";
+import { FileReaderService } from "../../services/file-reader.service";
 import { HttpClient } from "@angular/common/http";
-import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
 import { InductivePetriNet } from 'src/app/classes/Datastructure/InductiveGraph/inductivePetriNet';
+import svgPanZoom from 'svg-pan-zoom';
 
 @Component({
     selector: 'app-display',
@@ -21,15 +21,17 @@ export class DisplayComponent implements OnDestroy {
 
     private _sub: Subscription;
     private _petriNet: InductivePetriNet | undefined;
+    isZoomed = false;
+    zoomLevel: number = 0.5;
 
     constructor(private _svgService: SvgService,
-                private _displayService: DisplayService,
-                private _fileReaderService: FileReaderService,
-                private _http: HttpClient) {
+        private _displayService: DisplayService,
+        private _fileReaderService: FileReaderService,
+        private _http: HttpClient) {
 
         this.fileContent = new EventEmitter<string>();
 
-        this._sub  = this._displayService.InductivePetriNet$.subscribe(log => {
+        this._sub = this._displayService.InductivePetriNet$.subscribe(log => {
 
             this._petriNet = log;
             this.draw();
@@ -59,7 +61,7 @@ export class DisplayComponent implements OnDestroy {
     }
 
     private fetchFile(link: string) {
-        this._http.get(link,{
+        this._http.get(link, {
             responseType: 'text'
         }).pipe(
             catchError(err => {
@@ -96,7 +98,7 @@ export class DisplayComponent implements OnDestroy {
 
         this.clearDrawingArea();
         const petriGraph = this._petriNet?.getSVGRepresentation();
-        
+
         //petriGraph = {(places), (transitions), arcs, (dfgs)}
         if (petriGraph && Array.isArray(petriGraph)) {  // or ensure it's an iterable
             try {
@@ -120,5 +122,21 @@ export class DisplayComponent implements OnDestroy {
         while (drawingArea.childElementCount > 0) {
             drawingArea.removeChild(drawingArea.lastChild as ChildNode);
         }
+    }
+
+    applyZoom() {
+
+        if (this.drawingArea != null) {
+            var zoom = svgPanZoom(this.drawingArea.nativeElement);
+            // zoom.zoom(this.zoomLevel);
+        }
+
+    }
+
+    onClick(e: MouseEvent) {
+        this.zoomLevel = this.zoomLevel + 0.5;
+        this.isZoomed = !this.isZoomed;
+        this.applyZoom()
+
     }
 }

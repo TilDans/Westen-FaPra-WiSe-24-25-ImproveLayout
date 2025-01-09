@@ -1,4 +1,3 @@
-<svg #drawingArea class="canvas"
-     (drop)="processDropEvent($event)"
-     (dragover)="prevent($event)">
+<svg #drawingArea class="canvas" (drop)="processDropEvent($event)" (click)="onClick($event)"
+    (dragover)="prevent($event)">
 </svg>
