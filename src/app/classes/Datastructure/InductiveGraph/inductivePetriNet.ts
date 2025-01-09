@@ -363,7 +363,7 @@ export class InductivePetriNet{
             });
 
             //remove from petrilayers
-            this._petriLayersContained?.replaceElement(dfg, transition);
+            this._petriLayersContained?.updateElem(dfg, transition);
         });
     }
 }

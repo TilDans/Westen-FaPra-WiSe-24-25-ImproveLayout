@@ -15,16 +15,12 @@ export class PetriLayerContainer extends CustomArray<PetriLayer> {
     override remove(item: CustomElement) {
         const number = this.findIndex(petriLayer => petriLayer.includes(item));
         if(number !== -1) {
-            this.splice(number, 1);
+            this[number].remove(item);
         }
     }
 
-    override updateElem(item: CustomElement): void {
-        this[this.findIndex(petriLayer => petriLayer.includes(item))];
-    }
-
-    public replaceElement(formerElement: CustomElement, newElement: CustomElement) {
-        this[this.findIndex(petriLayer => petriLayer.includes(formerElement))].updateElem(formerElement, newElement);
+    override updateElem(toRemove: CustomElement, toInsert: CustomElement): void {
+        this[this.findIndex(petriLayer => petriLayer.includes(toRemove))].updateElem(toRemove, toInsert);
     }
 
     // Layer bis zum genannten item nach hinten schieben sowie neues mit dem Element einfügen davor
