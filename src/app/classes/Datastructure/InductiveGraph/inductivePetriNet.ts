@@ -349,7 +349,7 @@ export class InductivePetriNet{
         console.log("Found base cases: ", baseCases);
         baseCases?.forEach(dfg => {
             const transitionName = dfg.eventLog.traces[0]?.events[0]?.conceptName;
-            const transition = this.genTransition(transitionName);
+            const transition = transitionName ? this.genTransition(transitionName) : this.genTransition();
             //remove from dfgs
             const index = this._eventLogDFGs?.indexOf(dfg);
             this._eventLogDFGs?.splice(index!, 1);
