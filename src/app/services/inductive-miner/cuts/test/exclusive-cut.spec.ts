@@ -3,7 +3,7 @@ import { ExclusiveCutChecker } from '../exclusive-cut';
 import { Trace } from 'src/app/classes/Datastructure/event-log/trace';
 import { TraceEvent } from 'src/app/classes/Datastructure/event-log/trace-event';
 import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
-import { DFGEdge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
+import { Edge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
 import { DFGElement } from 'src/app/classes/Datastructure/InductiveGraph/Elements/DFGElement';
 
 describe('Exclusive Cut function', () => {
@@ -26,6 +26,7 @@ describe('Exclusive Cut function', () => {
          * AFC
          * AFE
          * AFEC
+         * B,D+X,B,D+A,C+A,F,C+A,F,E+A,F,E,C+
          */
         const eventlog: EventLog = new EventLog([ 
                                         new Trace([new TraceEvent("B"),new TraceEvent("D")]),
@@ -38,10 +39,10 @@ describe('Exclusive Cut function', () => {
 
                                     
         // 1. Exclusive Cut: -->A, C-->, E-->
-        const edge1: DFGEdge[] = [
-                                new DFGEdge(new DFGElement(new TraceEvent('')), new DFGElement(new TraceEvent("A"))),
-                                new DFGEdge(new DFGElement(new TraceEvent("C")), new DFGElement(new TraceEvent(''))),
-                                new DFGEdge(new DFGElement(new TraceEvent("E")), new DFGElement(new TraceEvent('')))]
+        const edge1: Edge[] = [
+                                new Edge(new DFGElement(new TraceEvent('play')), new DFGElement(new TraceEvent("A"))),
+                                new Edge(new DFGElement(new TraceEvent("C")), new DFGElement(new TraceEvent('stop'))),
+                                new Edge(new DFGElement(new TraceEvent("E")), new DFGElement(new TraceEvent('stop')))]
 
         const resultA: EventLog[] = service.checkExclusiveCut(eventlog, edge1);
         expect(resultA.length).toBe(2);
@@ -74,10 +75,10 @@ describe('Exclusive Cut function', () => {
 
 
         // 2. Exclusive Cut: -->B, -->X, D-->
-        const edge2: DFGEdge[] = [
-                                new DFGEdge(new DFGElement(new TraceEvent('')), new DFGElement(new TraceEvent("B"))),
-                                new DFGEdge(new DFGElement(new TraceEvent('')), new DFGElement(new TraceEvent("X"))),
-                                new DFGEdge(new DFGElement(new TraceEvent("D")), new DFGElement(new TraceEvent('')))]
+        const edge2: Edge[] = [
+                                new Edge(new DFGElement(new TraceEvent('play')), new DFGElement(new TraceEvent("B"))),
+                                new Edge(new DFGElement(new TraceEvent('play')), new DFGElement(new TraceEvent("X"))),
+                                new Edge(new DFGElement(new TraceEvent("D")), new DFGElement(new TraceEvent('stop')))]
 
         const resultB: EventLog[] = service.checkExclusiveCut(eventlog, edge2);
         expect(resultB.length).toBe(2);

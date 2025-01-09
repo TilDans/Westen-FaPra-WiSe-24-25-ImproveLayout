@@ -20,4 +20,33 @@ export class DFGElement extends CustomElement {
         this._traceEvent = event;
     }
 
+    public override registerSvg(svg: SVGElement) {
+        this._svgElement = svg;
+        this._svgElement.onmousedown = (event) => {
+            this.processMouseDown(event);
+        };
+        this._svgElement.onmouseup = (event) => {
+            this.processMouseUp(event);
+        };
+    }
+
+    private processMouseDown(event: MouseEvent) {
+        if (this._svgElement === undefined) {
+            return;
+        }
+        this._svgElement.setAttribute('fill', 'red');
+    }
+
+    private processMouseUp(event: MouseEvent) {
+        if (this._svgElement === undefined) {
+            return;
+        }
+        this._svgElement.setAttribute('fill', 'black');
+    }
+    
+    public override getCenterXY(): { x: number; y: number; } {
+        let centerX = (this.x + this.getWidth()) / 2
+        let centerY = (this.y + this.getHeight()) / 2
+        return {x: centerX, y: centerY};
+    }
 }

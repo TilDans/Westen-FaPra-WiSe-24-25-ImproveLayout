@@ -1,3 +1,14 @@
-<svg #drawingArea class="canvas" (drop)="processDropEvent($event)" (click)="onClick($event)"
-    (dragover)="prevent($event)">
+
+<svg #drawingArea class="canvas"
+     (drop)="processDropEvent($event)"
+     (mousedown)="processMouseDown($event)"
+     (mouseup)="processMouseUp($event)"
+     (mousemove)="processMouseMove($event)"
+     (dragover)="prevent($event)"
+     (click)="onClick($event)">
+
 </svg>
+
+<button (click)="performCut()">Perform cut</button>
+<button (click)="resetCut()">Cancel</button>
+<button *ngIf="isPetriNetFinished" (click)="downloadPetriNet()">download PetriNet</button>

@@ -26,14 +26,14 @@ export class AppComponent {
 
         const result = this._xmlParserService.parseXml(newSource)
         if (result !== undefined) {
-            this._displayService.display(new InductivePetriNet(result));
+            this._displayService.display(new InductivePetriNet().init(result));
         }
     }
 
     parseEventLog(newEventLog: string) {
         const result = this._textParserService.parse(newEventLog);
         if(result) {
-            this._displayService.display(new InductivePetriNet(result));
+            this._displayService.display(new InductivePetriNet().init(result));
         }
     }
 }

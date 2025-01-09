@@ -1,35 +1,109 @@
-import { Injectable } from '@angular/core';
-import { CustomElement } from '../classes/Datastructure/InductiveGraph/Elements/element';
-import { EventLog } from '../classes/Datastructure/event-log/event-log';
-import { Trace } from '../classes/Datastructure/event-log/trace';
-import { TraceEvent } from '../classes/Datastructure/event-log/trace-event';
-import { InductivePetriNet } from '../classes/Datastructure/InductiveGraph/inductivePetriNet';
-import { transition } from '@angular/animations';
-import { DFGElement } from '../classes/Datastructure/InductiveGraph/Elements/DFGElement';
+import {Injectable} from '@angular/core';
+import {EventLog} from '../classes/Datastructure/event-log/event-log';
+import {TraceEvent} from '../classes/Datastructure/event-log/trace-event';
+import {DFGElement} from '../classes/Datastructure/InductiveGraph/Elements/DFGElement';
+import {Place} from '../classes/Datastructure/InductiveGraph/Elements/place';
+import {Edge} from '../classes/Datastructure/InductiveGraph/edgeElement';
+import {SvgArrowService} from "./svg-arrow.service";
+import { SvgLayoutService } from './svg-layout.service';
+import { Transition } from '../classes/Datastructure/InductiveGraph/Elements/transition';
 
 @Injectable({
     providedIn: 'root'
 })
+
 export class SvgService {
-    //Delete when layout done
-    offset = 0;
+    private _layouter = new SvgLayoutService();
+
+    constructor(private readonly svgArrowService: SvgArrowService) {
+    }
+
+    createSVGForPlace(placeToGen: Place) {
+        const svg = this.createSvgElement('circle');
+        svg.setAttribute('id', placeToGen.id);
+        svg.setAttribute('r', '20');
+        svg.setAttribute('class', 'place');
+        placeToGen.registerSvg(svg);
+    }
+
+    createSVGForTransition(transToGen: Transition) {
+        const MINHEIGHT = 20;
+        const MINWIDTH = 50;
+
+        // Create the SVG rectangle
+        const svg = this.createSvgElement('rect');
+        svg.setAttribute('id', transToGen.id);
+        svg.setAttribute('class', 'transition');
+
+        // Create a temporary SVG text element to measure the label width
+        const labelWidth = this.calcWidthOfText(transToGen.id);
+
+        // Calculate the rectangle dimensions
+        const rectWidth = Math.max(labelWidth + 10, MINWIDTH); // Add padding and ensure min width of 50
+
+        svg.setAttribute('width', rectWidth.toString());
+        svg.setAttribute('height', MINHEIGHT.toString());
+
+        // Create the SVG text element for the label
+        const text = this.createSvgElement('text');
+        text.textContent = transToGen.id;
+        text.setAttribute('x', (rectWidth / 2).toString()); // Horizontal position
+        text.setAttribute('y', (MINHEIGHT / 2).toString()); // Vertical position
+        text.setAttribute('dominant-baseline', 'middle'); // Vertical alignment
+        text.setAttribute('text-anchor', 'middle'); // Horizontal alignment
+        text.setAttribute('font-size', '12'); // Adjust font size if needed
+
+        // Group the rectangle and the text together
+        const group = this.createSvgElement('g');
+        group.appendChild(svg);
+        group.appendChild(text);
+        group.setAttribute('width', rectWidth.toString());
+        group.setAttribute('height', MINHEIGHT.toString());
+
+        // Register the group as the SVG element for the transition
+        transToGen.registerSvg(group);
+    }
+
+    private calcWidthOfText(label: string) {
+        const tempText = this.createSvgElement('text') as SVGGraphicsElement;
+        tempText.textContent = label;
+        tempText.setAttribute('font-size', '12'); // Adjust font size if needed
+
+        // Append the text to the SVG temporarily to measure its width
+        const tempSvg = this.createSvgElement('svg');
+        tempSvg.appendChild(tempText);
+        document.body.appendChild(tempSvg);
+        const labelWidth = tempText.getBBox().width;
+        document.body.removeChild(tempSvg);
+        return labelWidth;
+    }
+
+    public createSVGForArc(edge: Edge) {
+        const from = edge.start.getSvg()!;
+        const to = edge.end.getSvg()!;
+        const svg = this.createSvgForEdge(from, to);
+        //svg an Kante hinterlegen
+        edge.registerSvg(svg);
+    }
 
     //erstelle Gruppen von SVG Elementen für EventLogs
-    public createSVGforEventLog(eventLog: EventLog): SVGGElement {
+    public createSVGforEventLog(eventLog: EventLog, id: string) : SVGGElement {
         const result: Array<SVGElement> = [];
         const uniqueEvents = new Set<TraceEvent>();
         const addedConceptNames = new Set<string>(); // To track unique concept names
         const edges = new Set<string>(); // To track unique edges as a string representation
         const svgElementsMap: { [key: string]: SVGElement } = {}; // Map to hold SVG elements by concept name
         const group = this.createSvgElement('g') as SVGGElement;
+        group.setAttribute('id', id);
 
+        this.svgArrowService.appendArrowMarker(group);
 
         // Add a rectangle as background/container
         const rectangle = this.createSvgElement('rect');
-        rectangle.setAttribute('x', '0');
-        rectangle.setAttribute('y', '0');
-        rectangle.setAttribute('fill', 'lightblue'); // Example background color
-        group.appendChild(rectangle);
+        rectangle.setAttribute('cx', '0');
+        rectangle.setAttribute('cy', '0');
+        rectangle.classList.add('group-background')
+        group.append(rectangle);
 
         //Extract events and connections between those
         eventLog.traces.forEach(trace => {
@@ -87,22 +161,23 @@ export class SvgService {
         uniqueEvents.forEach(el => {
             const newElem = new DFGElement(el);
             const svgElement = this.createSvgForEvent(newElem); // Create SVG for each event
-            group.appendChild(svgElement);
+            //group.appendChild(svgElement);
             svgElementsMap[el.conceptName] = svgElement; // Store the SVG element in the map
         });
 
+        //play und stop generieren
         const svgStart = this.createStartSVG();
-        group.appendChild(svgStart);
+        //group.appendChild(svgStart);
         svgElementsMap['playNodeInDFG'] = svgStart;
         const svgEnd = this.createEndSVG();
-        group.appendChild(svgEnd);
+        //group.appendChild(svgEnd);
         svgElementsMap['stopNodeInDFG'] = svgEnd;
         uniqueEventsArray.push(new TraceEvent('playNodeInDFG'));
         uniqueEventsArray.push(new TraceEvent('stopNodeInDFG'));
 
-        console.log('Number of unique events:', uniqueEvents.size);
-
-        const positions = this.applySpringEmbedderLayout(uniqueEventsArray, edgesArray);
+        const conceptNameArray = uniqueEventsArray.map(event => event.conceptName);
+        //const positions = this.applySpringEmbedderLayout(conceptNameArray, edgesArray);
+        const positions = this._layouter.applyLayout(conceptNameArray, edgesArray);
         console.log("positions: ", positions);
 
         //group.setAttribute('transform', 'translate(200, 100)');
@@ -112,8 +187,12 @@ export class SvgService {
         const maxX = Math.max(...Object.values(positions).map(pos => pos.x));
         const maxY = Math.max(...Object.values(positions).map(pos => pos.y));
 
-        rectangle.setAttribute('width', (maxX - minX + 100).toString()); // Add padding
-        rectangle.setAttribute('height', (maxY - minY + 100).toString());
+        const width = maxX - minX + 100;
+        const height = maxY - minY + 100;
+        rectangle.setAttribute('width', (width).toString()); // Add padding
+        rectangle.setAttribute('height', (height).toString());
+        group.setAttribute('width', (width).toString()); // Add padding
+        group.setAttribute('height', (height).toString());
 
         // Apply the computed positions to the SVG elements
         Object.entries(positions).forEach(([conceptName, pos]) => {
@@ -133,25 +212,28 @@ export class SvgService {
 
             if (fromElement && toElement) {
                 const edgeSvg = this.createSvgForEdge(fromElement, toElement);
-                group.appendChild(edgeSvg); // Append the edge to the result
+                group.append(edgeSvg); // Append the edge to the result
             }
         });
-
+        //Append nodes after rectangle and edges to be displayed on top of these elements
+        conceptNameArray.forEach(name => {
+            group.append(svgElementsMap[name])
+        })
         return group;
     }
 
-    private applySpringEmbedderLayout(nodes: Array<TraceEvent>, edges: Array<{ from: string; to: string }>) {
+    /* private applySpringEmbedderLayout(nodes: Array<string>, edges: Array<{ from: string; to: string }>) {
         const positions: { [key: string]: { x: number; y: number } } = {};
         const width = 1000; // Canvas width
         const height = 800; // Canvas height
         const maxIterations = 300; // Number of iterations for the layout
-        const k = 100; // Ideal edge length
-        const repulsiveForce = 6000; // Force constant for repulsion
-        const step = 0.3; // Step size for position updates
+        const k = 150; // Ideal edge length
+        const repulsiveForce = 800; // Force constant for repulsion
+        const step = 2; // Step size for position updates
 
         // Initialize positions randomly within the canvas bounds
         nodes.forEach(node => {
-            positions[node.conceptName] = {
+            positions[node] = {
                 x: Math.random() * width,
                 y: Math.random() * height,
             };
@@ -179,9 +261,9 @@ export class SvgService {
         for (let i = 0; i < maxIterations; i++) {
             const forces: { [key: string]: { fx: number; fy: number } } = {};
 
-            // Initialize forces to zeroS
+            // Initialize forces to zero
             nodes.forEach(node => {
-                forces[node.conceptName] = { fx: 0, fy: 0 };
+                forces[node] = { fx: 0, fy: 0 };
             });
 
             // Compute repulsive forces
@@ -189,11 +271,11 @@ export class SvgService {
                 for (let k = j + 1; k < nodes.length; k++) {
                     const nodeA = nodes[j];
                     const nodeB = nodes[k];
-                    const force = computeRepulsiveForce(positions[nodeA.conceptName], positions[nodeB.conceptName]);
-                    forces[nodeA.conceptName].fx += force.fx;
-                    forces[nodeA.conceptName].fy += force.fy;
-                    forces[nodeB.conceptName].fx -= force.fx;
-                    forces[nodeB.conceptName].fy -= force.fy;
+                    const force = computeRepulsiveForce(positions[nodeA], positions[nodeB]);
+                    forces[nodeA].fx += force.fx;
+                    forces[nodeA].fy += force.fy;
+                    forces[nodeB].fx -= force.fx;
+                    forces[nodeB].fy -= force.fy;
                 }
             }
 
@@ -208,8 +290,8 @@ export class SvgService {
 
             // Update positions based on forces
             nodes.forEach(node => {
-                const pos = positions[node.conceptName];
-                const force = forces[node.conceptName];
+                const pos = positions[node];
+                const force = forces[node];
                 pos.x += force.fx * step;
                 pos.y += force.fy * step;
 
@@ -218,9 +300,8 @@ export class SvgService {
                 pos.y = Math.max(0, Math.min(height, pos.y));
             });
         }
-
         return positions;
-    }
+    } */
 
     private createSvgForEvent(element: DFGElement): SVGElement {
         const svg = this.createSvgElement('circle');
@@ -228,7 +309,7 @@ export class SvgService {
         svg.setAttribute('cx', '0');
         svg.setAttribute('cy', `0`);
         svg.setAttribute('r', '15');
-        svg.setAttribute('fill', 'black');
+        svg.setAttribute('class', 'dfgNode');
 
         element.registerSvg(svg);
         return svg;
@@ -236,51 +317,76 @@ export class SvgService {
 
     private createStartSVG(): SVGElement {
         const svg = this.createSvgElement('circle');
-        const currX = 50 + this.offset
         svg.setAttribute('id', 'play');
+        svg.setAttribute('class', 'playStop');
         svg.setAttribute('cx', '0');
         svg.setAttribute('cy', `0`);
         svg.setAttribute('r', '15');
-        svg.setAttribute('fill', 'green');
+        svg.setAttribute('class', 'dfgPlayNode');
         return svg;
     }
 
     private createEndSVG(): SVGElement {
         const svg = this.createSvgElement('circle');
         svg.setAttribute('id', 'stop');
+        svg.setAttribute('class', 'playStop');
         svg.setAttribute('cx', '0');
         svg.setAttribute('cy', `0`);
         svg.setAttribute('r', '15');
-        svg.setAttribute('fill', 'red');
+        svg.setAttribute('class', 'dfgStopNode');
         return svg;
     }
 
     private createSvgForEdge(from: SVGElement, to: SVGElement): SVGElement {
-
         const svg = this.createSvgElement('line');
+        svg.setAttribute('id', from.id + ':' + to.id);
+        svg.setAttribute('from', from.id);
+        svg.setAttribute('to', to.id);
+
         // Retrieve the x and y coordinates from the circle elements
-        const fromX = parseFloat(from.getAttribute('cx') || '0');
-        const fromY = parseFloat(from.getAttribute('cy') || '0');
+        const { x: fromX, y: fromY } = this.calculateStartEndCoordinate(from);
+        const { x: toX, y: toY } = this.calculateStartEndCoordinate(to);
 
-        const toX = parseFloat(to.getAttribute('cx') || '0');
-        const toY = parseFloat(to.getAttribute('cy') || '0');
-
-        console.log('Creating edge from', from.id, 'to', to.id, 'with coordinates:', fromX, fromY, toX, toY);
-
+        const intersection = this.svgArrowService.calculateIntersection(fromX, fromY, toX, toY, to);
         // Set line attributes using the coordinates
         svg.setAttribute('x1', fromX.toString());
         svg.setAttribute('y1', fromY.toString());
-        svg.setAttribute('x2', toX.toString());
-        svg.setAttribute('y2', toY.toString());
-        svg.setAttribute('stroke', 'black');       // Line color
-        svg.setAttribute('stroke-width', '2');     // Line thickness
+        svg.setAttribute('x2', intersection.x.toString());
+        svg.setAttribute('y2', intersection.y.toString());
+        svg.setAttribute('class', 'edge');
         return svg;
+    }
+
+    private calculateStartEndCoordinate(toCalc: SVGElement): {x: number, y: number} {
+        var resX = 0;
+        var resY = 0;
+        if (toCalc.tagName.toLowerCase() === "g") {
+            const x = parseFloat(toCalc.getAttribute('cx') || '0');
+            const y = parseFloat(toCalc.getAttribute('cy') || '0');
+            const hwidth = parseFloat(toCalc.getAttribute('width') || '0') / 2;
+            const hheight = parseFloat(toCalc.getAttribute('height') || '0') / 2;
+            resX = x + hwidth;
+            resY = y + hheight;
+        } else {
+            resX = parseFloat(toCalc.getAttribute('cx') || '0');
+            resY = parseFloat(toCalc.getAttribute('cy') || '0');
+        }
+        return {x: resX, y: resY};
     }
 
     private createSvgElement(name: string): SVGElement {
         return document.createElementNS('http://www.w3.org/2000/svg', name);
     }
 
+    public createDrawnLine(x: number, y: number) {
+        const line = this.createSvgElement('line');
+        line.setAttribute('x1', x.toString());
+        line.setAttribute('y1', y.toString());
+        line.setAttribute('x2', x.toString());
+        line.setAttribute('y2', y.toString());
+        line.setAttribute('class', 'drawn-line');
+        return line;
+    }
+
+
 }
-
-

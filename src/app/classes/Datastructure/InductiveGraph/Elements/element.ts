@@ -1,8 +1,10 @@
-export class CustomElement {
+//import { EventLogDFG } from "./eventLogDFG";
+
+export abstract class CustomElement {
     private _id: string = "";
     private _x: number;
     private _y: number;
-    private _svgElement: SVGElement | undefined;
+    protected _svgElement: SVGElement | undefined;
 
     constructor() {
         this._x = 0;
@@ -21,6 +23,8 @@ export class CustomElement {
     }
 
     set x(value: number) {
+        //Für SVG Gruppenelemente wird der Wert nicht genutzt, kann aber gesetzt werden.
+        this._svgElement!.setAttribute('cx', value.toString());
         this._x = value;
     }
 
@@ -29,31 +33,31 @@ export class CustomElement {
     }
 
     set y(value: number) {
+        //Für SVG Gruppenelemente wird der Wert nicht genutzt, kann aber gesetzt werden.
+        this._svgElement!.setAttribute('cy', value.toString());
         this._y = value;
     }
 
     public registerSvg(svg: SVGElement) {
         this._svgElement = svg;
-        this._svgElement.onmousedown = (event) => {
-            this.processMouseDown(event);
-        };
-        this._svgElement.onmouseup = (event) => {
-            this.processMouseUp(event);
-        };
     }
 
-    private processMouseDown(event: MouseEvent) {
-        if (this._svgElement === undefined) {
-            return;
-        }
-        this._svgElement.setAttribute('fill', 'red');
+    public getSvg() {
+        return this._svgElement
     }
 
-    private processMouseUp(event: MouseEvent) {
-        if (this._svgElement === undefined) {
-            return;
-        }
-        this._svgElement.setAttribute('fill', 'black');
+    public getWidth(): number {
+        return parseFloat(this._svgElement!.getAttribute('width') || '0');
     }
+    public getHeight(): number {
+        return parseFloat(this._svgElement!.getAttribute('height') || '0');
+    }
+
+    public setXYonSVG(xNew: number, yNew: number) {
+        this._svgElement!.setAttribute('cx', xNew.toString());
+        this._svgElement!.setAttribute('cy', yNew.toString());
+    }
+
+    public abstract getCenterXY(): { x: number, y: number} 
 
 }

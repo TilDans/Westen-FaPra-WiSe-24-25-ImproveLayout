@@ -3,7 +3,7 @@ import { SequenceCutChecker } from '../sequence-cut';
 import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
 import { Trace } from 'src/app/classes/Datastructure/event-log/trace';
 import { TraceEvent } from 'src/app/classes/Datastructure/event-log/trace-event';
-import { DFGEdge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
+import { Edge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
 import { DFGElement } from 'src/app/classes/Datastructure/InductiveGraph/Elements/DFGElement';
 
 describe('Sequence Cut function', () => {
@@ -34,8 +34,8 @@ describe('Sequence Cut function', () => {
 
                                     
         // 1. Sequence cut: A-->
-        const edge1: DFGEdge[] = [new DFGEdge(new DFGElement(new TraceEvent("A")), new DFGElement(new TraceEvent("B"))),
-                                  new DFGEdge(new DFGElement(new TraceEvent("A")), new DFGElement(new TraceEvent("C")))]
+        const edge1: Edge[] = [new Edge(new DFGElement(new TraceEvent("A")), new DFGElement(new TraceEvent("B"))),
+                                  new Edge(new DFGElement(new TraceEvent("A")), new DFGElement(new TraceEvent("C")))]
 
         const resultA: EventLog[] = service.checkSequenceCut(eventlog, edge1);
         expect(resultA.length).toBe(2);
@@ -67,8 +67,8 @@ describe('Sequence Cut function', () => {
 
 
         // 2. Sequence cut: B-->D / C-->D
-        const edge2: DFGEdge[] = [new DFGEdge(new DFGElement(new TraceEvent("B")), new DFGElement(new TraceEvent("D"))),
-                                  new DFGEdge(new DFGElement(new TraceEvent("C")), new DFGElement(new TraceEvent("D")))]
+        const edge2: Edge[] = [new Edge(new DFGElement(new TraceEvent("B")), new DFGElement(new TraceEvent("D"))),
+                                  new Edge(new DFGElement(new TraceEvent("C")), new DFGElement(new TraceEvent("D")))]
 
         const resultB: EventLog[] = service.checkSequenceCut(eventlog, edge2);
         expect(resultB.length).toBe(2);

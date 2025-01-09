@@ -2,8 +2,9 @@ import { Injectable } from '@angular/core';
 import { InductiveMinerHelper } from './inductive-miner-helper';
 import { ExclusiveCutChecker } from './cuts/exclusive-cut';
 import { SequenceCutChecker } from './cuts/sequence-cut';
-import { DFGEdge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
+import { Edge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
 import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
+import { Cuts } from 'src/app/classes/Datastructure/enums';
 
 
 @Injectable({
@@ -17,17 +18,24 @@ export class InductiveMinerService {
         private sequenceCutChecker: SequenceCutChecker
     ) {}
 
-    public applyInductiveMiner(eventlog: EventLog, edges: DFGEdge[]): EventLog[] {
+    public applyInductiveMiner(eventlog: EventLog, edges: Edge[]): {el: EventLog[], cutMade: Cuts} {
         let splitEventlogs: EventLog[];
-        
-        splitEventlogs = this.sequenceCutChecker.checkSequenceCut(eventlog, edges);
-        if (splitEventlogs.length == 0) {
-            splitEventlogs = this.exclusiveCutChecker.checkExclusiveCut(eventlog, edges);
+        let cutMade = '';
+
+        const cutCheckers = [
+            { checker: this.sequenceCutChecker.checkSequenceCut.bind(this.sequenceCutChecker), cutType: Cuts.Sequence },
+            { checker: this.exclusiveCutChecker.checkExclusiveCut.bind(this.exclusiveCutChecker), cutType: Cuts.Exclusive },
+            //{ checker: this.parallelCutChecker.checkParallelCut.bind(this.parallelCutChecker), cutType: Cuts.Parallel },
+            //{ checker: this.loopCutChecker.checkLoopCut.bind(this.loopCutChecker), cutType: Cuts.Loop }
+        ];
+          
+        for (const { checker, cutType } of cutCheckers) {
+            const splitEventlogs = checker(eventlog, edges);
+            if (splitEventlogs.length !== 0) {
+                return { el: splitEventlogs, cutMade: cutType };
+            }
         }
-    
-        return splitEventlogs;
-    
-    //...
+        throw new Error ('no cut possible');
     }
     
 }

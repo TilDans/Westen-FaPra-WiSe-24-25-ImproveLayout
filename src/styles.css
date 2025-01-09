@@ -7,6 +7,50 @@ body {
     font-family: "Courier New", sans-serif;
 }
 
-.startStop{
+.group-background {
+    fill: lightblue;
+    stroke: black; 
+    stroke-width: 2; 
+}
+
+.place {
+    fill: yellow;
+    stroke: black;
+    stroke-width: 4;
+}
+
+.transition {
+    fill: green;
+    stroke: black;
+    stroke-width: 4;
+}
+
+.dfgNode {
+    fill: blue;
+}
+
+.dfgPlayNode {
+    fill: green;
+}
+
+.dfgStopNode {
     fill: red;
+}
+
+.edge {
+    stroke: black;      
+    stroke-width: 2;     
+    marker-end: url(#arrow);
+}
+
+.edge.selectedEdge {
+    stroke: red;
+    marker-end: url(#arrow-selected);
+}
+
+.drawn-line {
+    stroke: red;
+    stroke-width: 2;
+    stroke-dasharray: 5,5;
+    stroke-opacity: 0.8;
 }
