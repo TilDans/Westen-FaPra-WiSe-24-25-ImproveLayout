@@ -3,4 +3,5 @@
     height: 800px;
     border-style: dotted;
     border-color: lightgrey;
+    overflow: scroll;
 }
