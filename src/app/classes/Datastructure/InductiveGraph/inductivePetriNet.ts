@@ -348,7 +348,7 @@ export class InductivePetriNet{
         const baseCases = this._eventLogDFGs?.filter(dfg => dfg.eventLog.isBaseCase());
         console.log("Found base cases: ", baseCases);
         baseCases?.forEach(dfg => {
-            const transitionName = dfg.eventLog.traces[0]?.events[0]?.conceptName || 'baseCase';
+            const transitionName = dfg.eventLog.traces[0]?.events[0]?.conceptName;
             const transition = this.genTransition(transitionName);
             //remove from dfgs
             const index = this._eventLogDFGs?.indexOf(dfg);
