@@ -104,7 +104,7 @@ export class InductivePetriNet{
             edge.end = toInsertFirst;
         });
 
-        //Kanten und Stelle zur Verbindung der DFGs einfügen 1. -- 2. 
+        //Kanten und Stelle zur Verbindung der DFGs einfügen 1. -- 2.
         this.connectLogsByPlace(toInsertFirst, toInsertSecond);
 
         //für ausgehende Kanten das zweite einzufügende Element als Start setzen
@@ -201,8 +201,8 @@ export class InductivePetriNet{
         return result;
     }
 
-    private layoutPetriNet() {        
-        //maxY insgesamt bestimmen, um das gesamte Netz mittig platzieren zu können 
+    private layoutPetriNet() {
+        //maxY insgesamt bestimmen, um das gesamte Netz mittig platzieren zu können
         let maxY = 0;
         this._petriLayersContained!.forEach(layer => {
             let yValInLayer = layer.length * InductivePetriNet.verticalOffset;
@@ -214,7 +214,7 @@ export class InductivePetriNet{
         const yOffset = maxY / 2;
         //y Wert der Start- und Endstellen setzen
         for (let i = 0; i <= this._endPlaceIndex; i++) {
-            this._places[i].y = yOffset;    
+            this._places[i].y = yOffset;
         }
 
         let currLayerXOffSet = InductivePetriNet.horizontalOffset;
@@ -228,14 +228,14 @@ export class InductivePetriNet{
             });
             //subtrahiere aktuelle von maximaler Höhe um die Differenz zu erhalten, teilen zum mittig platzieren.
             let currLayerYOffset = (((maxY - totalLayerHeight) / 2) + (InductivePetriNet.verticalOffset / 2));
-            
+
             //für jedes Element x und y Werte setzen
             layer.forEach(element => {
                 const currElemHeight = element.getHeight();
                 const currElemWidth = element.getWidth();
                 let yValToSet = currLayerYOffset;
                 let xValToSet = currLayerXOffSet + ((layerMaxWidth - currElemWidth) / 2);
-                
+
                 element.setXYonSVG(xValToSet, yValToSet);
                 currLayerYOffset += (InductivePetriNet.verticalOffset + currElemHeight);
             });
@@ -271,7 +271,7 @@ export class InductivePetriNet{
             //Element der eingehenden Kante liegt links des ausgehenden
             const before = toPlace[0].start;
             const after = fromPlace[0].end;
-            xValToSet = (this._petriLayersContained![this._petriLayersContained!.findIndex(layer => layer.includes(after))].minX + 
+            xValToSet = (this._petriLayersContained![this._petriLayersContained!.findIndex(layer => layer.includes(after))].minX +
                         this._petriLayersContained![this._petriLayersContained!.findIndex(layer => layer.includes(before))].maxX) / 2;
             yValToSet = (before.getCenterXY().y + after.getCenterXY().y) / 2
         } else {
@@ -342,5 +342,28 @@ export class InductivePetriNet{
         this._svgService.createSVGForTransition(transToGen);
         this._transitions.push(transToGen);
         return transToGen;
+    }
+
+    public handleBaseCases() {
+        const baseCases = this._eventLogDFGs?.filter(dfg => dfg.eventLog.isBaseCase());
+        console.log("Found base cases: ", baseCases);
+        baseCases?.forEach(dfg => {
+            const transitionName = dfg.eventLog.traces[0]?.events[0]?.conceptName;
+            const transition = transitionName ? this.genTransition(transitionName) : this.genTransition();
+            //remove from dfgs
+            const index = this._eventLogDFGs?.indexOf(dfg);
+            this._eventLogDFGs?.splice(index!, 1);
+            //connect the arcs to the transition
+            const connectedArcs = this.getConnectedArcs(dfg);
+            connectedArcs.edgesToElem.forEach(edge => {
+                edge.end = transition;
+            });
+            connectedArcs.edgesFromElem.forEach(edge => {
+                edge.start = transition;
+            });
+
+            //remove from petrilayers
+            this._petriLayersContained?.updateElem(dfg, transition);
+        });
     }
 }

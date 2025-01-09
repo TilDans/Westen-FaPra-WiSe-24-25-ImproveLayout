@@ -115,6 +115,8 @@ export class DisplayComponent implements OnDestroy {
 
         this.clearDrawingArea();
         this.dropLines();
+        this._petriNet?.handleBaseCases();
+       
         const petriGraph = this._petriNet!.getSVGRepresentation();
         for (const node of petriGraph) {
             this.drawingArea.nativeElement.prepend(node);
