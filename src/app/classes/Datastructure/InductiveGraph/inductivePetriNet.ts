@@ -8,8 +8,8 @@ import {CustomElement} from "./Elements/element";
 import {SvgArrowService} from "../../../services/svg-arrow.service";
 import {IntersectionCalculatorService} from "../../../services/intersection-calculator.service";
 import { PetriLayerContainer } from "./PetriLayout/petriLayerContainer";
-import { Cuts } from "../enums";
-import { last } from "rxjs";
+import { Cuts, Layout } from "../enums";
+import { SvgLayoutService } from "src/app/services/svg-layout.service";
 
 
 export class InductivePetriNet{
@@ -21,7 +21,7 @@ export class InductivePetriNet{
 
     private _endPlaceIndex = 0;
 
-    _svgService : SvgService = new SvgService (new SvgArrowService(new IntersectionCalculatorService()));
+    _svgService : SvgService = new SvgService (new SvgArrowService(new IntersectionCalculatorService()), new SvgLayoutService());
 
     //OffSet sollte nicht frößer sein als kleinstes Element * 2 (Berechnung, ob ein Element in einem Layer ist)
     static horizontalOffset = 150;
@@ -195,6 +195,15 @@ export class InductivePetriNet{
     /* ----- Layout / Graphical ----- */
     ////////////////////////////////////
 
+    applyNewDFGLayout(layout: Layout) {
+        this._svgService.applyNewDFGLayout(layout);
+        if(this._eventLogDFGs) {
+            for (const elDfg of this._eventLogDFGs) {
+                elDfg.updateLayout();
+            }
+        }
+    }
+    
     public getSVGRepresentation(): SVGElement[] {
         //Layout für das Petrinetz durchführen, Koordinaten für SVGs der Stellen, Transitionen und zugehöriger Kanten setzen.
         this.layoutPetriNet();
@@ -205,6 +214,7 @@ export class InductivePetriNet{
     private layoutPetriNet() {
         //maxY insgesamt bestimmen, um das gesamte Netz mittig platzieren zu können
         let maxY = 0;
+        if(!this._petriLayersContained) { return };
         this._petriLayersContained!.forEach(layer => {
             let yValInLayer = layer.length * InductivePetriNet.verticalOffset;
             layer.forEach(element => {
@@ -386,7 +396,7 @@ export class InductivePetriNet{
 
     public handleBaseCases() {
         const baseCases = this._eventLogDFGs?.filter(dfg => dfg.eventLog.isBaseCase());
-        console.log("Found base cases: ", baseCases);
+        if (baseCases) console.log("Found base cases: ", baseCases);
         baseCases?.forEach(dfg => {
             const transitionName = dfg.eventLog.traces[0]?.events[0]?.conceptName;
             const transition = transitionName ? this.genTransition(transitionName) : this.genTransition();

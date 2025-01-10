@@ -7,15 +7,21 @@ import {Edge} from '../classes/Datastructure/InductiveGraph/edgeElement';
 import {SvgArrowService} from "./svg-arrow.service";
 import { SvgLayoutService } from './svg-layout.service';
 import { Transition } from '../classes/Datastructure/InductiveGraph/Elements/transition';
+import { Layout } from '../classes/Datastructure/enums';
 
 @Injectable({
     providedIn: 'root'
 })
 
 export class SvgService {
-    private _layouter = new SvgLayoutService();
 
-    constructor(private readonly svgArrowService: SvgArrowService) {
+    constructor(private readonly svgArrowService: SvgArrowService,
+                private readonly svgLayoutService: SvgLayoutService
+    ) {
+    }
+
+    applyNewDFGLayout(layout: Layout) {
+        this.svgLayoutService.setLayout(layout);
     }
 
     createSVGForPlace(placeToGen: Place) {
@@ -178,7 +184,7 @@ export class SvgService {
 
         const conceptNameArray = uniqueEventsArray.map(event => event.conceptName);
         //const positions = this.applySpringEmbedderLayout(conceptNameArray, edgesArray);
-        const positions = this._layouter.applyLayout(conceptNameArray, edgesArray);
+        const positions = this.svgLayoutService.applyLayout(conceptNameArray, edgesArray);
 
         //group.setAttribute('transform', 'translate(200, 100)');
         // Update rectangle dimensions to encompass the layout

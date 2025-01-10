@@ -1,5 +1,6 @@
 export enum Layout {
-    SpringEmbedder = "SpringEmbedder"
+    SpringEmbedder = "SpringEmbedder",
+    Sugiyama = "Sugiyama",
 }
 
 export enum Cuts {

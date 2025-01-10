@@ -14,6 +14,7 @@ import {APP_BASE_HREF, PlatformLocation} from "@angular/common";
 import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {ExampleButtonComponent} from "./components/example-button/example-button.component";
 import {EventLogInputComponent} from "./components/event-log-input/event-log-input.component";
+import { MatSelectModule } from '@angular/material/select';
 
 @NgModule({
     declarations: [
@@ -27,6 +28,7 @@ import {EventLogInputComponent} from "./components/event-log-input/event-log-inp
         MatFormFieldModule,
         MatInputModule,
         MatButtonModule,
+        MatSelectModule,
         MatIconModule,
         ReactiveFormsModule, EventLogInputComponent],
     exports: [ ],
