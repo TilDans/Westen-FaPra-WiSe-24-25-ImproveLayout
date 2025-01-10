@@ -59,7 +59,9 @@ export class SvgLayoutService {
 
         // Optimize node ordering within layers to reduce edge crossings
         let improved = true;
-        while (improved) {
+        const maxRuns = 5;
+        let currRuns = 0;
+        while (improved && (currRuns < maxRuns)) {
             improved = false;
     
             for (let i = 0; i < columns.length - 1; i++) {
@@ -92,8 +94,9 @@ export class SvgLayoutService {
                     columns[i + 1] = newOrder;
                 }
             }
+            currRuns++;
         }
-    
+
         // Assign coordinates to nodes
         const nodePositions: { [key: string]: { x: number; y: number; } } = {};
         const columnSpacing = 200; // Horizontal spacing between columns
@@ -102,12 +105,11 @@ export class SvgLayoutService {
         columns.forEach((column, columnIndex) => {
             column.forEach((node, rowIndex) => {
                 nodePositions[node] = {
-                    x: columnIndex * columnSpacing,
-                    y: rowIndex * rowSpacing
+                    x: rowIndex * columnSpacing,
+                    y: columnIndex * rowSpacing
                 };
             });
         });
-        console.log(nodePositions);
         return nodePositions;
     }
     
