@@ -9,14 +9,108 @@ import { Layout } from "../classes/Datastructure/enums";
 export class SvgLayoutService {
     private _chosenLayout: Layout = Layout.SpringEmbedder;
 
+    public setLayout(layout: Layout) {
+        this._chosenLayout = layout;
+    }
+
+    public getLayout() {
+        return this._chosenLayout;
+    }
+
     public applyLayout(nodes: Array<string>, edges: Array<{ from: string; to: string }>) {
         switch (this._chosenLayout) {
             case Layout.SpringEmbedder:
                 return this.springEmbedder(nodes, edges);
+            case Layout.Sugiyama:
+                return this.Sugiyama(nodes, edges);
             default:
                 throw new Error(`Falscher Wert für Layout: ${this._chosenLayout}`);
         }
     }
+
+    private Sugiyama(
+        nodes: string[], 
+        edges: { from: string; to: string; }[]
+    ): { [key: string]: { x: number; y: number; } } {
+        const nodeIds = nodes;
+        const nodeIdsWithIncomingEdges = new Set(edges.map((edge) => edge.to));
+        const startNodeIds = nodeIds.filter(
+            (nodeId) => !nodeIdsWithIncomingEdges.has(nodeId)
+        );
+        const columns = [
+            nodes.filter((node) => startNodeIds.includes(node)),
+        ];
+        // Generate columns of nodes
+        while (columns.flat().length < nodes.length) {
+            const previousColumn = columns[columns.length - 1];
+            
+            let edgesWithStartElem = edges.filter((edge) => previousColumn.includes(edge.from))
+            const nextColumnNodeIds = new Set(
+                edgesWithStartElem.map((edge) => edge.to)
+            );
+            
+            const nextColumn = nodes.filter((node) =>
+                nextColumnNodeIds.has(node) && 
+                columns.flat().indexOf(node) === -1
+            );
+    
+            columns.push(nextColumn);
+        }
+
+        // Optimize node ordering within layers to reduce edge crossings
+        let improved = true;
+        while (improved) {
+            improved = false;
+    
+            for (let i = 0; i < columns.length - 1; i++) {
+                const column = columns[i];
+                const nextColumn = columns[i + 1];
+    
+                const newOrder = [...nextColumn].sort((nodeA, nodeB) => {
+                    const nodeAParents = edges
+                        .filter((edge) => edge.to === nodeA)
+                        .map((edge) => edge.from);
+                    const nodeBParents = edges
+                        .filter((edge) => edge.to === nodeB)
+                        .map((edge) => edge.from);
+    
+                    const nodeAOrder = nodeAParents.map((parentId) =>
+                        column.findIndex((node) => node === parentId)
+                    );
+                    const nodeBOrder = nodeBParents.map((parentId) =>
+                        column.findIndex((node) => node === parentId)
+                    );
+    
+                    const nodeAAvg = nodeAOrder.reduce((acc, val) => acc + val, 0) / nodeAOrder.length;
+                    const nodeBAvg = nodeBOrder.reduce((acc, val) => acc + val, 0) / nodeBOrder.length;
+    
+                    return nodeAAvg - nodeBAvg;
+                });
+    
+                if (JSON.stringify(newOrder) !== JSON.stringify(nextColumn)) {
+                    improved = true;
+                    columns[i + 1] = newOrder;
+                }
+            }
+        }
+    
+        // Assign coordinates to nodes
+        const nodePositions: { [key: string]: { x: number; y: number; } } = {};
+        const columnSpacing = 200; // Horizontal spacing between columns
+        const rowSpacing = 100;    // Vertical spacing between nodes in the same column
+    
+        columns.forEach((column, columnIndex) => {
+            column.forEach((node, rowIndex) => {
+                nodePositions[node] = {
+                    x: columnIndex * columnSpacing,
+                    y: rowIndex * rowSpacing
+                };
+            });
+        });
+        console.log(nodePositions);
+        return nodePositions;
+    }
+    
 
     private springEmbedder(nodes: string[], edges: { from: string; to: string; }[]) {
         const positions: { [key: string]: { x: number; y: number; }; } = {};

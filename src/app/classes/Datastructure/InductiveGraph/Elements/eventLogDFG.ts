@@ -19,6 +19,10 @@ export class EventLogDFG extends CustomElement{
         this._svgElement = this._svgService.createSVGforEventLog(this.eventLog, this.id)
     }
 
+    public updateLayout() {
+        this._svgElement = this._svgService.createSVGforEventLog(this.eventLog, this.id)
+    }
+
     public override getSvg() : SVGElement {
         return this._svgElement!;
     }

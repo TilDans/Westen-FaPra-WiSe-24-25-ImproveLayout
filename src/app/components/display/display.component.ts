@@ -12,6 +12,11 @@ import {Edge} from "../../classes/Datastructure/InductiveGraph/edgeElement";
 import {DFGElement} from "../../classes/Datastructure/InductiveGraph/Elements/DFGElement";
 import {IntersectionCalculatorService} from "../../services/intersection-calculator.service";
 import { PNMLWriterService } from 'src/app/services/pnmlWriterService';
+import { Layout } from 'src/app/classes/Datastructure/enums';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { SvgLayoutService } from 'src/app/services/svg-layout.service';
 
 @Component({
     selector: 'app-display',
@@ -27,6 +32,9 @@ export class DisplayComponent implements OnDestroy {
     //Bedingung, damit der Button zum Download angezeigt wird. Siehe draw Methode
     isPetriNetFinished: boolean = true;
 
+    availableLayouts = Object.values(Layout); // Extract the enum values as an array
+    selectedLayout: Layout = this.svgLayoutService.getLayout(); // Set a default layout
+
     private _sub: Subscription;
     private _petriNet: InductivePetriNet | undefined;
     private _leftMouseDown = false;
@@ -41,13 +49,15 @@ export class DisplayComponent implements OnDestroy {
                 private _inductiveMinerService: InductiveMinerService,
                 private _http: HttpClient,
                 private _intersectionCalculatorService: IntersectionCalculatorService,
-                private _pnmlWriterService: PNMLWriterService
+                private _pnmlWriterService: PNMLWriterService,
+                private svgLayoutService: SvgLayoutService,
     ) {
 
         this.fileContent = new EventEmitter<string>();
 
         this._sub = this._displayService.InductivePetriNet$.subscribe(newNet => {
             this._petriNet = newNet;
+            this._petriNet.applyNewDFGLayout(this.selectedLayout);
             this.draw();
         });
     }
@@ -55,6 +65,11 @@ export class DisplayComponent implements OnDestroy {
     ngOnDestroy(): void {
         this._sub.unsubscribe();
         this.fileContent.complete();
+    }
+
+    applyLayout() {
+        this._petriNet!.applyNewDFGLayout(this.selectedLayout);
+        this.draw();
     }
 
     public processDropEvent(e: DragEvent) {
@@ -116,11 +131,15 @@ export class DisplayComponent implements OnDestroy {
         this.clearDrawingArea();
         this.dropLines();
         this._petriNet?.handleBaseCases();
-       
-        const petriGraph = this._petriNet!.getSVGRepresentation();
-        for (const node of petriGraph) {
-            this.drawingArea.nativeElement.prepend(node);
+        try {
+            const petriGraph = this._petriNet!.getSVGRepresentation();
+            for (const node of petriGraph) {
+                this.drawingArea.nativeElement.prepend(node);
+            }
+        } catch (error) {
+            console.log('net not initialized yet')
         }
+       
         // Netz nur herunterladbar, wenn fertig
         // this.isPetriNetFinished = this._petriNet!.netFinished();
     }
