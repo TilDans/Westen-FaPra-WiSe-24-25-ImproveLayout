@@ -14,7 +14,7 @@
   <button mat-raised-button color="primary" class="aligned-element" (click)="resetCut()">
     Reset Marked Elements
   </button>
-  <button mat-raised-button *ngIf="isPetriNetFinished" color="primary" class="aligned-element" (click)="downloadPetriNet()" >
+  <button mat-raised-button [disabled]="!isPetriNetFinished" color="primary" class="aligned-element" (click)="downloadPetriNet()" >
     download PetriNet
   </button>
 </div>

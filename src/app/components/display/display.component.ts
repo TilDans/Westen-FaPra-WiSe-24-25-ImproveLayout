@@ -31,7 +31,7 @@ export class DisplayComponent implements OnDestroy {
     @Output('fileContent') fileContent: EventEmitter<string>;
 
     //Bedingung, damit der Button zum Download angezeigt wird. Siehe draw Methode
-    isPetriNetFinished: boolean = true;
+    isPetriNetFinished: boolean = false;
 
     availableLayouts = Object.values(Layout); // Extract the enum values as an array
     selectedLayout: Layout = this._svgLayoutService.getLayout(); // Set a default layout
@@ -146,7 +146,7 @@ export class DisplayComponent implements OnDestroy {
         }
        
         // Netz nur herunterladbar, wenn fertig
-        // this.isPetriNetFinished = this._petriNet!.netFinished();
+        this.isPetriNetFinished = this._petriNet!.netFinished();
     }
 
     public dropLines() {
