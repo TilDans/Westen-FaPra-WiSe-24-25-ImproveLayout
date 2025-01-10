@@ -114,7 +114,7 @@ export class InductivePetriNet{
         });
 
         //Layout aktualisieren
-        this._petriLayersContained?.insertToNewLayerAfterCurrentElement(toRemove, toInsertFirst, toInsertSecond);
+        this._petriLayersContained?.insertToNewLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
 
         //zu entfernendes Element ersetzen und zweites Element an das Ende des Arrays pushen.
         this._eventLogDFGs![this._eventLogDFGs!.findIndex(elem => elem === toRemove)] = toInsertFirst;
@@ -139,16 +139,107 @@ export class InductivePetriNet{
         });
 
         //Layout aktualisieren
-        this._petriLayersContained?.insertToExistingLayerAfterCurrentElement(toRemove, toInsertFirst, toInsertSecond);
+        this._petriLayersContained?.insertToExistingLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
 
         //zu entfernendes Element ersetzen und zweites Element an das Ende des Arrays pushen.
-        this._eventLogDFGs![this._eventLogDFGs!.findIndex(elem => elem === toRemove)] = toInsertFirst;
-        this._eventLogDFGs!.push(toInsertSecond);
+        this.replaceDFGAndInsertNewDFG(toRemove, toInsertFirst, toInsertSecond);
     }
 
-    //vorgelagerte Stelle aufteilen, parallel laufen lassen
+    //vorgelagerte Stelle aufteilen, parallel laufen lassen (ggf. Hilfstransitionen einfügen)
     public applyParallelCut(toRemove: EventLogDFG, toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG){
-        throw new Error('Parallel Cut not implemented yet');
+        //Verbundene Kanten finden
+        const connecionsInNet = this.getConnectedArcs(toRemove);
+
+        let mockTransRequired = false;
+        //eingehende Kanten 
+        connecionsInNet.edgesToElem.forEach(edge => {
+            const place = edge.start;
+            const connectedToPlace = this.getConnectedArcs(place);
+            if (connectedToPlace.edgesFromElem.length > 1) { 
+                mockTransRequired = true;
+            }
+        });
+        //ausgehende Kanten
+        connecionsInNet.edgesFromElem.forEach(edge => {
+            const place = edge.end;
+            const connectedToPlace = this.getConnectedArcs(place);
+            if (connectedToPlace.edgesToElem.length > 1) { 
+                mockTransRequired = true;
+            }
+        });
+        if (mockTransRequired) {
+            // Stelle im Vorbereich des DFG hat mehr als eine ausgehende Kante oder eine im Nachbereich mehr als eine eingehende
+            //zwei Transitionen um die einzufügenden Elemente herum erzeugen
+            const mockTrans1 = this.genTransition();
+            const mockTrans2 = this.genTransition();
+            //je zwei Stellen im Vor- und Nachbereich der einzufügenden Elemente
+            const prevPlace1 = this.genPlace();
+            const prevPlace2 = this.genPlace();
+            const postPlace1 = this.genPlace();
+            const postPlace2 = this.genPlace();
+
+            //Stellen des Vorbereichs mit künstlicher Transition verbinden
+            connecionsInNet.edgesToElem.forEach(edge => {
+                edge.end = mockTrans1;
+            });
+            //künstliche Transition mit Stellen im Vorbereich der einzufügenden Elemente verbinden
+            this.genArc(mockTrans1, prevPlace1);
+            this.genArc(mockTrans1, prevPlace2);
+            //Stellen im Vorbereich mit den Elementen verbinden
+            this.genArc(prevPlace1, toInsertFirst);
+            this.genArc(prevPlace2, toInsertSecond);
+            //Elemente mit Stellen im Nachbereich verbinden
+            this.genArc(toInsertFirst, postPlace1);
+            this.genArc(toInsertSecond, postPlace2);
+            //Stellen im Nachbereich mit künstlicher Transition verbinden
+            this.genArc(postPlace1, mockTrans2);
+            this.genArc(postPlace2, mockTrans2);
+
+            //jede Kante des zu löschenden Elements bei der künstlichen Transition starten
+            connecionsInNet.edgesFromElem.forEach(edgeAfterElem => {
+                edgeAfterElem.start = mockTrans2;
+            });
+
+            //vorherigen DFG durch die beiden neuen ersetzen
+            this.replaceDFGAndInsertNewDFG(toRemove, toInsertFirst, toInsertSecond);
+
+            //künstliche Transitionen in neues Layer vor/nach dem DFG einfügen
+            this._petriLayersContained!.insertToNewLayerBeforeElement(toRemove, mockTrans1);
+            this._petriLayersContained!.insertToNewLayerAfterElement(toRemove, mockTrans2);
+            //aktuellen DFG durch die beiden neu generierten ersetzen
+            this._petriLayersContained!.insertToExistingLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+        } else { // Stellen im Vorbereich haben nur eine ausgehende und solche im Nachbereich nur eine eingehende Kante
+            //Für jede eingehende Kante die entsprechende Stelle duplizieren
+            connecionsInNet.edgesToElem.forEach(edgeBeforeElem => {
+                //Ende der aktuellen Kante auf das erste Element setzen
+                const place = edgeBeforeElem.start;
+                edgeBeforeElem.end = toInsertFirst;
+
+                //neue Stelle erzeugen und so verbinden wie die andere, zusätzlich mit zweitem einzufügenden Element
+                const newPlaceBeforeElems = this.genPlace();
+                this.getConnectedArcs(place).edgesToElem.forEach(edge => {
+                    this.genArc(edge.start, newPlaceBeforeElems);
+                });
+                this.genArc(newPlaceBeforeElems, toInsertSecond);
+            });
+
+            connecionsInNet.edgesFromElem.forEach(edgeAfterElem => {
+                //Start der ausgehenden Kanten auf das erste Element setzen
+                const place = edgeAfterElem.end;
+                edgeAfterElem.start = toInsertFirst;
+
+                //neue Stelle erzeugen und so verbinden wie die andere, zusätzlich mit zweitem einzufügenden Element
+                const newPlaceAfterElems = this.genPlace();
+                this.getConnectedArcs(place).edgesFromElem.forEach(edge => {
+                    this.genArc(newPlaceAfterElems, edge.end);
+                });
+                this.genArc(toInsertSecond, newPlaceAfterElems);
+            });
+
+            this.replaceDFGAndInsertNewDFG(toRemove, toInsertFirst, toInsertSecond);
+            this._petriLayersContained?.insertToExistingLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+        }
+                
     }
 
     //??????????
@@ -163,6 +254,11 @@ export class InductivePetriNet{
         const connectingPlace = this.genPlace();
         this.genArc(toInsertFirst, connectingPlace);
         this.genArc(connectingPlace, toInsertSecond);
+    }
+
+    private replaceDFGAndInsertNewDFG(toRemove: EventLogDFG, toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG) {
+        this._eventLogDFGs![this._eventLogDFGs!.findIndex(elem => elem === toRemove)] = toInsertFirst;
+        this._eventLogDFGs!.push(toInsertSecond);
     }
 
     //////////////////////////////////
@@ -370,14 +466,22 @@ export class InductivePetriNet{
         return result;
     }
 
-    ////////////////////////////////////
-    /* ----- Element Generation ----- */
-    ////////////////////////////////////
+    ///////////////////////////////////////////////
+    /* ----- Element Generation / Deletion ----- */
+    ///////////////////////////////////////////////
 
     private genArc(start: CustomElement, end: CustomElement) {
         const edgeToGen = new Edge(start, end);
         //this._svgService.createSVGForArc(edgeToGen);
         this._arcs.push(edgeToGen);
+    }
+
+    private dropArc(arcToDrop: Edge) {
+        const index = this._arcs.findIndex((arc) => arc === arcToDrop);
+
+        if (index !== -1) {
+            this._arcs.splice(index, 1);
+        }
     }
 
     private genPlace(name?: string) {

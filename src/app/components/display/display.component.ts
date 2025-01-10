@@ -17,6 +17,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { SvgLayoutService } from 'src/app/services/svg-layout.service';
+import { SvgArrowService } from 'src/app/services/svg-arrow.service';
 
 @Component({
     selector: 'app-display',
@@ -33,7 +34,7 @@ export class DisplayComponent implements OnDestroy {
     isPetriNetFinished: boolean = true;
 
     availableLayouts = Object.values(Layout); // Extract the enum values as an array
-    selectedLayout: Layout = this.svgLayoutService.getLayout(); // Set a default layout
+    selectedLayout: Layout = this._svgLayoutService.getLayout(); // Set a default layout
 
     private _sub: Subscription;
     private _petriNet: InductivePetriNet | undefined;
@@ -50,7 +51,8 @@ export class DisplayComponent implements OnDestroy {
                 private _http: HttpClient,
                 private _intersectionCalculatorService: IntersectionCalculatorService,
                 private _pnmlWriterService: PNMLWriterService,
-                private svgLayoutService: SvgLayoutService,
+                private _svgLayoutService: SvgLayoutService,
+                private _svgArrowService: SvgArrowService,
     ) {
 
         this.fileContent = new EventEmitter<string>();
@@ -129,6 +131,9 @@ export class DisplayComponent implements OnDestroy {
         this._selectedEventLogId = undefined;
 
         this.clearDrawingArea();
+
+        this._svgArrowService.appendArrowMarker(this.drawingArea.nativeElement);
+
         this.dropLines();
         this._petriNet?.handleBaseCases();
         try {
