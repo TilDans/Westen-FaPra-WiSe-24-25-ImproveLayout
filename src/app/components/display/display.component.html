@@ -1,12 +1,23 @@
+<div class="settingsForButtons">
+  <mat-form-field appearance="fill" class="aligned-element">
+    <mat-label>Select DFG Layout</mat-label>
+    <mat-select [(value)]="selectedLayout" (selectionChange)="applyLayout()">
+      <mat-option *ngFor="let layout of availableLayouts" [value]="layout">
+        {{ layout }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
 
-<mat-form-field appearance="fill">
-     <mat-label>Select Layout</mat-label>
-     <mat-select [(value)]="selectedLayout" (selectionChange)="applyLayout()">
-       <mat-option *ngFor="let layout of availableLayouts" [value]="layout">
-         {{ layout }}
-       </mat-option>
-     </mat-select>
-</mat-form-field>
+  <button mat-raised-button color="primary" class="aligned-element" (click)="performCut()">
+    Perform Cut
+  </button>
+  <button mat-raised-button color="primary" class="aligned-element" (click)="resetCut()">
+    Reset Marked Elements
+  </button>
+  <button mat-raised-button *ngIf="isPetriNetFinished" color="primary" class="aligned-element" (click)="downloadPetriNet()" >
+    download PetriNet
+  </button>
+</div>
 
 <svg #drawingArea class="canvas"
      (drop)="processDropEvent($event)"
@@ -16,6 +27,6 @@
      (dragover)="prevent($event)">
 </svg>
 
-<button (click)="performCut()">Perform cut</button>
+<!-- <button (click)="performCut()">Perform cut</button>
 <button (click)="resetCut()">Cancel</button>
-<button *ngIf="isPetriNetFinished" (click)="downloadPetriNet()">download PetriNet</button>
+<button *ngIf="isPetriNetFinished" (click)="downloadPetriNet()">download PetriNet</button> -->
