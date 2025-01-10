@@ -242,12 +242,28 @@ export class InductivePetriNet{
                 
     }
 
-    //??????????
+    //wie exclusive, nur werden die Kantenrichtungen im unteren Teil vertauscht.
     public applyLoopCut(toRemove: EventLogDFG, toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG){
         //Verbundene Kanten finden
         const connecionsInNet = this.getConnectedArcs(toRemove);
 
-        throw new Error('Loop Cut not implemented yet');
+        //für eingehende Kanten das erste einzufügende Element als Ziel setzen
+        connecionsInNet.edgesToElem.forEach(edge => {
+            edge.end = toInsertFirst;
+            this.genArc(toInsertSecond, edge.start);
+        });
+
+        //für ausgehende Kanten das zweite einzufügende Element als Start setzen
+        connecionsInNet.edgesFromElem.forEach(edge => {
+            edge.start = toInsertFirst;
+            this.genArc(edge.end, toInsertSecond);
+        });
+
+        //Layout aktualisieren
+        this._petriLayersContained?.insertToExistingLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+
+        //zu entfernendes Element ersetzen und zweites Element an das Ende des Arrays pushen.
+        this.replaceDFGAndInsertNewDFG(toRemove, toInsertFirst, toInsertSecond);
     }
 
     private connectLogsByPlace(toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG) {
