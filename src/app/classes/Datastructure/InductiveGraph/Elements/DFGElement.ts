@@ -34,7 +34,6 @@ export class DFGElement extends CustomElement {
         if (this._svgElement === undefined) {
             return;
         }
-        console.log(this.id);
         this._svgElement.setAttribute('fill', 'red');
     }
 
