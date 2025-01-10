@@ -252,12 +252,12 @@ export class DisplayComponent implements OnDestroy {
             markedEdges.push(new Edge(new DFGElement(new TraceEvent(from)), new DFGElement(new TraceEvent(to))));
         }
 
-        console.log('markedEdges', markedEdges)
+        console.log('markedEdges: ', markedEdges)
 
         const eventLog = this._petriNet!.getMarkedEventLog(this._selectedEventLogId!);
         try {
             const result = this._inductiveMinerService.applyInductiveMiner(eventLog, markedEdges);
-            console.log('result', result);
+            console.log('cut result: ', result);
             this._petriNet?.handleCutResult(result.cutMade, eventLog, result.el[0], result.el[1])
             this.draw();
         } catch (Error) {

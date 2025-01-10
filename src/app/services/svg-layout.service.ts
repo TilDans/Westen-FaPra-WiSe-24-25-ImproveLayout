@@ -20,12 +20,12 @@ export class SvgLayoutService {
 
     private springEmbedder(nodes: string[], edges: { from: string; to: string; }[]) {
         const positions: { [key: string]: { x: number; y: number; }; } = {};
-        const width = 1000; // Canvas width
+        const width = 500; // Canvas width
         const height = 800; // Canvas height
         const maxIterations = 300; // Number of iterations for the layout
-        const k = 150; // Ideal edge length
-        const repulsiveForce = 800; // Force constant for repulsion
-        const step = 2; // Step size for position updates
+        const k = 100; // Ideal edge length
+        const repulsiveForce = 1500; // Force constant for repulsion
+        const step = 1; // Step size for position updates
 
 
         // Initialize positions randomly within the canvas bounds
@@ -37,7 +37,7 @@ export class SvgLayoutService {
         });
 
         // Function to compute repulsive force between two nodes
-        const computeRepulsiveForce = (pos1: { x: number; y: number; }, pos2: { x: number; y: number; }) => {
+        function computeRepulsiveForce (pos1: { x: number; y: number; }, pos2: { x: number; y: number; }) {
             const dx = pos1.x - pos2.x;
             const dy = pos1.y - pos2.y;
             const dist = Math.sqrt(dx * dx + dy * dy) || 1; // Avoid division by zero
@@ -46,7 +46,7 @@ export class SvgLayoutService {
         };
 
         // Function to compute attractive force along an edge
-        const computeAttractiveForce = (pos1: { x: number; y: number; }, pos2: { x: number; y: number; }) => {
+        function computeAttractiveForce (pos1: { x: number; y: number; }, pos2: { x: number; y: number; }) {
             const dx = pos2.x - pos1.x;
             const dy = pos2.y - pos1.y;
             const dist = Math.sqrt(dx * dx + dy * dy) || 1; // Avoid division by zero
@@ -95,6 +95,15 @@ export class SvgLayoutService {
                 // Keep positions within bounds
                 pos.x = Math.max(0, Math.min(width, pos.x));
                 pos.y = Math.max(0, Math.min(height, pos.y));
+            });
+
+            // Pull "play" nodes to the top and "stop" nodes to the bottom
+            nodes.forEach(node => {
+                if (node === "playNodeInDFG") {
+                    positions[node].y = Math.min(positions[node].y, height * 0.2); // Pull to top 10% of the canvas
+                } else if (node === "stopNodeInDFG") {
+                    positions[node].y = Math.max(positions[node].y, height * 0.8); // Pull to bottom 10% of the canvas
+                }
             });
         }
         return positions;
