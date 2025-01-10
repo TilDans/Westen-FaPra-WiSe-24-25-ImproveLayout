@@ -1,5 +1,6 @@
 import { CustomArray } from "../../customArray";
 import { CustomElement } from "../Elements/element";
+import { InductivePetriNet } from "../inductivePetriNet";
 import { PetriLayer } from "./petriLayer";
 
 
@@ -21,6 +22,21 @@ export class PetriLayerContainer extends CustomArray<PetriLayer> {
 
     override updateElem(toRemove: CustomElement, toInsert: CustomElement): void {
         this[this.findIndex(petriLayer => petriLayer.includes(toRemove))].updateElem(toRemove, toInsert);
+    }
+
+    public getLayerCoordinates(layerIndex: number) {
+        return {minX: this[layerIndex].minX, maxX: this[layerIndex].maxX};
+    }
+
+    public getCollidingLayer(xVal: number) {
+        const xValMin = xVal - (InductivePetriNet.horizontalOffset / 2);
+        const xValMax = xVal + (InductivePetriNet.horizontalOffset / 2);
+        for (const layer of this) {
+            if (layer.isValueInLayer(xVal) || layer.isValueInLayer(xValMin) || layer.isValueInLayer(xValMax)) {
+                return this.indexOf(layer);
+            }
+        }
+        return undefined;
     }
 
     // Layer bis zum genannten item nach hinten schieben sowie neues mit dem Element einfügen davor

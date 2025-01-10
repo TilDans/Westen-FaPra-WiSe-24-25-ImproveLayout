@@ -1,3 +1,13 @@
+
+<mat-form-field appearance="fill">
+     <mat-label>Select Layout</mat-label>
+     <mat-select [(value)]="selectedLayout" (selectionChange)="applyLayout()">
+       <mat-option *ngFor="let layout of availableLayouts" [value]="layout">
+         {{ layout }}
+       </mat-option>
+     </mat-select>
+</mat-form-field>
+
 <svg #drawingArea class="canvas"
      (drop)="processDropEvent($event)"
      (mousedown)="processMouseDown($event)"

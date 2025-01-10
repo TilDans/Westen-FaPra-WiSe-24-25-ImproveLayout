@@ -8,8 +8,8 @@ import {CustomElement} from "./Elements/element";
 import {SvgArrowService} from "../../../services/svg-arrow.service";
 import {IntersectionCalculatorService} from "../../../services/intersection-calculator.service";
 import { PetriLayerContainer } from "./PetriLayout/petriLayerContainer";
-import { Cuts } from "../enums";
-import { last } from "rxjs";
+import { Cuts, Layout } from "../enums";
+import { SvgLayoutService } from "src/app/services/svg-layout.service";
 
 
 export class InductivePetriNet{
@@ -21,8 +21,9 @@ export class InductivePetriNet{
 
     private _endPlaceIndex = 0;
 
-    _svgService : SvgService = new SvgService (new SvgArrowService(new IntersectionCalculatorService()));
+    _svgService : SvgService = new SvgService (new SvgArrowService(new IntersectionCalculatorService()), new SvgLayoutService());
 
+    //OffSet sollte nicht frößer sein als kleinstes Element * 2 (Berechnung, ob ein Element in einem Layer ist)
     static horizontalOffset = 150;
     static verticalOffset = 150;
 
@@ -194,6 +195,15 @@ export class InductivePetriNet{
     /* ----- Layout / Graphical ----- */
     ////////////////////////////////////
 
+    applyNewDFGLayout(layout: Layout) {
+        this._svgService.applyNewDFGLayout(layout);
+        if(this._eventLogDFGs) {
+            for (const elDfg of this._eventLogDFGs) {
+                elDfg.updateLayout();
+            }
+        }
+    }
+    
     public getSVGRepresentation(): SVGElement[] {
         //Layout für das Petrinetz durchführen, Koordinaten für SVGs der Stellen, Transitionen und zugehöriger Kanten setzen.
         this.layoutPetriNet();
@@ -204,6 +214,7 @@ export class InductivePetriNet{
     private layoutPetriNet() {
         //maxY insgesamt bestimmen, um das gesamte Netz mittig platzieren zu können
         let maxY = 0;
+        if(!this._petriLayersContained) { return };
         this._petriLayersContained!.forEach(layer => {
             let yValInLayer = layer.length * InductivePetriNet.verticalOffset;
             layer.forEach(element => {
@@ -250,7 +261,7 @@ export class InductivePetriNet{
         this._places.forEach(place => {
             if (place.id == 'firstPlace' || place.id == 'lastPlace') {
             } else {
-                this.setPlacePosition(place);
+                this.setPlacePosition(place, yOffset);
             }
         });
         this._places.forEach(place => {
@@ -262,38 +273,77 @@ export class InductivePetriNet{
         })
     }
 
-    private setPlacePosition(place: Place) {
+    private setPlacePosition(place: Place, yOffset: number) {
         const { edgesToElem: toPlace, edgesFromElem: fromPlace } = this.getConnectedArcs(place);
         //X und Y Werte für die Stellen berechnen.
         let xValToSet = 0;
         let yValToSet = 0;
-        if (toPlace.length === 1 && fromPlace.length === 1) {
-            //Element der eingehenden Kante liegt links des ausgehenden
-            const before = toPlace[0].start;
-            const after = fromPlace[0].end;
-            xValToSet = (this._petriLayersContained![this._petriLayersContained!.findIndex(layer => layer.includes(after))].minX +
-                        this._petriLayersContained![this._petriLayersContained!.findIndex(layer => layer.includes(before))].maxX) / 2;
-            yValToSet = (before.getCenterXY().y + after.getCenterXY().y) / 2
-        } else {
-            //Summiere alle x und y Werte der Elemente vor und nach der Stelle
-            toPlace.forEach(element => {
-                const centerCoord = element.start.getCenterXY();
-                xValToSet += centerCoord.x;
-                yValToSet += centerCoord.y;
+
+        //Summiere alle x und y Werte der Elemente vor und nach der Stelle
+        toPlace.forEach(edge => {
+            const centerCoord = edge.start.getCenterXY();
+            xValToSet += centerCoord.x;
+            yValToSet += centerCoord.y;
+        });
+        fromPlace.forEach(edge => {
+            const centerCoord = edge.end.getCenterXY();
+            xValToSet += centerCoord.x;
+            yValToSet += centerCoord.y;
+        });
+        //Teile die Summe durch die gesamte Anzahl der Elemente um die Stelle mittig zu platzieren
+        const totalBeforeAndAfter = toPlace.length + fromPlace.length;
+        xValToSet = xValToSet / totalBeforeAndAfter;
+        yValToSet = yValToSet / totalBeforeAndAfter;
+
+        const collidingLayer = this._petriLayersContained!.getCollidingLayer(xValToSet);
+        if (collidingLayer) {
+            let layerBeforePlace = -1;
+            toPlace.forEach(edge => {
+                const currStartElemLayer = this.getLayer(edge.start);
+                layerBeforePlace = (currStartElemLayer > layerBeforePlace) ? currStartElemLayer : layerBeforePlace;
             });
-            fromPlace.forEach(element => {
-                const centerCoord = element.end.getCenterXY();
-                xValToSet += centerCoord.x;
-                yValToSet += centerCoord.y;
+            let maxLayerAfterPlace = -1;
+            fromPlace.forEach(edge => {
+                const currEndElemLayer = this.getLayer(edge.end);
+                maxLayerAfterPlace = (currEndElemLayer > maxLayerAfterPlace) ? currEndElemLayer : maxLayerAfterPlace;
             });
-            //Teile die Summe durch die gesamte Anzahl der Elemente um die Stelle mittig zu platzieren
-            const totalBeforeAndAfter = toPlace.length + fromPlace.length;
-            xValToSet = xValToSet / totalBeforeAndAfter;
-            yValToSet = yValToSet / totalBeforeAndAfter;
+            let collidingLayerCoordinates;
+            if (layerBeforePlace >= collidingLayer && maxLayerAfterPlace > layerBeforePlace) {
+                collidingLayerCoordinates = this._petriLayersContained!.getLayerCoordinates(layerBeforePlace);
+                xValToSet = collidingLayerCoordinates.maxX + (InductivePetriNet.horizontalOffset / 2);
+            } else {
+                const collisionCoords = this._petriLayersContained!.getLayerCoordinates(collidingLayer);
+                const middleOfCollidingLayer = (collisionCoords.minX + collisionCoords.maxX) / 2
+                if (xValToSet <= middleOfCollidingLayer) {
+                    xValToSet = collisionCoords.minX - (InductivePetriNet.horizontalOffset / 2);
+                } else {
+                    xValToSet = collisionCoords.maxX + (InductivePetriNet.horizontalOffset / 2);
+                }
+            }            
+        }
+        // Kollisionen auf der Mittellinie vermeiden, wenn Stelle dort nah dran liegt
+        if (yOffset - 15 < yValToSet && yValToSet < yOffset + 15) {
+            let followingLayer = true;
+            //nur für Stellen, deren Layer nicht direkt aufeinander folgen
+            for (const toEdge of toPlace) {
+                for (const fromEdge of fromPlace) {
+                    let test = Math.abs(this.getLayer(toEdge.start) - this.getLayer(fromEdge.end))
+                    if (test > 1) {
+                        followingLayer = false;
+                    }
+                }
+            }
+            if (!followingLayer){
+                    yValToSet += 50;
+            }
         }
         place.setXYonSVG(xValToSet, yValToSet);
     }
 
+    private getLayer(element: CustomElement) {
+        return this._petriLayersContained!.findIndex(layer => layer.includes(element));
+    }
+    
     private concatSVGReps() {
         const result: Array<SVGElement> = [];
         this._eventLogDFGs!.forEach(eventLogDFG => {
@@ -346,7 +396,7 @@ export class InductivePetriNet{
 
     public handleBaseCases() {
         const baseCases = this._eventLogDFGs?.filter(dfg => dfg.eventLog.isBaseCase());
-        console.log("Found base cases: ", baseCases);
+        if (baseCases) console.log("Found base cases: ", baseCases);
         baseCases?.forEach(dfg => {
             const transitionName = dfg.eventLog.traces[0]?.events[0]?.conceptName;
             const transition = transitionName ? this.genTransition(transitionName) : this.genTransition();
