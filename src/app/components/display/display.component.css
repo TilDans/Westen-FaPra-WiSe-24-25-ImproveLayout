@@ -1,8 +1,26 @@
+body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* Add spacing between elements */
+  margin: 0; /* Remove any default body margins */
+  padding: 16px; /* Optional: Add padding around the entire layout */
+  box-sizing: border-box;
+}
+
+
+.resizable-container {
+  position: relative; /* Allows internal positioning */
+  resize: both; /* Enables resizing on both width and height */
+  overflow: hidden; /* Ensures content doesn't overflow when resizing */
+  width: 100%;
+  height: 600px;
+  border-style: solid;
+  border-color: lightgray;
+}
+
 .canvas {
-    width: 100%;
-    height: 800px;
-    border-style: dotted;
-    border-color: lightgrey;
+  width: 100%;
+  height: 100%;
 }
 
 .settingsForButtons {

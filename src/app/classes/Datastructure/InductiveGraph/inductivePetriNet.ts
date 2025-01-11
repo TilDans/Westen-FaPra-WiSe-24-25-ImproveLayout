@@ -328,7 +328,7 @@ export class InductivePetriNet{
         let maxY = 0;
         if(!this._petriLayersContained) { return };
         this._petriLayersContained!.forEach(layer => {
-            let yValInLayer = layer.length * InductivePetriNet.verticalOffset;
+            let yValInLayer = ((layer.length - 1) * InductivePetriNet.verticalOffset) + 50;
             layer.forEach(element => {
                 yValInLayer += element.getHeight();
             });
