@@ -168,10 +168,31 @@ export class DisplayComponent implements OnDestroy {
     public processMouseDown(e: MouseEvent) {
         if (e.button === 0 && this.drawingArea) {
             this._leftMouseDown = true;
-            this.removeAllDrawnLines();
-            const {x, y} = this.calculateSvgCoordinates(e);
-            this.drawingArea.nativeElement.appendChild(this._svgService.createDrawnLine(x, y));
+            if (this.isDomEventInEventLog(e)) {
+                this.removeAllDrawnLines();
+                const {x, y} = this.calculateSvgCoordinates(e);
+                this.drawingArea.nativeElement.appendChild(this._svgService.createDrawnLine(x, y));
+            }
         }
+    }
+
+    public isDomEventInEventLog(e: Event): boolean {
+        let target = e.target;
+        let stopCon = false;
+        while (target && !stopCon) {
+            console.log(target);
+            if (target instanceof SVGElement) {
+                if (target.classList.contains('canvas')) {
+                    stopCon = true;
+                }else {
+                    if (target.classList.contains('eventLog')) {
+                        return true;
+                    }
+                    target = target.parentNode;
+                }
+            }
+        }
+        return false;
     }
 
     private calculateSvgCoordinates(e: MouseEvent) {
