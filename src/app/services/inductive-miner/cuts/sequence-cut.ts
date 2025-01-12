@@ -74,9 +74,10 @@ export class SequenceCutChecker {
 
     // Bedingungen prüfen
     // A1 und A2 dürfen keine intersection haben
-    if (this.helper.hasIntersection(A1, A2)) return [];
+    if (this.helper.hasIntersection(this.helper.getUniqueActivities(A1), this.helper.getUniqueActivities(A2))) return [];
     // A1 und A2 sollten alle events umfassen
-    if (!this.helper.isUnion(eventlog, A1, A2)) return [];
+    if (!this.helper.isUnion(eventlog, this.helper.getUniqueActivities(A1), this.helper.getUniqueActivities(A2))) return [];
+    
     /*
     1. für jede Aktivität in 𝐴1 gibt es in 𝐷 einen Weg zu jeder Aktivität in 𝐴2,
     2. für keine Aktivität in 𝐴2 gibt es in 𝐷 einen Weg zu einer Aktivität in 𝐴1.

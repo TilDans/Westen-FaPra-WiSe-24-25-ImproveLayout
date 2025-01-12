@@ -16,23 +16,17 @@ export class InductiveMinerHelper {
         return [...set2].every(element => set1.has(element));
     }
 
-    public hasIntersection(A1: EventLog, A2: EventLog): boolean {
-        const A1Set: Set<string> = this.getUniqueActivities(A1);
-        const A2Set: Set<string> = this.getUniqueActivities(A2);
-
-        for (const e of A1Set) {
-            if (A2Set.has(e)) {
+    public hasIntersection(A1: Set<string>, A2: Set<string>): boolean {
+        for (const e of A1) {
+            if (A2.has(e)) {
                 return true;
             }
         }
         return false;
     }
 
-    public isUnion(eventlog: EventLog, A1: EventLog, A2: EventLog): boolean {
-        const A1Set: Set<string> = this.getUniqueActivities(A1);
-        const A2Set: Set<string> = this.getUniqueActivities(A2);
-        
-        const unionA1A2: Set<string>  = new Set([...A1Set, ...A2Set]);
+    public isUnion(eventlog: EventLog, A1: Set<string>, A2: Set<string>): boolean { 
+        const unionA1A2: Set<string>  = new Set([...A1, ...A2]);
         const uniqueActivities: Set<string>  = this.getUniqueActivities(eventlog);
         if (unionA1A2.size === uniqueActivities.size && [...unionA1A2].every((x) => uniqueActivities.has(x))) return true;
         
