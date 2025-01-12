@@ -20,6 +20,7 @@ export class InductivePetriNet{
     private _petriLayersContained?: PetriLayerContainer;
 
     private _endPlaceIndex = 0;
+    private _finished: boolean = false;
 
     _svgService : SvgService = new SvgService (new SvgArrowService(new IntersectionCalculatorService()), new SvgLayoutService());
 
@@ -86,10 +87,18 @@ export class InductivePetriNet{
         const eventLogDFGToInsertFirst = new EventLogDFG(this._svgService, toInsertFirst);
         const eventLogDFGToInsertSecond = new EventLogDFG(this._svgService, toInsertSecond);
         switch (cutType) {
-            case Cuts.Sequence: return this.applySequenceCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
-            case Cuts.Exclusive: return this.applyExclusiveCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
-            case Cuts.Parallel: return this.applyParallelCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
-            case Cuts.Loop: return this.applyLoopCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+            case Cuts.Sequence: 
+                this.applySequenceCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+                break;
+            case Cuts.Exclusive: 
+                this.applyExclusiveCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+                break;
+            case Cuts.Parallel: 
+                this.applyParallelCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+                break;
+            case Cuts.Loop: 
+                this.applyLoopCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+                break;
             default:
                 throw new Error(`Falscher Wert für Cut: ${cutType}`);
         }
@@ -281,8 +290,19 @@ export class InductivePetriNet{
     /* ----- CUT HANDLING END ----- */
     //////////////////////////////////
 
-    public netFinished(): boolean {
-        return (this._eventLogDFGs?.length == 0);
+    public netFinished() {
+        const netFin = this._eventLogDFGs?.length == 0;
+        if (netFin) {
+            const stopTransToModify = this._transitions[this._transitions.findIndex(trans => trans.id === 'tStop')];
+            stopTransToModify.id = ('t' + (this._transitions.length - 1).toString());
+            this._svgService.createSVGForTransition(stopTransToModify);
+            this._transitions.sort((a, b) => parseFloat(a.id.slice(1)) - parseFloat(b.id.slice(1)));
+        }
+        this._finished = true;
+    }
+
+    public get finished() {
+        return this._finished;
     }
 
     public getMarkedEventLog(eventLogID: string) {
@@ -371,7 +391,7 @@ export class InductivePetriNet{
 
         //Positionen der Stellen berechnen und setzen
         this._places.forEach(place => {
-            if (place.id == 'firstPlace' || place.id == 'lastPlace') {
+            if (place.id == 'p0' || place.id == 'p3') {
             } else {
                 this.setPlacePosition(place, yOffset);
             }
@@ -501,14 +521,23 @@ export class InductivePetriNet{
     }
 
     private genPlace(name?: string) {
-        const placeToGen = new Place(name || 'p' + (this._places.length - 4).toString());
+        const placeToGen = new Place('p' + (this._places.length).toString());
         this._svgService.createSVGForPlace(placeToGen);
         this._places.push(placeToGen);
         return placeToGen;
     }
 
     private genTransition(name?: string) {
-        const transToGen = new Transition(name || 't' + (this._transitions.length - 2).toString());
+        let transID = '';
+        const transLength = this._transitions.length;
+        if(transLength > 1) {
+            transID= 't' + (this._transitions.length - 1).toString();
+        } else if (transLength === 1){
+            transID = 'tStop';
+        } else {
+            transID = 't0';
+        };
+        const transToGen = new Transition(transID, name || '');
         this._svgService.createSVGForTransition(transToGen);
         this._transitions.push(transToGen);
         return transToGen;
@@ -535,5 +564,6 @@ export class InductivePetriNet{
             //remove from petrilayers
             this._petriLayersContained?.updateElem(dfg, transition);
         });
+        this.netFinished();
     }
 }

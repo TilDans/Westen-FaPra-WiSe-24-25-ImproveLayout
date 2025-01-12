@@ -11,11 +11,8 @@ import {TraceEvent} from "../../classes/Datastructure/event-log/trace-event";
 import {Edge} from "../../classes/Datastructure/InductiveGraph/edgeElement";
 import {DFGElement} from "../../classes/Datastructure/InductiveGraph/Elements/DFGElement";
 import {IntersectionCalculatorService} from "../../services/intersection-calculator.service";
-import { PNMLWriterService } from 'src/app/services/pnmlWriterService';
+import { PNMLWriterService } from 'src/app/services/file-export.service';
 import { Layout } from 'src/app/classes/Datastructure/enums';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { SvgLayoutService } from 'src/app/services/svg-layout.service';
 import { SvgArrowService } from 'src/app/services/svg-arrow.service';
 
@@ -146,7 +143,7 @@ export class DisplayComponent implements OnDestroy {
         }
        
         // Netz nur herunterladbar, wenn fertig
-        this.isPetriNetFinished = this._petriNet!.netFinished();
+        this.isPetriNetFinished = this._petriNet!.finished;
     }
 
     public dropLines() {
@@ -289,12 +286,18 @@ export class DisplayComponent implements OnDestroy {
         }
     }
 
-    downloadPetriNet() {
-        const content = this._pnmlWriterService.createPnmlForPetriNet(this._petriNet!);
-        const blob = new Blob([content], { type: 'application/xml' });
+    downloadPetriNet(type: string) {
         const link = document.createElement('a');
+        let content = '';
+        if (type === 'pnml') {
+            content = this._pnmlWriterService.createPnmlForPetriNet(this._petriNet!);
+            link.download = 'output.pnml';
+        } else {
+            content = this._pnmlWriterService.createJSONForPetriNet(this._petriNet!);
+            link.download = 'output.json';
+        }
+        const blob = new Blob([content], { type: 'application/xml' });
         link.href = URL.createObjectURL(blob);
-        link.download = 'output.pnml';
         link.click();
         URL.revokeObjectURL(link.href);
     }

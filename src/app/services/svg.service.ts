@@ -53,7 +53,7 @@ export class SvgService {
 
         // Create the SVG text element for the label
         const text = this.createSvgElement('text');
-        text.textContent = transToGen.id;
+        text.textContent = transToGen.event;
         text.setAttribute('x', (rectWidth / 2).toString()); // Horizontal position
         text.setAttribute('y', (MINHEIGHT / 2).toString()); // Vertical position
         text.setAttribute('dominant-baseline', 'middle'); // Vertical alignment

@@ -2,10 +2,13 @@ import { CustomElement } from "./element";
 
 export class Transition extends CustomElement {
     static TRANSITIONHEIGHT = 50;
+
+    private _event: string;
     
-    constructor(name: string) {
+    constructor(id:string, name: string) {
         super();
-        this.id = name;
+        this.id = id;
+        this._event = name;
     }
 
     override setXYonSVG(xNew: number, yNew: number) {
@@ -21,5 +24,9 @@ export class Transition extends CustomElement {
         let centerX = (this.x + (this.getWidth() / 2));
         let centerY = (this.y + (this.getHeight() / 2));
         return {x: centerX, y: centerY};
+    }
+
+    public get event() {
+        return this._event;
     }
 }
