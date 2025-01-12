@@ -104,8 +104,6 @@ export class SvgService {
         const group = this.createSvgElement('g') as SVGGElement;
         group.setAttribute('id', id);
 
-        this.svgArrowService.appendArrowMarker(group);
-
         // Add a rectangle as background/container
         const rectangle = this.createSvgElement('rect');
         rectangle.setAttribute('cx', '0');
