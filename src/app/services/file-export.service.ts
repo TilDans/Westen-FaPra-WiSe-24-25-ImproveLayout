@@ -10,7 +10,7 @@ export class PNMLWriterService {
     private xmlDoc: any; // The XML document structure
 
     ///////////////////////
-    /// * CREATE PNML * ///
+    /// * CREATE JSON * ///
     ///////////////////////
     
     public createJSONForPetriNet(petriNet: InductivePetriNet): string {
