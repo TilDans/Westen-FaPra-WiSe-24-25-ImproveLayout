@@ -5,6 +5,7 @@ import { SequenceCutChecker } from './cuts/sequence-cut';
 import { Edge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
 import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
 import { Cuts } from 'src/app/classes/Datastructure/enums';
+import { ParallelCutChecker } from './cuts/parallel-cut';
 
 
 @Injectable({
@@ -15,7 +16,8 @@ export class InductiveMinerService {
     constructor(
         private helper: InductiveMinerHelper,
         private exclusiveCutChecker: ExclusiveCutChecker,
-        private sequenceCutChecker: SequenceCutChecker
+        private sequenceCutChecker: SequenceCutChecker,
+        private parallelCutChecker: ParallelCutChecker,
     ) {}
 
     public applyInductiveMiner(eventlog: EventLog, edges: Edge[]): {el: EventLog[], cutMade: Cuts} {
@@ -25,11 +27,12 @@ export class InductiveMinerService {
         const cutCheckers = [
             { checker: this.sequenceCutChecker.checkSequenceCut.bind(this.sequenceCutChecker), cutType: Cuts.Sequence },
             { checker: this.exclusiveCutChecker.checkExclusiveCut.bind(this.exclusiveCutChecker), cutType: Cuts.Exclusive },
-            //{ checker: this.parallelCutChecker.checkParallelCut.bind(this.parallelCutChecker), cutType: Cuts.Parallel },
+            { checker: this.parallelCutChecker.checkParallelCut.bind(this.parallelCutChecker), cutType: Cuts.Parallel },
             //{ checker: this.loopCutChecker.checkLoopCut.bind(this.loopCutChecker), cutType: Cuts.Loop }
         ];
 
         for (const { checker, cutType } of cutCheckers) {
+            console.log('checking for: ', cutType);
             const splitEventlogs = checker(eventlog, edges);
             if (splitEventlogs.length !== 0) {
                 return { el: splitEventlogs, cutMade: cutType };

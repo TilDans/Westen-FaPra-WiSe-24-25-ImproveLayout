@@ -99,7 +99,7 @@ export class SvgLayoutService {
 
         // Assign coordinates to nodes
         const nodePositions: { [key: string]: { x: number; y: number; } } = {};
-        const columnSpacing = 200; // Horizontal spacing between columns
+        const columnSpacing = 75; // Horizontal spacing between columns
         const rowSpacing = 100;    // Vertical spacing between nodes in the same column
     
         columns.forEach((column, columnIndex) => {
