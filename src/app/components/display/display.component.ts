@@ -288,17 +288,21 @@ export class DisplayComponent implements OnDestroy {
 
     downloadPetriNet(type: string) {
         const link = document.createElement('a');
-        let content = '';
+        let blob;
         if (type === 'pnml') {
-            content = this._pnmlWriterService.createPnmlForPetriNet(this._petriNet!);
+            const content = this._pnmlWriterService.createPnmlForPetriNet(this._petriNet!);
             link.download = 'output.pnml';
-        } else {
-            content = this._pnmlWriterService.createJSONForPetriNet(this._petriNet!);
+            blob = new Blob([content], { type: 'application/pnml' });
+            link.href = URL.createObjectURL(blob);
+            link.click();
+            URL.revokeObjectURL(link.href);
+        } else if (type === 'json') {
+            const content = this._pnmlWriterService.createJSONForPetriNet(this._petriNet!);
             link.download = 'output.json';
+            blob = new Blob([content], { type: 'application/json' });
+            link.href = URL.createObjectURL(blob);
+            link.click();
+            URL.revokeObjectURL(link.href);
         }
-        const blob = new Blob([content], { type: 'application/xml' });
-        link.href = URL.createObjectURL(blob);
-        link.click();
-        URL.revokeObjectURL(link.href);
     }
 }
