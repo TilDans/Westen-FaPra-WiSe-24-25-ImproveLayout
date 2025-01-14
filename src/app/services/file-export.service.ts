@@ -88,10 +88,8 @@ export class PNMLWriterService {
             }
         });
         //Kanten hinzufügen
-        let i = 0;
-        petriNet.Arcs.forEach(arc => {
-            this.addArc(('arc' + i), arc.start.id, arc.end.id)
-            i++;
+        petriNet.Arcs.forEach((arc, index) => {
+            this.addArc(('arc' + index), arc.start.id, arc.end.id)
         });
         
         try {
