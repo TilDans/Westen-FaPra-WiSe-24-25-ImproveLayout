@@ -17,7 +17,7 @@ describe('TextParserService', () => {
     });
 
     it('should parse event log string correctly', () => {
-        const input = "A,B,C,D+A,D,B,C+B,A,C,D";
+        const input = "A B C D+A D B C+B A C D";
         const result: EventLog = service.parse(input);
 
         expect(result).toBeInstanceOf(EventLog);
@@ -43,7 +43,7 @@ describe('TextParserService', () => {
     });
 
     it('should parse event log string with spaces and longer names correctly', () => {
-        const input = "Event A , Event B , Event C , Event D + Event D , Event B , Event A + Event C , Event A , Event B";
+        const input = "EventA  EventB  EventC  EventD + EventD   EventB  EventA + EventC   EventA  EventB";
         const result: EventLog = service.parse(input);
 
         expect(result).toBeInstanceOf(EventLog);
@@ -52,17 +52,17 @@ describe('TextParserService', () => {
         expect(result.traces[0]).toBeInstanceOf(Trace);
         expect(result.traces[0].events.length).toBe(4);
         expect(result.traces[0].events[0]).toBeInstanceOf(TraceEvent);
-        expect(result.traces[0].events[0].conceptName).toBe('Event A');
-        expect(result.traces[0].events[1].conceptName).toBe('Event B');
-        expect(result.traces[0].events[2].conceptName).toBe('Event C');
-        expect(result.traces[0].events[3].conceptName).toBe('Event D');
+        expect(result.traces[0].events[0].conceptName).toBe('EventA');
+        expect(result.traces[0].events[1].conceptName).toBe('EventB');
+        expect(result.traces[0].events[2].conceptName).toBe('EventC');
+        expect(result.traces[0].events[3].conceptName).toBe('EventD');
 
-        expect(result.traces[1].events[0].conceptName).toBe('Event D');
-        expect(result.traces[1].events[1].conceptName).toBe('Event B');
-        expect(result.traces[1].events[2].conceptName).toBe('Event A');
+        expect(result.traces[1].events[0].conceptName).toBe('EventD');
+        expect(result.traces[1].events[1].conceptName).toBe('EventB');
+        expect(result.traces[1].events[2].conceptName).toBe('EventA');
 
-        expect(result.traces[2].events[0].conceptName).toBe('Event C');
-        expect(result.traces[2].events[1].conceptName).toBe('Event A');
-        expect(result.traces[2].events[2].conceptName).toBe('Event B');
+        expect(result.traces[2].events[0].conceptName).toBe('EventC');
+        expect(result.traces[2].events[1].conceptName).toBe('EventA');
+        expect(result.traces[2].events[2].conceptName).toBe('EventB');
     });
 });

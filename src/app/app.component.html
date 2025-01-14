@@ -30,12 +30,6 @@
 
         <div class="inputFeature">
             <app-event-log-input (eventLogChange)="parseEventLog($event)"></app-event-log-input>
-
-            <mat-form-field appearance="outline" class="textarea">
-                <mat-label>File content</mat-label>
-                <textarea matInput cdkTextareaAutosize cdkAutosizeMinRows="10" cdkAutosizeMaxRows="20"
-                    [formControl]="textareaFc"></textarea>
-            </mat-form-field>
         </div>
 
     </div>

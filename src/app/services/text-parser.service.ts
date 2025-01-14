@@ -14,7 +14,9 @@ export class TextParserService {
     parse(eventLog: string): EventLog {
         const sequences = eventLog.split('+');
         const traces = sequences.filter(element => element.length > 0).map(sequence => {
-            const events = sequence.split(',').map(eventName => new TraceEvent(eventName.trim()));
+            const events = sequence.split(' ')
+                .filter(el => el.length > 0)
+                .map(eventName => new TraceEvent(eventName.trim()));
             return new Trace(events);
         });
         return new EventLog(traces);
