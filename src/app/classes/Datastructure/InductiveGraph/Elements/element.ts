@@ -1,7 +1,7 @@
 //import { EventLogDFG } from "./eventLogDFG";
 
 export abstract class CustomElement {
-    private _id: string = "";
+    protected _id: string = "";
     private _x: number;
     private _y: number;
     protected _svgElement: SVGElement | undefined;
@@ -14,6 +14,7 @@ export abstract class CustomElement {
     public get id(): string {
         return this._id;
     }
+    
     public set id(value: string) {
         this._id = value;
     }
@@ -54,6 +55,8 @@ export abstract class CustomElement {
     }
 
     public setXYonSVG(xNew: number, yNew: number) {
+        this._x = xNew;
+        this._y = yNew;
         this._svgElement!.setAttribute('cx', xNew.toString());
         this._svgElement!.setAttribute('cy', yNew.toString());
     }
