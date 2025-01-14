@@ -26,9 +26,9 @@ describe('Exclusive Cut function', () => {
          * AFC
          * AFE
          * AFEC
-         * B,D+X,B,D+A,C+A,F,C+A,F,E+A,F,E,C+
+         * B D+X B D+A C+A F C+A F E+A F E C+
          */
-        const eventlog: EventLog = new EventLog([ 
+        const eventlog: EventLog = new EventLog([
                                         new Trace([new TraceEvent("B"),new TraceEvent("D")]),
                                         new Trace([new TraceEvent("X"),new TraceEvent("B"),new TraceEvent("D")]),
                                         new Trace([new TraceEvent("A"),new TraceEvent("C")]),
@@ -37,7 +37,7 @@ describe('Exclusive Cut function', () => {
                                         new Trace([new TraceEvent("A"),new TraceEvent("F"),new TraceEvent("E"),new TraceEvent("C")])
                                     ]);
 
-                                    
+
         // 1. Exclusive Cut: -->A, C-->, E-->
         const edge1: Edge[] = [
                                 new Edge(new DFGElement(new TraceEvent('play')), new DFGElement(new TraceEvent("A"))),
@@ -71,7 +71,7 @@ describe('Exclusive Cut function', () => {
         expect(resultA[1].traces[1].events[0].conceptName).toBe("X")
         expect(resultA[1].traces[1].events[1].conceptName).toBe("B")
         expect(resultA[1].traces[1].events[2].conceptName).toBe("D")
-        
+
 
 
         // 2. Exclusive Cut: -->B, -->X, D-->
@@ -86,24 +86,24 @@ describe('Exclusive Cut function', () => {
          // Checks for A1
          expect(resultA[0].traces[0].events[0].conceptName).toBe("A")
          expect(resultA[0].traces[0].events[1].conceptName).toBe("C")
- 
+
          expect(resultA[0].traces[1].events[0].conceptName).toBe("A")
          expect(resultA[0].traces[1].events[1].conceptName).toBe("F")
          expect(resultA[0].traces[1].events[2].conceptName).toBe("C")
- 
+
          expect(resultA[0].traces[2].events[0].conceptName).toBe("A")
          expect(resultA[0].traces[2].events[1].conceptName).toBe("F")
          expect(resultA[0].traces[2].events[2].conceptName).toBe("E")
- 
+
          expect(resultA[0].traces[3].events[0].conceptName).toBe("A")
          expect(resultA[0].traces[3].events[1].conceptName).toBe("F")
          expect(resultA[0].traces[3].events[2].conceptName).toBe("E")
          expect(resultA[0].traces[3].events[3].conceptName).toBe("C")
- 
+
          // Checks for A2
          expect(resultA[1].traces[0].events[0].conceptName).toBe("B")
          expect(resultA[1].traces[0].events[1].conceptName).toBe("D")
- 
+
          expect(resultA[1].traces[1].events[0].conceptName).toBe("X")
          expect(resultA[1].traces[1].events[1].conceptName).toBe("B")
          expect(resultA[1].traces[1].events[2].conceptName).toBe("D")
