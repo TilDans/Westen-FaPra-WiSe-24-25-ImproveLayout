@@ -39,7 +39,7 @@ export class SvgService {
         // Create the SVG rectangle
         const svg = this.createSvgElement('rect');
         svg.setAttribute('id', transToGen.id);
-        svg.setAttribute('class', 'transition');
+        svg.setAttribute('class', 'transitionStyle');
         const fontSize = 16;
 
         // Create a temporary SVG text element to measure the label width
@@ -67,6 +67,7 @@ export class SvgService {
         group.setAttribute('width', rectWidth.toString());
         group.setAttribute('height', MINHEIGHT.toString());
         group.setAttribute('id', transToGen.id);
+        group.classList.add('transition');
 
         // Register the group as the SVG element for the transition
         transToGen.registerSvg(group);
@@ -96,13 +97,13 @@ export class SvgService {
 
     //erstelle Gruppen von SVG Elementen für EventLogs
     public createSVGforEventLog(eventLog: EventLog, id: string) : SVGGElement {
-        const result: Array<SVGElement> = [];
         const uniqueEvents = new Set<TraceEvent>();
         const addedConceptNames = new Set<string>(); // To track unique concept names
         const edges = new Set<string>(); // To track unique edges as a string representation
         const svgElementsMap: { [key: string]: SVGElement } = {}; // Map to hold SVG elements by concept name
         const group = this.createSvgElement('g') as SVGGElement;
         group.setAttribute('id', id);
+        group.classList.add('eventLog');
 
         // Add a rectangle as background/container
         const rectangle = this.createSvgElement('rect');
@@ -270,12 +271,13 @@ export class SvgService {
         const { x: fromX, y: fromY } = this.calculateStartEndCoordinate(from);
         const { x: toX, y: toY } = this.calculateStartEndCoordinate(to);
 
-        const intersection = this.svgArrowService.calculateIntersection(fromX, fromY, toX, toY, to);
+        const fromIntersection = this.svgArrowService.calculateIntersection(toX, toY, fromX, fromY, from);
+        const toIntersection = this.svgArrowService.calculateIntersection(fromX, fromY, toX, toY, to);
         // Set line attributes using the coordinates
-        svg.setAttribute('x1', fromX.toString());
-        svg.setAttribute('y1', fromY.toString());
-        svg.setAttribute('x2', intersection.x.toString());
-        svg.setAttribute('y2', intersection.y.toString());
+        svg.setAttribute('x1', fromIntersection.x.toString());
+        svg.setAttribute('y1', fromIntersection.y.toString());
+        svg.setAttribute('x2', toIntersection.x.toString());
+        svg.setAttribute('y2', toIntersection.y.toString());
         svg.setAttribute('class', 'edge');
         return svg;
     }
