@@ -12,6 +12,8 @@ export class TextParserService {
     }
 
     parse(eventLog: string): EventLog {
+        // remove all duplicate spaces
+        eventLog = eventLog.replace(/\s+/g, ' ');
         const sequences = eventLog.split('+');
         const traces = sequences.filter(element => element.length > 0).map(sequence => {
             const events = sequence.split(' ')
