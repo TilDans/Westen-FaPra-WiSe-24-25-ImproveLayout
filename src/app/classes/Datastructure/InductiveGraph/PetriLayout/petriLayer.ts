@@ -4,12 +4,11 @@ import { CustomArray } from "../../customArray";
 
 export class PetriLayer extends CustomArray<CustomElement>{
     private _minX = 0;
-    
     private _maxX = 0;
-    
+
     override remove(item: CustomElement) {
         const index = this.findIndex(element => element === item);
-        this.slice(index, index);
+        this.splice(index, 1);
     }
 
     override updateElem(toRemove: CustomElement, toInsert: CustomElement): void {
@@ -17,6 +16,9 @@ export class PetriLayer extends CustomArray<CustomElement>{
         this[index] = toInsert;
     }
 
+    public isValueInLayer(xVal: number) {
+        return (this.minX < xVal && xVal < this._maxX);
+    }
 
     public get minX() {
         return this._minX;

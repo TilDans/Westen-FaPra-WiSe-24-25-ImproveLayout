@@ -14,13 +14,19 @@ body {
 }
 
 .place {
-    fill: yellow;
+    fill: none;
     stroke: black;
     stroke-width: 4;
 }
 
 .transition {
-    fill: green;
+    fill: none;
+    stroke: black;
+    stroke-width: 1;
+}
+
+.transitionStyle {
+    fill: none;
     stroke: black;
     stroke-width: 4;
 }

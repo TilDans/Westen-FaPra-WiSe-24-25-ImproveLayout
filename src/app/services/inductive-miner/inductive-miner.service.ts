@@ -7,6 +7,7 @@ import { LoopCutChecker } from './cuts/loop-cut';
 import { Edge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
 import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
 import { Cuts } from 'src/app/classes/Datastructure/enums';
+import { ParallelCutChecker } from './cuts/parallel-cut';
 
 @Injectable({
     providedIn: 'root',
@@ -31,8 +32,9 @@ export class InductiveMinerService {
             { checker: this.parallelCutChecker.checkParallelCut.bind(this.parallelCutChecker), cutType: Cuts.Parallel },
             { checker: this.loopCutChecker.checkLoopCut.bind(this.loopCutChecker), cutType: Cuts.Loop }
         ];
-          
+
         for (const { checker, cutType } of cutCheckers) {
+            console.log('checking for: ', cutType);
             const splitEventlogs = checker(eventlog, edges);
             if (splitEventlogs.length !== 0) {
                 return { el: splitEventlogs, cutMade: cutType };
@@ -40,5 +42,5 @@ export class InductiveMinerService {
         }
         throw new Error ('no cut possible');
     }
-    
+
 }

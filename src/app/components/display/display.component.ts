@@ -11,6 +11,10 @@ import {TraceEvent} from "../../classes/Datastructure/event-log/trace-event";
 import {Edge} from "../../classes/Datastructure/InductiveGraph/edgeElement";
 import {DFGElement} from "../../classes/Datastructure/InductiveGraph/Elements/DFGElement";
 import {IntersectionCalculatorService} from "../../services/intersection-calculator.service";
+import { PNMLWriterService } from 'src/app/services/file-export.service';
+import { Layout } from 'src/app/classes/Datastructure/enums';
+import { SvgLayoutService } from 'src/app/services/svg-layout.service';
+import { SvgArrowService } from 'src/app/services/svg-arrow.service';
 
 @Component({
     selector: 'app-display',
@@ -22,6 +26,12 @@ export class DisplayComponent implements OnDestroy {
     @ViewChild('drawingArea') drawingArea: ElementRef<SVGElement> | undefined;
 
     @Output('fileContent') fileContent: EventEmitter<string>;
+
+    //Bedingung, damit der Button zum Download angezeigt wird. Siehe draw Methode
+    isPetriNetFinished: boolean = false;
+
+    availableLayouts = Object.values(Layout); // Extract the enum values as an array
+    selectedLayout: Layout = this._svgLayoutService.getLayout(); // Set a default layout
 
     private _sub: Subscription;
     private _petriNet: InductivePetriNet | undefined;
@@ -36,13 +46,17 @@ export class DisplayComponent implements OnDestroy {
                 private _fileReaderService: FileReaderService,
                 private _inductiveMinerService: InductiveMinerService,
                 private _http: HttpClient,
-                private _intersectionCalculatorService: IntersectionCalculatorService
+                private _intersectionCalculatorService: IntersectionCalculatorService,
+                private _pnmlWriterService: PNMLWriterService,
+                private _svgLayoutService: SvgLayoutService,
+                private _svgArrowService: SvgArrowService,
     ) {
 
         this.fileContent = new EventEmitter<string>();
 
         this._sub = this._displayService.InductivePetriNet$.subscribe(newNet => {
             this._petriNet = newNet;
+            this._petriNet.applyNewDFGLayout(this.selectedLayout);
             this.draw();
         });
     }
@@ -50,6 +64,11 @@ export class DisplayComponent implements OnDestroy {
     ngOnDestroy(): void {
         this._sub.unsubscribe();
         this.fileContent.complete();
+    }
+
+    applyLayout() {
+        this._petriNet!.applyNewDFGLayout(this.selectedLayout);
+        this.draw();
     }
 
     public processDropEvent(e: DragEvent) {
@@ -109,21 +128,22 @@ export class DisplayComponent implements OnDestroy {
         this._selectedEventLogId = undefined;
 
         this.clearDrawingArea();
-        this.dropLines();
-        const petriGraph = this._petriNet?.getSVGRepresentation();
 
-        //petriGraph = {(places), (transitions), arcs, (dfgs)}
-        if (petriGraph && Array.isArray(petriGraph)) {  // or ensure it's an iterable
-            try {
-                for (const node of petriGraph) {
-                    this.drawingArea.nativeElement.prepend(node);
-                }
-            } catch (error) {
-                console.error("Error appending petriGraph:", error);
+        this._svgArrowService.appendArrowMarker(this.drawingArea.nativeElement);
+
+        this.dropLines();
+        this._petriNet?.handleBaseCases();
+        try {
+            const petriGraph = this._petriNet!.getSVGRepresentation();
+            for (const node of petriGraph) {
+                this.drawingArea.nativeElement.prepend(node);
             }
-        } else {
-            console.warn("No valid petriGraph found to append.");
+        } catch (error) {
+            console.log('net not initialized yet')
         }
+       
+        // Netz nur herunterladbar, wenn fertig
+        this.isPetriNetFinished = this._petriNet!.finished;
     }
 
     public dropLines() {
@@ -145,10 +165,30 @@ export class DisplayComponent implements OnDestroy {
     public processMouseDown(e: MouseEvent) {
         if (e.button === 0 && this.drawingArea) {
             this._leftMouseDown = true;
-            this.removeAllDrawnLines();
-            const {x, y} = this.calculateSvgCoordinates(e);
-            this.drawingArea.nativeElement.appendChild(this._svgService.createDrawnLine(x, y));
+            if (this.isDomEventInEventLog(e)) {
+                this.removeAllDrawnLines();
+                const {x, y} = this.calculateSvgCoordinates(e);
+                this.drawingArea.nativeElement.appendChild(this._svgService.createDrawnLine(x, y));
+            }
         }
+    }
+
+    public isDomEventInEventLog(e: Event): boolean {
+        let target = e.target;
+        while (target) {
+            console.log(target);
+            if (target instanceof SVGElement) {
+                if (target.classList.contains('canvas')) {   
+                    return false;
+                } else {
+                    if (target.classList.contains('eventLog')) {
+                        return true;
+                    }
+                    target = target.parentNode;
+                }
+            }
+        }
+        return false;
     }
 
     private calculateSvgCoordinates(e: MouseEvent) {
@@ -253,16 +293,32 @@ export class DisplayComponent implements OnDestroy {
             markedEdges.push(new Edge(new DFGElement(new TraceEvent(from)), new DFGElement(new TraceEvent(to))));
         }
 
-        console.log('markedEdges', markedEdges)
+        console.log('markedEdges: ', markedEdges)
 
         const eventLog = this._petriNet!.getMarkedEventLog(this._selectedEventLogId!);
         try {
             const result = this._inductiveMinerService.applyInductiveMiner(eventLog, markedEdges);
-            console.log('result', result);
+            console.log('cut result: ', result);
             this._petriNet?.handleCutResult(result.cutMade, eventLog, result.el[0], result.el[1])
             this.draw();
         } catch (Error) {
             console.log('no cut possible', Error);
         }
+    }
+
+    downloadPetriNet(type: string) {
+        const link = document.createElement('a');
+        let content = 'type didn\'t match available export format';
+        if (type === 'pnml') {
+            content = this._pnmlWriterService.createPnmlForPetriNet(this._petriNet!);
+            link.download = 'output.pnml';
+        } else if (type === 'json') {
+            content = this._pnmlWriterService.createJSONForPetriNet(this._petriNet!);
+            link.download = 'output.json';
+        }
+        const blob = new Blob([content]);
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
     }
 }

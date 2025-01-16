@@ -7,15 +7,21 @@ import {Edge} from '../classes/Datastructure/InductiveGraph/edgeElement';
 import {SvgArrowService} from "./svg-arrow.service";
 import { SvgLayoutService } from './svg-layout.service';
 import { Transition } from '../classes/Datastructure/InductiveGraph/Elements/transition';
+import { Layout } from '../classes/Datastructure/enums';
 
 @Injectable({
     providedIn: 'root'
 })
 
 export class SvgService {
-    private _layouter = new SvgLayoutService();
 
-    constructor(private readonly svgArrowService: SvgArrowService) {
+    constructor(private readonly svgArrowService: SvgArrowService,
+                private readonly svgLayoutService: SvgLayoutService
+    ) {
+    }
+
+    applyNewDFGLayout(layout: Layout) {
+        this.svgLayoutService.setLayout(layout);
     }
 
     createSVGForPlace(placeToGen: Place) {
@@ -27,16 +33,17 @@ export class SvgService {
     }
 
     createSVGForTransition(transToGen: Transition) {
-        const MINHEIGHT = 20;
-        const MINWIDTH = 50;
+        const MINHEIGHT = 50;
+        const MINWIDTH = 100;
 
         // Create the SVG rectangle
         const svg = this.createSvgElement('rect');
         svg.setAttribute('id', transToGen.id);
-        svg.setAttribute('class', 'transition');
+        svg.setAttribute('class', 'transitionStyle');
+        const fontSize = 16;
 
         // Create a temporary SVG text element to measure the label width
-        const labelWidth = this.calcWidthOfText(transToGen.id);
+        const labelWidth = this.calcWidthOfText(transToGen.id, fontSize);
 
         // Calculate the rectangle dimensions
         const rectWidth = Math.max(labelWidth + 10, MINWIDTH); // Add padding and ensure min width of 50
@@ -46,12 +53,12 @@ export class SvgService {
 
         // Create the SVG text element for the label
         const text = this.createSvgElement('text');
-        text.textContent = transToGen.id;
+        text.textContent = transToGen.event;
         text.setAttribute('x', (rectWidth / 2).toString()); // Horizontal position
         text.setAttribute('y', (MINHEIGHT / 2).toString()); // Vertical position
         text.setAttribute('dominant-baseline', 'middle'); // Vertical alignment
         text.setAttribute('text-anchor', 'middle'); // Horizontal alignment
-        text.setAttribute('font-size', '12'); // Adjust font size if needed
+        text.setAttribute('font-size', fontSize.toString()); // Adjust font size if needed
 
         // Group the rectangle and the text together
         const group = this.createSvgElement('g');
@@ -59,15 +66,17 @@ export class SvgService {
         group.appendChild(text);
         group.setAttribute('width', rectWidth.toString());
         group.setAttribute('height', MINHEIGHT.toString());
+        group.setAttribute('id', transToGen.id);
+        group.classList.add('transition');
 
         // Register the group as the SVG element for the transition
         transToGen.registerSvg(group);
     }
 
-    private calcWidthOfText(label: string) {
+    private calcWidthOfText(label: string, fontSize: number) {
         const tempText = this.createSvgElement('text') as SVGGraphicsElement;
         tempText.textContent = label;
-        tempText.setAttribute('font-size', '12'); // Adjust font size if needed
+        tempText.setAttribute('font-size', fontSize.toString()); // Adjust font size if needed
 
         // Append the text to the SVG temporarily to measure its width
         const tempSvg = this.createSvgElement('svg');
@@ -88,15 +97,13 @@ export class SvgService {
 
     //erstelle Gruppen von SVG Elementen für EventLogs
     public createSVGforEventLog(eventLog: EventLog, id: string) : SVGGElement {
-        const result: Array<SVGElement> = [];
         const uniqueEvents = new Set<TraceEvent>();
         const addedConceptNames = new Set<string>(); // To track unique concept names
         const edges = new Set<string>(); // To track unique edges as a string representation
         const svgElementsMap: { [key: string]: SVGElement } = {}; // Map to hold SVG elements by concept name
         const group = this.createSvgElement('g') as SVGGElement;
         group.setAttribute('id', id);
-
-        this.svgArrowService.appendArrowMarker(group);
+        group.classList.add('eventLog');
 
         // Add a rectangle as background/container
         const rectangle = this.createSvgElement('rect');
@@ -153,7 +160,6 @@ export class SvgService {
             return { from, to };
         });
 
-        // Example output for debugging
         console.log('Unique Events:', uniqueEventsArray);
         console.log('Edges:', edgesArray);
 
@@ -177,8 +183,7 @@ export class SvgService {
 
         const conceptNameArray = uniqueEventsArray.map(event => event.conceptName);
         //const positions = this.applySpringEmbedderLayout(conceptNameArray, edgesArray);
-        const positions = this._layouter.applyLayout(conceptNameArray, edgesArray);
-        console.log("positions: ", positions);
+        const positions = this.svgLayoutService.applyLayout(conceptNameArray, edgesArray);
 
         //group.setAttribute('transform', 'translate(200, 100)');
         // Update rectangle dimensions to encompass the layout
@@ -221,87 +226,6 @@ export class SvgService {
         })
         return group;
     }
-
-    /* private applySpringEmbedderLayout(nodes: Array<string>, edges: Array<{ from: string; to: string }>) {
-        const positions: { [key: string]: { x: number; y: number } } = {};
-        const width = 1000; // Canvas width
-        const height = 800; // Canvas height
-        const maxIterations = 300; // Number of iterations for the layout
-        const k = 150; // Ideal edge length
-        const repulsiveForce = 800; // Force constant for repulsion
-        const step = 2; // Step size for position updates
-
-        // Initialize positions randomly within the canvas bounds
-        nodes.forEach(node => {
-            positions[node] = {
-                x: Math.random() * width,
-                y: Math.random() * height,
-            };
-        });
-
-        // Function to compute repulsive force between two nodes
-        const computeRepulsiveForce = (pos1: { x: number; y: number }, pos2: { x: number; y: number }) => {
-            const dx = pos1.x - pos2.x;
-            const dy = pos1.y - pos2.y;
-            const dist = Math.sqrt(dx * dx + dy * dy) || 1; // Avoid division by zero
-            const force = repulsiveForce / (dist * dist);
-            return { fx: force * (dx / dist), fy: force * (dy / dist) };
-        };
-
-        // Function to compute attractive force along an edge
-        const computeAttractiveForce = (pos1: { x: number; y: number }, pos2: { x: number; y: number }) => {
-            const dx = pos2.x - pos1.x;
-            const dy = pos2.y - pos1.y;
-            const dist = Math.sqrt(dx * dx + dy * dy) || 1; // Avoid division by zero
-            const force = (dist - k) / k;
-            return { fx: force * (dx / dist), fy: force * (dy / dist) };
-        };
-
-        // Iteratively apply forces
-        for (let i = 0; i < maxIterations; i++) {
-            const forces: { [key: string]: { fx: number; fy: number } } = {};
-
-            // Initialize forces to zero
-            nodes.forEach(node => {
-                forces[node] = { fx: 0, fy: 0 };
-            });
-
-            // Compute repulsive forces
-            for (let j = 0; j < nodes.length; j++) {
-                for (let k = j + 1; k < nodes.length; k++) {
-                    const nodeA = nodes[j];
-                    const nodeB = nodes[k];
-                    const force = computeRepulsiveForce(positions[nodeA], positions[nodeB]);
-                    forces[nodeA].fx += force.fx;
-                    forces[nodeA].fy += force.fy;
-                    forces[nodeB].fx -= force.fx;
-                    forces[nodeB].fy -= force.fy;
-                }
-            }
-
-            // Compute attractive forces
-            edges.forEach(edge => {
-                const force = computeAttractiveForce(positions[edge.from], positions[edge.to]);
-                forces[edge.from].fx += force.fx;
-                forces[edge.from].fy += force.fy;
-                forces[edge.to].fx -= force.fx;
-                forces[edge.to].fy -= force.fy;
-            });
-
-            // Update positions based on forces
-            nodes.forEach(node => {
-                const pos = positions[node];
-                const force = forces[node];
-                pos.x += force.fx * step;
-                pos.y += force.fy * step;
-
-                // Keep positions within bounds
-                pos.x = Math.max(0, Math.min(width, pos.x));
-                pos.y = Math.max(0, Math.min(height, pos.y));
-            });
-        }
-        return positions;
-    } */
 
     private createSvgForEvent(element: DFGElement): SVGElement {
         const svg = this.createSvgElement('circle');
@@ -347,12 +271,13 @@ export class SvgService {
         const { x: fromX, y: fromY } = this.calculateStartEndCoordinate(from);
         const { x: toX, y: toY } = this.calculateStartEndCoordinate(to);
 
-        const intersection = this.svgArrowService.calculateIntersection(fromX, fromY, toX, toY, to);
+        const fromIntersection = this.svgArrowService.calculateIntersection(toX, toY, fromX, fromY, from);
+        const toIntersection = this.svgArrowService.calculateIntersection(fromX, fromY, toX, toY, to);
         // Set line attributes using the coordinates
-        svg.setAttribute('x1', fromX.toString());
-        svg.setAttribute('y1', fromY.toString());
-        svg.setAttribute('x2', intersection.x.toString());
-        svg.setAttribute('y2', intersection.y.toString());
+        svg.setAttribute('x1', fromIntersection.x.toString());
+        svg.setAttribute('y1', fromIntersection.y.toString());
+        svg.setAttribute('x2', toIntersection.x.toString());
+        svg.setAttribute('y2', toIntersection.y.toString());
         svg.setAttribute('class', 'edge');
         return svg;
     }
