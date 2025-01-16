@@ -193,8 +193,7 @@ export class InductiveMinerHelper {
     
             // Starte DFS von allen Startknoten
             for (const start of startEdges) {
-                const visited = new Set<string>();
-                dfs(start, visited, false);
+                dfs(start, new Set<string>(), false);
     
                 // Falls ein gültiger Pfad gefunden wurde, prüfe die nächste Aktivität
                 if (activityReached && stopReached) break;
@@ -205,5 +204,42 @@ export class InductiveMinerHelper {
         }
     
         return true; // Alle Aktivitäten wurden überprüft und erfüllen die Bedingung
+    }
+
+    // Identifiziere alle Aktivitäten, die zwischen zwei Aktivitätsmengen liegen
+    public getActivitiesInbetween(eventlog: EventLog, from: Set<string>, to: Set<string>): Set<string> {
+        const eventlogMap: Map<string, string[]> = this.parseEventlogToNodes(eventlog);
+        const inBetweenActivities = new Set<string>();
+
+        const dfs = (current: string, visited: Set<string>): void => {
+            // Zyklen vermeiden
+            if (visited.has(current)) return;
+            visited.add(current);
+    
+            const neighbors = eventlogMap.get(current) || []; // Direkte Nachfolger des aktuellen Knotens
+    
+            for (const neighbor of neighbors) {
+                if (to.has(neighbor)) {
+                    // Wenn Aktivität aus "to" erreicht, akt. Rekursion fertig
+                    continue;
+                }
+    
+                if (!inBetweenActivities.has(neighbor)) { // Wenn Aktivität aus "to" noch nicht erreicht, weitersuchen
+                    inBetweenActivities.add(neighbor);
+                    dfs(neighbor, visited);
+                }
+            }
+    
+            visited.delete(current); // Backtracking
+        };
+
+        // Suche von allen Elementen in "from"
+        for (const cActivity of from) {
+            if (eventlogMap.has(cActivity)) {
+                dfs(cActivity, new Set<string>());
+            }
+        }
+
+        return inBetweenActivities;
     }
 }

@@ -39,9 +39,11 @@ export class SequenceCutChecker {
             for (let i = 0; i < cEventLogTrace.events.length; i++) {
 
                 //TODO Events i+1 can be out of bounds
-                if (cEventLogTrace.events[i].conceptName == cEdge.start.id && cEventLogTrace.events[i+1].conceptName == cEdge.end.id ) {
-                    indexOfCutInTrace = i;
-                }
+                if (cEventLogTrace.events[i+1] ) {
+                    if (cEventLogTrace.events[i].conceptName == cEdge.start.id && cEventLogTrace.events[i+1].conceptName == cEdge.end.id ) {
+                        indexOfCutInTrace = i;
+                    }
+                } else break;
             }
             if (indexOfCutInTrace !== -1) { // wenn akt. cut-Vorschlag im akt. eventlog trace gefunden
                 cutPossible = true;
