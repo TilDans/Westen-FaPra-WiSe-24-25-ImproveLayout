@@ -63,6 +63,7 @@ export class SvgService {
         text.setAttribute('dominant-baseline', 'middle'); // Vertical alignment
         text.setAttribute('text-anchor', 'middle'); // Horizontal alignment
         text.setAttribute('font-size', fontSize.toString()); // Adjust font size if needed
+        text.setAttribute('class', 'non-selectable'); // Add a class for non-selectable styles
 
         // Group the rectangle and the text together
         const group = this.createSvgElement('g');

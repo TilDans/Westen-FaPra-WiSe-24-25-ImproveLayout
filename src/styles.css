@@ -13,6 +13,11 @@ body {
     stroke-width: 2; 
 }
 
+.non-selectable {
+    user-select: none;
+    pointer-events: none; /* Optional, to ensure clicks pass through the text */
+}
+
 .place {
     fill: none;
     stroke: black;
