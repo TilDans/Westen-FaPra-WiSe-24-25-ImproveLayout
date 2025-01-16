@@ -50,8 +50,6 @@ export class SvgService {
         // Calculate the rectangle dimensions
         const rectWidth = Math.max(labelWidth + 10, MINWIDTH); // Add padding and ensure min width of 50
 
-        console.log(rectWidth);
-
         svg.setAttribute('width', rectWidth.toString());
         svg.setAttribute('height', MINHEIGHT.toString());
 
