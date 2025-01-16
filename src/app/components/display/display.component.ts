@@ -176,7 +176,6 @@ export class DisplayComponent implements OnDestroy {
     public isDomEventInEventLog(e: Event): boolean {
         let target = e.target;
         while (target) {
-            console.log(target);
             if (target instanceof SVGElement) {
                 if (target.classList.contains('canvas')) {   
                     return false;

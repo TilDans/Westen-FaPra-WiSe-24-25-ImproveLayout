@@ -35,15 +35,17 @@ export class SvgService {
     createSVGForTransition(transToGen: Transition) {
         const MINHEIGHT = 50;
         const MINWIDTH = 100;
+        const fontSize = 16;
+
+        const labelForTrans = transToGen.event;
 
         // Create the SVG rectangle
         const svg = this.createSvgElement('rect');
-        svg.setAttribute('id', transToGen.id);
+        svg.setAttribute('id', labelForTrans);
         svg.setAttribute('class', 'transitionStyle');
-        const fontSize = 16;
 
         // Create a temporary SVG text element to measure the label width
-        const labelWidth = this.calcWidthOfText(transToGen.id, fontSize);
+        const labelWidth = this.calcWidthOfText(labelForTrans, fontSize);
 
         // Calculate the rectangle dimensions
         const rectWidth = Math.max(labelWidth + 10, MINWIDTH); // Add padding and ensure min width of 50
@@ -53,12 +55,13 @@ export class SvgService {
 
         // Create the SVG text element for the label
         const text = this.createSvgElement('text');
-        text.textContent = transToGen.event;
+        text.textContent = labelForTrans;
         text.setAttribute('x', (rectWidth / 2).toString()); // Horizontal position
         text.setAttribute('y', (MINHEIGHT / 2).toString()); // Vertical position
         text.setAttribute('dominant-baseline', 'middle'); // Vertical alignment
         text.setAttribute('text-anchor', 'middle'); // Horizontal alignment
         text.setAttribute('font-size', fontSize.toString()); // Adjust font size if needed
+        text.setAttribute('class', 'non-selectable'); // Add a class for non-selectable styles
 
         // Group the rectangle and the text together
         const group = this.createSvgElement('g');
@@ -66,7 +69,7 @@ export class SvgService {
         group.appendChild(text);
         group.setAttribute('width', rectWidth.toString());
         group.setAttribute('height', MINHEIGHT.toString());
-        group.setAttribute('id', transToGen.id);
+        group.setAttribute('id', labelForTrans);
         group.classList.add('transition');
 
         // Register the group as the SVG element for the transition
