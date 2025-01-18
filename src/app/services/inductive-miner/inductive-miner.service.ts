@@ -7,7 +7,6 @@ import { LoopCutChecker } from './cuts/loop-cut';
 import { Edge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
 import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
 import { Cuts } from 'src/app/classes/Datastructure/enums';
-import { ParallelCutChecker } from './cuts/parallel-cut';
 
 @Injectable({
     providedIn: 'root',
