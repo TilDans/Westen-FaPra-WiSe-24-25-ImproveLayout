@@ -14,20 +14,20 @@ export class LoopCutChecker {
 
     public checkLoopCut(eventlog: EventLog, edges: Edge[]): EventLog[] {
 
-        // Identifiziere alle START/STOP-Knoten
-        let startEdges: Set<string> = new Set();
+        // Identifiziere alle Play/STOP-Knoten
+        let playEdges: Set<string> = new Set();
         let stopEdges: Set<string> = new Set();
 
         for (const trace of eventlog.traces) {
-            startEdges.add(trace.events[0].conceptName)
+            playEdges.add(trace.events[0].conceptName)
             stopEdges.add(trace.events[trace.events.length-1].conceptName)
         }
 
         // Deklaration von Teilmengen
-        let A1Play: Set<string> = new Set<string>;
-        let A1Stop: Set<string> = new Set<string>;
-        let A2Play: Set<string> = new Set<string>;
-        let A2Stop: Set<string> = new Set<string>;
+        const A1Play: Set<string> = new Set<string>;
+        const A1Stop: Set<string> = new Set<string>;
+        const A2Play: Set<string> = new Set<string>;
+        const A2Stop: Set<string> = new Set<string>;
         
         // Identifiziere A1Play, A1Stop, A2Play, A2Stop 
         for (const edge of edges) {
@@ -38,12 +38,17 @@ export class LoopCutChecker {
             }
 
             // Identifiziere A2Stop und A1Play Knoten
-            if (startEdges.has(edge.end.id)) { // Wenn es sich um einen Knoten handelt, der aus START kommt
+            if (playEdges.has(edge.end.id)) { // Wenn es sich um einen Knoten handelt, der aus PLAY kommt
                 A2Stop.add(edge.start.id);
                 A1Play.add(edge.end.id);
             }
         }
 
+        // Prüfe Bedingungen
+        return this.loopCutConditionsChecker(eventlog, A1Play, A1Stop, A2Play, A2Stop,);
+    }
+
+    public loopCutConditionsChecker(eventlog: EventLog, A1Play: Set<string>, A1Stop: Set<string>, A2Play: Set<string>, A2Stop: Set<string>): EventLog[] {
         // Identifiziere "A1Inbetween" ⊆ A1 ⊄ (A1Play ∪ A1Stop) UND "A2Inbetween" ⊆ A2 ⊄ (A2Play ∪ A2Stop)
         let A1Inbetween: Set<string> = new Set<string>()
         let A2Inbetween: Set<string> = new Set<string>()
@@ -52,10 +57,10 @@ export class LoopCutChecker {
         if (!(A1Play.size === A1Stop.size && [...A1Play].every(x => A1Stop.has(x)))) A1Inbetween = this.helper.getActivitiesInbetween(eventlog, A1Play, A1Stop);
         if (!(A2Play.size === A2Stop.size && [...A2Play].every(x => A2Stop.has(x)))) A2Inbetween = this.helper.getActivitiesInbetween(eventlog, A2Play, A2Stop); 
 
-        // Deklaration von Teilmengen A1/A2, um Bedingungen prüfen zu können
-        let A1: Set<string> = new Set([...A1Play, ...A1Stop, ...A1Inbetween]);
-        let A2: Set<string> = new Set([...A2Play, ...A2Stop, ...A2Inbetween]);
-
+        // Deklaration von Teilmengen A1/A2, um neue Eventlogs zu erzeugen und daraufhin Bedingungen zu prüfen
+        const A1: Set<string> = new Set([...A1Play, ...A1Stop, ...A1Inbetween]);
+        const A2: Set<string> = new Set([...A2Play, ...A2Stop, ...A2Inbetween]);
+        
         // Bedingungen prüfen
         // A1 und A2 dürfen keine intersection haben
         if (this.helper.hasIntersection(A1, A2)) return [];
@@ -69,8 +74,17 @@ export class LoopCutChecker {
         4. für jede Aktivität in 𝐴1S𝑡𝑜𝑝 gibt es in 𝐷 eine Kante zu jeder Aktivität in 𝐴2P𝑙𝑎𝑦 ∪ {𝑠𝑡𝑜𝑝}
         */
         
+        // Identifiziere PLAY/STOP-Knoten
+        let playEdges: Set<string> = new Set();
+        let stopEdges: Set<string> = new Set();
+
+        for (const trace of eventlog.traces) {
+            playEdges.add(trace.events[0].conceptName)
+            stopEdges.add(trace.events[trace.events.length-1].conceptName)
+        }
+
         // 1:
-        if (!(startEdges.size === A1Play.size && [...startEdges].every(x => A1Play.has(x)))) return [];
+        if (!(playEdges.size === A1Play.size && [...playEdges].every(x => A1Play.has(x)))) return [];
         // 2:
         if (!(stopEdges.size === A1Stop.size && [...stopEdges].every(x => A1Stop.has(x)))) return [];
         
@@ -79,10 +93,15 @@ export class LoopCutChecker {
         // 4:
         if (!this.helper.checkDirectNeighbors(eventlog, A1Stop, A2Play)) return []
 
+        // Wenn alle Bedingungen erfolgreich: Returne zwei eventlogs
+        return this.loopCutGenerateEventlogs(eventlog, A1, A2);
+    }
+
+    public loopCutGenerateEventlogs(eventlog: EventLog, A1: Set<string>, A2: Set<string>): EventLog[] {
         // Deklaration neuer, geteilter eventlogs
         let eventlogA1: EventLog = new EventLog([]);
         let eventlogA2: EventLog = new EventLog([]);
-
+  
         // Konstruiere die neuen Eventlogs anhand der Teilmengen A1 und A2
         for (const trace of eventlog.traces) {
             let ctraceA1: Trace = new Trace([]);
@@ -115,7 +134,6 @@ export class LoopCutChecker {
             }
         }
 
-        // Wenn alle Bedingungen erfolgreich: Returne zwei eventlogs
         return [eventlogA1, eventlogA2];
     }
 

@@ -45,8 +45,7 @@ export class InductiveMinerHelper {
     }
 
     // Gebe jeden direkten und indirekten Nachfolger eines Events zurück (rekursiv: DFS)
-    public getAllReachableActivities(map: Map<string, string[]>, traceEvent: TraceEvent): Set<string> {
-        const initialActivity: string = traceEvent.conceptName;
+    public getAllReachableActivities(map: Map<string, string[]>, initialActivity: string): Set<string> {
         const reachableActivities: Set<string> = new Set<string>();
         let isInitialActivityReachable: boolean = false;
 
@@ -105,22 +104,22 @@ export class InductiveMinerHelper {
         return eventlogMap;
     }
 
-    // Mappe START-Kanten an STOP-Kanten
-    public mapEdgesStartToStop(edges: Edge[]): [string, string][] {
-        let startEdges: Edge[] = [];
+    // Mappe PLAY-Kanten an STOP-Kanten
+    public mapEdgesPlayToStop(edges: Edge[]): [string, string][] {
+        let playEdges: Edge[] = [];
         let stopEdges: Edge[] = [];
 
-        // Fülle Arrays mit START und STOP Kanten
+        // Fülle Arrays mit PLAY und STOP Kanten
         for (const edge of edges) {
-            if (edge.start.id == 'play' && (edge.end)) startEdges.push(edge);
+            if (edge.start.id == 'play' && (edge.end)) playEdges.push(edge);
             if ((edge.start) && edge.end.id == 'stop') stopEdges.push(edge);
         }
 
-        // Erzeuge Paare von START Kanten mit STOP Kanten
+        // Erzeuge Paare von PLAY Kanten mit STOP Kanten
         let pairedEdges: [string, string][] = [];
-        for (const startEdge of startEdges) {
+        for (const playEdge of playEdges) {
             for (const stopEdge of stopEdges) {
-                pairedEdges.push([startEdge.end.id, stopEdge.start.id]);
+                pairedEdges.push([playEdge.end.id, stopEdge.start.id]);
             }
         }
 
@@ -149,12 +148,12 @@ export class InductiveMinerHelper {
     public checkPathInSublog(eventlog: EventLog, activities: Set<string>): boolean {
         const eventlogMap: Map<string, string[]> = this.parseEventlogToNodes(eventlog);
     
-        // Sammle Start- und Stop-Knoten
-        const startEdges: Set<string> = new Set();
+        // Sammle PLAY- und STOP-Knoten
+        const playEdges: Set<string> = new Set();
         const stopEdges: Set<string> = new Set();
         for (const trace of eventlog.traces) {
             if (activities.has(trace.events[0].conceptName)) {
-                startEdges.add(trace.events[0].conceptName);
+                playEdges.add(trace.events[0].conceptName);
             }
             if (activities.has(trace.events[trace.events.length - 1].conceptName)) {
                 stopEdges.add(trace.events[trace.events.length - 1].conceptName);
@@ -191,9 +190,9 @@ export class InductiveMinerHelper {
                 return false;
             };
     
-            // Starte DFS von allen Startknoten
-            for (const start of startEdges) {
-                dfs(start, new Set<string>(), false);
+            // Starte DFS von allen PLAY-Knoten
+            for (const playEdge of playEdges) {
+                dfs(playEdge, new Set<string>(), false);
     
                 // Falls ein gültiger Pfad gefunden wurde, prüfe die nächste Aktivität
                 if (activityReached && stopReached) break;

@@ -304,6 +304,10 @@ export class DisplayComponent implements OnDestroy {
             console.log('no cut possible', Error);
         }
     }
+    
+    public fallThrough() {
+        
+    }
 
     downloadPetriNet(type: string) {
         const link = document.createElement('a');
