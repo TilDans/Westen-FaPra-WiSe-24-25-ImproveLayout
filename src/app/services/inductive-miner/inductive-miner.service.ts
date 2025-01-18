@@ -42,4 +42,38 @@ export class InductiveMinerService {
         throw new Error ('no cut possible');
     }
 
+    public applyfallThrough(eventlog: EventLog): boolean {
+        const uniqueActivities: Set<string> = this.helper.getUniqueActivities(eventlog);
+
+        const cutCheckers = [
+            { checker: this.sequenceCutChecker.sequenceCutConditionsChecker.bind(this.sequenceCutChecker) as any, cutType: Cuts.Sequence },
+            { checker: this.exclusiveCutChecker.exclusiveCutConditionsChecker.bind(this.exclusiveCutChecker) as any, cutType: Cuts.Exclusive },
+            { checker: this.parallelCutChecker.parallelCutConditionsChecker.bind(this.parallelCutChecker) as any, cutType: Cuts.Parallel },
+            { checker: this.loopCutChecker.loopCutConditionsChecker.bind(this.loopCutChecker) as any, cutType: Cuts.Loop },
+        ];
+        
+        for (const cutChecker of cutCheckers) {
+            let A1: Set<string> = new Set<string>();
+            let A2: Set<string> = new Set<string>(uniqueActivities);
+
+            if (cutChecker.cutType == Cuts.Loop ) {
+               continue;
+            } else {
+                for (const activity of uniqueActivities) {
+                    A1.add(activity);
+                    A2.delete(activity)
+                    const a: EventLog[] = cutChecker.checker(eventlog, A1, A2);
+                    if (a.length == 0) {
+                        console.log("HALLO1")
+                        return true;
+                    } else {
+                        console.log("HALLO " + a[0].traces[0]?.events[0].conceptName)
+                        return false;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 }

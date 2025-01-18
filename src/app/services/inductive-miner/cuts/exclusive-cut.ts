@@ -50,7 +50,7 @@ export class ExclusiveCutChecker {
         return this.exclusiveCutConditionsChecker(eventlog, this.helper.getUniqueActivities(eventlogA1), this.helper.getUniqueActivities(eventlogA2), {A1: eventlogA1, A2: eventlogA2});
     }
 
-    public exclusiveCutConditionsChecker(eventlog: EventLog, A1: Set<string>, A2: Set<string>, splitEventlogs?: {A1: EventLog, A2: EventLog}) {
+    public exclusiveCutConditionsChecker(eventlog: EventLog, A1: Set<string>, A2: Set<string>, splitEventlogs?: {A1: EventLog, A2: EventLog}): EventLog[] {
         // Bedingungen prüfen
         // A1 und A2 dürfen keine intersection haben
         if (this.helper.hasIntersection(A1, A2)) return [];
@@ -75,7 +75,7 @@ export class ExclusiveCutChecker {
 
         // Falls diese Methode von der fallThrough-Funktion aufgerufen wurde, ist die "echte" Generierung eines eventlogs irrelevant
         if (splitEventlogs === undefined) {
-            return [new EventLog([new Trace([new TraceEvent('No Fall Through')])])]
+            return [new EventLog([new Trace([new TraceEvent('Fall Through found')])])]
         }
 
         // Wenn alle Bedingungen erfolgreich: Returne zwei eventlogs

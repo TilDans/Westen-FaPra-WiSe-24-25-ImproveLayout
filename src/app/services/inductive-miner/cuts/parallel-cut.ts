@@ -98,7 +98,7 @@ export class ParallelCutChecker {
         return this.parallelCutConditionsChecker(eventlog, cutoutActivities, bidirectionalActivities);
     }
 
-    public parallelCutConditionsChecker(eventlog: EventLog, A1: Set<string>, A2: Set<string>) {
+    public parallelCutConditionsChecker(eventlog: EventLog, A1: Set<string>, A2: Set<string>): EventLog[] {
         // Bedingungen prüfen
         // A1 und A2 dürfen keine intersection haben
         if (this.helper.hasIntersection(A1, A2)) return [];

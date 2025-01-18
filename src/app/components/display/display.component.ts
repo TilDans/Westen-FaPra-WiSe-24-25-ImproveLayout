@@ -306,7 +306,26 @@ export class DisplayComponent implements OnDestroy {
     }
     
     public fallThrough() {
-        
+        if (this._selectedEventLogId === undefined) {
+            alert('No eventlog marked')
+            return;
+        }
+
+        const eventLog = this._petriNet!.getMarkedEventLog(this._selectedEventLogId!);
+        try {
+            const result = this._inductiveMinerService.applyfallThrough(eventLog);
+            if (!result) {
+                alert('No Fall Through possible')
+                return;
+            } else {
+                alert('Fall Through applied')
+                return;
+            }
+            //this._petriNet?.handleCutResult(result.cutMade, eventLog, result.el[0], result.el[1])
+            this.draw();
+        } catch (Error) {
+            console.log('no cut possible', Error);
+        }
     }
 
     downloadPetriNet(type: string) {
