@@ -40,6 +40,10 @@ body {
     fill: blue;
 }
 
+.highligtedDFGNode{
+    fill: yellow;
+}
+
 .dfgPlayNode {
     fill: green;
 }

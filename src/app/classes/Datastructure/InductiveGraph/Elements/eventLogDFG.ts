@@ -45,5 +45,16 @@ export class EventLogDFG extends CustomElement{
         let centerY = (this.y + (this.getHeight() / 2));
         return {x: centerX, y: centerY};
     }
+
+    public colorSubSet(events: Array<string>) {
+        const svg = this.getSvg();
+        const svgNodes = Array.from(svg.getElementsByClassName('dfgNode'));
+        svgNodes.forEach(dfgNode => {
+            dfgNode.classList.remove('highligtedDFGNode');
+            if (events.indexOf(dfgNode.id) !== -1) {
+                dfgNode.classList.add('highligtedDFGNode');
+            }
+        });
+    }
 }
 

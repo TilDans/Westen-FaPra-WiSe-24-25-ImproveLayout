@@ -129,7 +129,7 @@ export class PetriLayerContainer extends CustomArray<PetriLayer> {
             } else {
                 //Elemente nach rechts schieben, letztes Element ist indexInLayer + 2.
                 for (let i = currentLayer.length - 1; i > indexInLayer; i --) {
-                    this [i + 1] = this [i];
+                    currentLayer[i + 1] = currentLayer[i];
                 }
                 //vorheriges Element durch neues ersetzen
                 currentLayer[indexInLayer] = replacingElement;

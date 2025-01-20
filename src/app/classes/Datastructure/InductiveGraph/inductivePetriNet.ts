@@ -10,6 +10,8 @@ import {IntersectionCalculatorService} from "../../../services/intersection-calc
 import { PetriLayerContainer } from "./PetriLayout/petriLayerContainer";
 import { Cuts, Layout } from "../enums";
 import { SvgLayoutService } from "src/app/services/svg-layout.service";
+import { Trace } from "../event-log/trace";
+import { TraceEvent } from "../event-log/trace-event";
 
 
 export class InductivePetriNet{
@@ -25,8 +27,8 @@ export class InductivePetriNet{
     _svgService : SvgService = new SvgService (new SvgArrowService(new IntersectionCalculatorService()), new SvgLayoutService());
 
     //OffSet sollte nicht frößer sein als kleinstes Element * 2 (Berechnung, ob ein Element in einem Layer ist)
-    static horizontalOffset = 150;
-    static verticalOffset = 150;
+    static horizontalOffset = 100;
+    static verticalOffset = 200;
 
     constructor() {
         EventLogDFG.logCounter = 0; // counter der logs für neues Netz resetten
@@ -82,26 +84,26 @@ export class InductivePetriNet{
     /* ----- CUT HANDLING Start ----- */
     ////////////////////////////////////
 
-    public handleCutResult(cutType: Cuts, toRemove: EventLog, toInsertFirst: EventLog, toInsertSecond: EventLog){
-        const eventLogDFGToRemove = this._eventLogDFGs!.find(element => element.eventLog === toRemove)!;
-        const eventLogDFGToInsertFirst = new EventLogDFG(this._svgService, toInsertFirst);
-        const eventLogDFGToInsertSecond = new EventLogDFG(this._svgService, toInsertSecond);
-        switch (cutType) {
-            case Cuts.Sequence: 
-                this.applySequenceCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
-                break;
-            case Cuts.Exclusive: 
-                this.applyExclusiveCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
-                break;
-            case Cuts.Parallel: 
-                this.applyParallelCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
-                break;
-            case Cuts.Loop: 
-                this.applyLoopCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
-                break;
-            default:
-                throw new Error(`Falscher Wert für Cut: ${cutType}`);
-        }
+    public handleCutResult(cutType: Cuts, toRemove: EventLog, toInsertFirst: EventLog, toInsertSecond: EventLog) {
+            const eventLogDFGToRemove = this._eventLogDFGs!.find(element => element.eventLog === toRemove)!;
+            const eventLogDFGToInsertFirst = new EventLogDFG(this._svgService, toInsertFirst);
+            const eventLogDFGToInsertSecond = new EventLogDFG(this._svgService, toInsertSecond);
+            switch (cutType) {
+                case Cuts.Sequence: 
+                    this.applySequenceCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+                    break;
+                case Cuts.Exclusive: 
+                    this.applyExclusiveCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+                    break;
+                case Cuts.Parallel: 
+                    this.applyParallelCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+                    break;
+                case Cuts.Loop: 
+                    this.applyLoopCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+                    break;
+                default:
+                    throw new Error(`Falscher Wert für Cut: ${cutType}`);
+            }
     }
 
     //Elemente hintereinander
@@ -109,8 +111,11 @@ export class InductivePetriNet{
         //Verbundene Kanten finden
         const connecionsInNet = this.getConnectedArcs(toRemove);
 
+        let isLoop = false;
+
         //für eingehende Kanten das erste einzufügende Element als Ziel setzen
         connecionsInNet.edgesToElem.forEach(edge => {
+            if (edge.start.x > toRemove.x) isLoop = true;
             edge.end = toInsertFirst;
         });
 
@@ -119,12 +124,16 @@ export class InductivePetriNet{
 
         //für ausgehende Kanten das zweite einzufügende Element als Start setzen
         connecionsInNet.edgesFromElem.forEach(edge => {
+            if (edge.end.x < toRemove.x) isLoop = true;
             edge.start = toInsertSecond;
         });
 
-        //Layout aktualisieren
-        this._petriLayersContained?.insertToNewLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
-
+        if (!isLoop) {
+            //Layout aktualisieren
+            this._petriLayersContained?.insertToNewLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+        } else {
+            this._petriLayersContained?.insertToNewLayerBeforeCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+        }
         //zu entfernendes Element ersetzen und zweites Element an das Ende des Arrays pushen.
         this._eventLogDFGs![this._eventLogDFGs!.findIndex(elem => elem === toRemove)] = toInsertFirst;
         this._eventLogDFGs!.push(toInsertSecond);
@@ -286,6 +295,32 @@ export class InductivePetriNet{
         this._eventLogDFGs!.push(toInsertSecond);
     }
 
+    public highlightSubsetInDFG(toHighlightIn: EventLog, subset: EventLog) {
+        const eventLogDFGMarked = this._eventLogDFGs!.find(element => element.eventLog === toHighlightIn)!;
+        //eventLogDFGMarked.removeColoring();
+        const uniqueActivities = new Set<string>();
+        if (subset && subset.traces) {
+            subset.traces.forEach((trace: Trace) => {
+                if (trace.events) {
+                trace.events.forEach((event: TraceEvent) => {
+                    if (event.conceptName) {
+                    uniqueActivities.add(event.conceptName);
+                    }
+                });
+                }
+            });
+        }
+        const uniqueActivitiesArray = Array.from(uniqueActivities);
+        eventLogDFGMarked.colorSubSet(uniqueActivitiesArray);
+    }
+    
+    public removeHighlightingFromEventLogDFG(eventLogID: string) {
+        const eventLogDFGToRemoveHighlightingFrom = this._eventLogDFGs!.find(element => element.id === eventLogID)!
+        if (eventLogDFGToRemoveHighlightingFrom) {
+            eventLogDFGToRemoveHighlightingFrom.colorSubSet([]);
+        }
+    }
+
     //////////////////////////////////
     /* ----- CUT HANDLING END ----- */
     //////////////////////////////////
@@ -380,7 +415,6 @@ export class InductivePetriNet{
                 const currElemWidth = element.getWidth();
                 let yValToSet = currLayerYOffset;
                 let xValToSet = currLayerXOffSet + ((layerMaxWidth - currElemWidth) / 2);
-
                 element.setXYonSVG(xValToSet, yValToSet);
                 currLayerYOffset += (InductivePetriNet.verticalOffset + currElemHeight);
             });
