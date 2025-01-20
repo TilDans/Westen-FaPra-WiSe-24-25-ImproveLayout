@@ -85,25 +85,25 @@ export class InductivePetriNet{
     ////////////////////////////////////
 
     public handleCutResult(cutType: Cuts, toRemove: EventLog, toInsertFirst: EventLog, toInsertSecond: EventLog) {
-            const eventLogDFGToRemove = this._eventLogDFGs!.find(element => element.eventLog === toRemove)!;
-            const eventLogDFGToInsertFirst = new EventLogDFG(this._svgService, toInsertFirst);
-            const eventLogDFGToInsertSecond = new EventLogDFG(this._svgService, toInsertSecond);
-            switch (cutType) {
-                case Cuts.Sequence: 
-                    this.applySequenceCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
-                    break;
-                case Cuts.Exclusive: 
-                    this.applyExclusiveCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
-                    break;
-                case Cuts.Parallel: 
-                    this.applyParallelCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
-                    break;
-                case Cuts.Loop: 
-                    this.applyLoopCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
-                    break;
-                default:
-                    throw new Error(`Falscher Wert für Cut: ${cutType}`);
-            }
+        const eventLogDFGToRemove = this._eventLogDFGs!.find(element => element.eventLog === toRemove)!;
+        const eventLogDFGToInsertFirst = new EventLogDFG(this._svgService, toInsertFirst);
+        const eventLogDFGToInsertSecond = new EventLogDFG(this._svgService, toInsertSecond);
+        switch (cutType) {
+            case Cuts.Sequence: 
+                this.applySequenceCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+                break;
+            case Cuts.Exclusive: 
+                this.applyExclusiveCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+                break;
+            case Cuts.Parallel: 
+                this.applyParallelCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+                break;
+            case Cuts.Loop: 
+                this.applyLoopCut(eventLogDFGToRemove, eventLogDFGToInsertFirst, eventLogDFGToInsertSecond);
+                break;
+            default:
+                throw new Error(`Falscher Wert für Cut: ${cutType}`);
+        }
     }
 
     //Elemente hintereinander
