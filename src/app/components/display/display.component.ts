@@ -12,11 +12,9 @@ import {Edge} from "../../classes/Datastructure/InductiveGraph/edgeElement";
 import {DFGElement} from "../../classes/Datastructure/InductiveGraph/Elements/DFGElement";
 import {IntersectionCalculatorService} from "../../services/intersection-calculator.service";
 import { PNMLWriterService } from 'src/app/services/file-export.service';
-import { Cuts, Layout } from 'src/app/classes/Datastructure/enums';
+import { Layout } from 'src/app/classes/Datastructure/enums';
 import { SvgLayoutService } from 'src/app/services/svg-layout.service';
 import { SvgArrowService } from 'src/app/services/svg-arrow.service';
-import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
-import { Trace } from 'src/app/classes/Datastructure/event-log/trace';
 
 @Component({
     selector: 'app-display',
