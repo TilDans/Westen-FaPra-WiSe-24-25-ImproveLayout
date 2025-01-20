@@ -291,14 +291,16 @@ export class InductivePetriNet{
     //////////////////////////////////
 
     public netFinished() {
-        const netFin = this._eventLogDFGs?.length == 0;
-        if (netFin) {
-            const stopTransToModify = this._transitions[this._transitions.findIndex(trans => trans.id === 'tStop')];
-            stopTransToModify.id = ('t' + (this._transitions.length - 1).toString());
-            this._svgService.createSVGForTransition(stopTransToModify);
-            this._transitions.sort((a, b) => parseFloat(a.id.slice(1)) - parseFloat(b.id.slice(1)));
+        if (!this._finished) {
+            const netFin = this._eventLogDFGs?.length === 0;
+            if (netFin) {
+                const stopTransToModify = this._transitions[this._transitions.findIndex(trans => trans.id === 'tStop')];
+                stopTransToModify.id = ('t' + (this._transitions.length - 1).toString());
+                this._svgService.createSVGForTransition(stopTransToModify);
+                this._transitions.sort((a, b) => parseFloat(a.id.slice(1)) - parseFloat(b.id.slice(1)));
+                this._finished = true;
+            }
         }
-        this._finished = true;
     }
 
     public get finished() {

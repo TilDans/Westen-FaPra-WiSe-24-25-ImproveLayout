@@ -56,6 +56,7 @@ export class DisplayComponent implements OnDestroy {
 
         this._sub = this._displayService.InductivePetriNet$.subscribe(newNet => {
             this._petriNet = newNet;
+            this.isPetriNetFinished = false;
             this._petriNet.applyNewDFGLayout(this.selectedLayout);
             this.draw();
         });
