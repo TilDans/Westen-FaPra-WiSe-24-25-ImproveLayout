@@ -315,10 +315,7 @@ export class InductivePetriNet{
     }
     
     public removeHighlightingFromEventLogDFG(eventLogID: string) {
-        const eventLogDFGToRemoveHighlightingFrom = this._eventLogDFGs!.find(element => element.id === eventLogID)!
-        if (eventLogDFGToRemoveHighlightingFrom) {
-            eventLogDFGToRemoveHighlightingFrom.colorSubSet([]);
-        }
+        const eventLogDFGToRemoveHighlightingFrom = this._eventLogDFGs!.find(element => element.id === eventLogID)?.colorSubSet([]);
     }
 
     //////////////////////////////////
