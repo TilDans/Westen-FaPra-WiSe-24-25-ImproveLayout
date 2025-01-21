@@ -307,7 +307,7 @@ export class DisplayComponent implements OnDestroy {
         }
         console.log('markedEdges: ', markedEdges)
 
-        const eventLog = this._petriNet!.getMarkedEventLog(this._selectedEventLogId!);
+        const eventLog = this._petriNet!.getEventLogByID(this._selectedEventLogId!);
 
 
         if (applyResultToPetriNet) {

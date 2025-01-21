@@ -46,6 +46,16 @@ export class InductivePetriNet{
         return this._arcs;
     }
 
+    public getEventLogByID(eventLogID: string) {
+        for (const eventLog of this._eventLogDFGs!) {
+            if (eventLog?.id === eventLogID) {
+                return eventLog?.eventLog;
+            }
+        }
+        // should not happen
+        throw new Error('No event log found for id ' + eventLogID);
+    }
+
     ////////////////////////////////
     /* ----- INITIALIZATION ----- */
     ////////////////////////////////
@@ -295,29 +305,6 @@ export class InductivePetriNet{
         this._eventLogDFGs!.push(toInsertSecond);
     }
 
-    public highlightSubsetInDFG(toHighlightIn: EventLog, subset: EventLog) {
-        const eventLogDFGMarked = this._eventLogDFGs!.find(element => element.eventLog === toHighlightIn)!;
-        //eventLogDFGMarked.removeColoring();
-        const uniqueActivities = new Set<string>();
-        if (subset && subset.traces) {
-            subset.traces.forEach((trace: Trace) => {
-                if (trace.events) {
-                trace.events.forEach((event: TraceEvent) => {
-                    if (event.conceptName) {
-                    uniqueActivities.add(event.conceptName);
-                    }
-                });
-                }
-            });
-        }
-        const uniqueActivitiesArray = Array.from(uniqueActivities);
-        eventLogDFGMarked.colorSubSet(uniqueActivitiesArray);
-    }
-    
-    public removeHighlightingFromEventLogDFG(eventLogID: string) {
-        const eventLogDFGToRemoveHighlightingFrom = this._eventLogDFGs!.find(element => element.id === eventLogID)?.colorSubSet([]);
-    }
-
     //////////////////////////////////
     /* ----- CUT HANDLING END ----- */
     //////////////////////////////////
@@ -339,16 +326,6 @@ export class InductivePetriNet{
         return this._finished;
     }
 
-    public getMarkedEventLog(eventLogID: string) {
-        for (const eventLog of this._eventLogDFGs!) {
-            if (eventLog?.id === eventLogID) {
-                return eventLog?.eventLog;
-            }
-        }
-        // should not happen
-        throw new Error('No event log found for id ' + eventLogID);
-    }
-
     private getConnectedArcs(node: CustomElement): {edgesToElem: Edge[], edgesFromElem: Edge[] } {
         //bestimme alle Kanten, welche an dem gegebenen Element enden und ziehe daraus die Elemente vor diesem
         const edgesToElem = (this._arcs.filter(edge => edge.end == node));
@@ -368,6 +345,29 @@ export class InductivePetriNet{
                 elDfg.updateLayout();
             }
         }
+    }
+
+    public highlightSubsetInDFG(toHighlightIn: EventLog, subset: EventLog) {
+        const eventLogDFGMarked = this._eventLogDFGs!.find(element => element.eventLog === toHighlightIn)!;
+        //eventLogDFGMarked.removeColoring();
+        const uniqueActivities = new Set<string>();
+        if (subset && subset.traces) {
+            subset.traces.forEach((trace: Trace) => {
+                if (trace.events) {
+                trace.events.forEach((event: TraceEvent) => {
+                    if (event.conceptName) {
+                    uniqueActivities.add(event.conceptName);
+                    }
+                });
+                }
+            });
+        }
+        const uniqueActivitiesArray = Array.from(uniqueActivities);
+        eventLogDFGMarked.colorSubSet(uniqueActivitiesArray);
+    }
+    
+    public removeHighlightingFromEventLogDFG(eventLogID: string) {
+        const eventLogDFGToRemoveHighlightingFrom = this._eventLogDFGs!.find(element => element.id === eventLogID)?.colorSubSet([]);
     }
     
     public getSVGRepresentation(): SVGElement[] {
