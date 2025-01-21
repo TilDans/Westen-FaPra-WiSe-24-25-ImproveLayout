@@ -34,6 +34,8 @@ export class InductivePetriNet{
         EventLogDFG.logCounter = 0; // counter der logs für neues Netz resetten
     }
 
+    //#region getters/setters
+
     public get Transitions() {
         return this._transitions;
     }
@@ -46,19 +48,16 @@ export class InductivePetriNet{
         return this._arcs;
     }
 
-    public getEventLogByID(eventLogID: string) {
-        for (const eventLog of this._eventLogDFGs!) {
-            if (eventLog?.id === eventLogID) {
-                return eventLog?.eventLog;
-            }
-        }
-        // should not happen
-        throw new Error('No event log found for id ' + eventLogID);
+    public get finished() {
+        return this._finished;
     }
+
+    //#endregion
 
     ////////////////////////////////
     /* ----- INITIALIZATION ----- */
     ////////////////////////////////
+    //#region
 
     init(eventLog: EventLog): InductivePetriNet {
         //zwei Stellen zum Start generieren und die entsprechenden Kanten einfügen
@@ -90,9 +89,12 @@ export class InductivePetriNet{
         this.genArc(stopTrans, last);
     }
 
+    //#endregion
+
     ////////////////////////////////////
     /* ----- CUT HANDLING Start ----- */
     ////////////////////////////////////
+    //#region
 
     public handleCutResult(cutType: Cuts, toRemove: EventLog, toInsertFirst: EventLog, toInsertSecond: EventLog) {
         const eventLogDFGToRemove = this._eventLogDFGs!.find(element => element.eventLog === toRemove)!;
@@ -305,9 +307,12 @@ export class InductivePetriNet{
         this._eventLogDFGs!.push(toInsertSecond);
     }
 
-    //////////////////////////////////
-    /* ----- CUT HANDLING END ----- */
-    //////////////////////////////////
+    //#endregion
+
+    /////////////////////////////////////
+    /* ----- Other Methods Start ----- */
+    /////////////////////////////////////
+    //#region
 
     public netFinished() {
         if (!this._finished) {
@@ -322,10 +327,6 @@ export class InductivePetriNet{
         }
     }
 
-    public get finished() {
-        return this._finished;
-    }
-
     private getConnectedArcs(node: CustomElement): {edgesToElem: Edge[], edgesFromElem: Edge[] } {
         //bestimme alle Kanten, welche an dem gegebenen Element enden und ziehe daraus die Elemente vor diesem
         const edgesToElem = (this._arcs.filter(edge => edge.end == node));
@@ -333,10 +334,23 @@ export class InductivePetriNet{
         const edgesFromElem = (this._arcs.filter(edge => edge.start == node));
         return {edgesToElem, edgesFromElem}
     }
+    
+    public getEventLogByID(eventLogID: string) {
+        for (const eventLog of this._eventLogDFGs!) {
+            if (eventLog?.id === eventLogID) {
+                return eventLog?.eventLog;
+            }
+        }
+        // should not happen
+        throw new Error('No event log found for id ' + eventLogID);
+    }
+
+    //#endregion
 
     ////////////////////////////////////
     /* ----- Layout / Graphical ----- */
     ////////////////////////////////////
+    //#region
 
     applyNewDFGLayout(layout: Layout) {
         this._svgService.applyNewDFGLayout(layout);
@@ -535,9 +549,12 @@ export class InductivePetriNet{
         return result;
     }
 
+    //#endregion
+
     ///////////////////////////////////////////////
     /* ----- Element Generation / Deletion ----- */
     ///////////////////////////////////////////////
+    //#region
 
     private genArc(start: CustomElement, end: CustomElement) {
         const edgeToGen = new Edge(start, end);
@@ -599,4 +616,7 @@ export class InductivePetriNet{
         });
         this.netFinished();
     }
+
+    //#endregion
+
 }
