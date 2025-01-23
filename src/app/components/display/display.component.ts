@@ -24,7 +24,7 @@ import { PNMLWriterService } from 'src/app/services/file-export.service';
     templateUrl: './display.component.html',
     styleUrls: ['./display.component.css']
 })
-export class DisplayComponent implements OnDestroy{
+export class DisplayComponent implements OnDestroy {
 
     @ViewChild('drawingArea') drawingArea: ElementRef<SVGElement> | undefined;
 
@@ -51,14 +51,14 @@ export class DisplayComponent implements OnDestroy{
 
     constructor(private _svgService: SvgService,
 
-                private _displayService: DisplayService,
-                private _fileReaderService: FileReaderService,
-                private _inductiveMinerService: InductiveMinerService,
-                private _http: HttpClient,
-                private _intersectionCalculatorService: IntersectionCalculatorService,
-                private _pnmlWriterService: PNMLWriterService,
-                private _svgLayoutService: SvgLayoutService,
-                private _svgArrowService: SvgArrowService,
+        private _displayService: DisplayService,
+        private _fileReaderService: FileReaderService,
+        private _inductiveMinerService: InductiveMinerService,
+        private _http: HttpClient,
+        private _intersectionCalculatorService: IntersectionCalculatorService,
+        private _pnmlWriterService: PNMLWriterService,
+        private _svgLayoutService: SvgLayoutService,
+        private _svgArrowService: SvgArrowService,
     ) {
 
         this.fileContent = new EventEmitter<string>();
@@ -176,7 +176,7 @@ export class DisplayComponent implements OnDestroy{
             this._leftMouseDown = true;
             if (this.isDomEventInEventLog(e)) {
                 this.removeAllDrawnLines();
-                const {x, y} = this.calculateSvgCoordinates(e);
+                const { x, y } = this.calculateSvgCoordinates(e);
                 this.drawingArea.nativeElement.appendChild(this._svgService.createDrawnLine(x, y));
             }
         }
@@ -276,7 +276,7 @@ export class DisplayComponent implements OnDestroy{
             if (!line) {
                 return;
             }
-            const {x, y} = this.calculateSvgCoordinates(e);
+            const { x, y } = this.calculateSvgCoordinates(e);
             line.setAttribute('x2', x.toString());
             line.setAttribute('y2', y.toString());
         }
@@ -287,7 +287,7 @@ export class DisplayComponent implements OnDestroy{
     }
 
     public resetCut() {
-        if(this._selectedEventLogId) {
+        if (this._selectedEventLogId) {
             this.resetDFGHighlighting();
         }
         this._markedEdges.forEach(edge => {
@@ -363,8 +363,8 @@ export class DisplayComponent implements OnDestroy{
 
         if (this.drawingArea != null) {
             this.zoomInstance = svgPanZoom(this.drawingArea.nativeElement, {
-               // viewportSelector: '.svg-pan-zoom_viewport'
-                 panEnabled: true
+                // viewportSelector: '.svg-pan-zoom_viewport'
+                panEnabled: true
                 , controlIconsEnabled: true
                 , zoomEnabled: true
                 , dblClickZoomEnabled: false
@@ -380,12 +380,12 @@ export class DisplayComponent implements OnDestroy{
                 , beforeZoom: function () { }
                 , onZoom: function () { }
                 , beforePan: function (odPan, newPan) {
-                     const isLeftMouseClick = svgPanZoom;
+                    const isLeftMouseClick = svgPanZoom;
 
-                     if(this.panEnabled){
+                    if (this.panEnabled) {
                         return false;
-                     }
-                     return newPan;
+                    }
+                    return newPan;
                 }
                 , onPan: function () { }
                 , onUpdatedCTM: function () { }
