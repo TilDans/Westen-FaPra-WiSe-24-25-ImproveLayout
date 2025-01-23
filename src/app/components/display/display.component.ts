@@ -1,16 +1,16 @@
-import {Component, ElementRef, EventEmitter, OnDestroy, Output, ViewChild} from '@angular/core';
-import {DisplayService} from '../../services/display.service';
-import {catchError, of, Subscription, take} from 'rxjs';
-import {SvgService} from '../../services/svg.service';
-import {ExampleFileComponent} from "../example-file/example-file.component";
-import {FileReaderService} from "../../services/file-reader.service";
-import {HttpClient} from "@angular/common/http";
-import {InductivePetriNet} from 'src/app/classes/Datastructure/InductiveGraph/inductivePetriNet';
-import {InductiveMinerService} from "../../services/inductive-miner/inductive-miner.service";
-import {TraceEvent} from "../../classes/Datastructure/event-log/trace-event";
-import {Edge} from "../../classes/Datastructure/InductiveGraph/edgeElement";
-import {DFGElement} from "../../classes/Datastructure/InductiveGraph/Elements/DFGElement";
-import {IntersectionCalculatorService} from "../../services/intersection-calculator.service";
+import { AfterViewInit, Component, ElementRef, EventEmitter, HostListener, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { DisplayService } from '../../services/display.service';
+import { catchError, of, Subscription, take } from 'rxjs';
+import { SvgService } from '../../services/svg.service';
+import { ExampleFileComponent } from "../example-file/example-file.component";
+import { FileReaderService } from "../../services/file-reader.service";
+import { HttpClient } from "@angular/common/http";
+import { InductivePetriNet } from 'src/app/classes/Datastructure/InductiveGraph/inductivePetriNet';
+import { InductiveMinerService } from "../../services/inductive-miner/inductive-miner.service";
+import { TraceEvent } from "../../classes/Datastructure/event-log/trace-event";
+import { Edge } from "../../classes/Datastructure/InductiveGraph/edgeElement";
+import { DFGElement } from "../../classes/Datastructure/InductiveGraph/Elements/DFGElement";
+import { IntersectionCalculatorService } from "../../services/intersection-calculator.service";
 import { PNMLWriterService } from 'src/app/services/pnmlWriterService';
 import svgPanZoom, { enableDblClickZoom } from 'svg-pan-zoom';
 
@@ -19,11 +19,13 @@ import svgPanZoom, { enableDblClickZoom } from 'svg-pan-zoom';
     templateUrl: './display.component.html',
     styleUrls: ['./display.component.css']
 })
-export class DisplayComponent implements OnDestroy {
+export class DisplayComponent implements OnDestroy{
 
     @ViewChild('drawingArea') drawingArea: ElementRef<SVGElement> | undefined;
 
     @Output('fileContent') fileContent: EventEmitter<string>;
+    @Output("displaySvg")
+    displaySvg!: EventEmitter<ElementRef<SVGElement>> | null;
 
     //Bedingung, damit der Button zum Download angezeigt wird. Siehe draw Methode
     isPetriNetFinished: boolean = true;
@@ -31,6 +33,7 @@ export class DisplayComponent implements OnDestroy {
     private _sub: Subscription;
     private _petriNet: InductivePetriNet | undefined;
     private _leftMouseDown = false;
+    private zoomInstance = svgPanZoom;
     isZoomed = false;
     zoomLevel: number = 0.5;
 
@@ -39,12 +42,12 @@ export class DisplayComponent implements OnDestroy {
     private _selectedEventLogId?: string;
 
     constructor(private _svgService: SvgService,
-                private _displayService: DisplayService,
-                private _fileReaderService: FileReaderService,
-                private _inductiveMinerService: InductiveMinerService,
-                private _http: HttpClient,
-                private _intersectionCalculatorService: IntersectionCalculatorService,
-                private _pnmlWriterService: PNMLWriterService
+        private _displayService: DisplayService,
+        private _fileReaderService: FileReaderService,
+        private _inductiveMinerService: InductiveMinerService,
+        private _http: HttpClient,
+        private _intersectionCalculatorService: IntersectionCalculatorService,
+        private _pnmlWriterService: PNMLWriterService
     ) {
 
         this.fileContent = new EventEmitter<string>();
@@ -155,7 +158,7 @@ export class DisplayComponent implements OnDestroy {
         const svgRect = this.drawingArea!.nativeElement.getBoundingClientRect();
         const x = e.clientX - svgRect.left;
         const y = e.clientY - svgRect.top;
-        return {x, y};
+        return { x, y };
     }
 
     public processMouseUp(e: MouseEvent) {
@@ -279,10 +282,10 @@ export class DisplayComponent implements OnDestroy {
     applyZoom() {
 
         if (this.drawingArea != null) {
-            var zoom = svgPanZoom(this.drawingArea.nativeElement,{
-                viewportSelector: '.svg-pan-zoom_viewport'
-                , panEnabled: true
-                , controlIconsEnabled: false
+            this.zoomInstance = svgPanZoom(this.drawingArea.nativeElement, {
+               // viewportSelector: '.svg-pan-zoom_viewport'
+                 panEnabled: true
+                , controlIconsEnabled: true
                 , zoomEnabled: true
                 , dblClickZoomEnabled: false
                 , mouseWheelZoomEnabled: true
@@ -294,17 +297,21 @@ export class DisplayComponent implements OnDestroy {
                 , contain: false
                 , center: true
                 , refreshRate: 'auto'
-                , beforeZoom: function(){}
-                , onZoom: function(){}
-                , beforePan: function(){}
-                , onPan: function(){}
-                , onUpdatedCTM: function(){}
+                , beforeZoom: function () { }
+                , onZoom: function () { }
+                , beforePan: function (odPan, newPan) {
+                     const isLeftMouseClick = svgPanZoom;
+
+                     if(this.panEnabled){
+                        return false;
+                     }
+                     return newPan;
+                }
+                , onPan: function () { }
+                , onUpdatedCTM: function () { }
 
             });
-            //zoom.cli
-            // zoom.zoom(this.zoomLevel);
         }
-
     }
 
     onClick(e: MouseEvent) {
