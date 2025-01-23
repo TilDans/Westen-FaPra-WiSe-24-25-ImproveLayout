@@ -35,7 +35,7 @@ export class FallThroughService {
 
             }
             if (foundInEventlog) {
-                return this.parallelCutChecker.parallelCutGenerateEventlogs(eventlog, new Set(activity));
+                return this.parallelCutChecker.parallelCutGenerateEventlogs(eventlog, new Set<string>([activity]));
             }
         }
         throw new Error("No ActivityOncePerTrace Fall Through found")

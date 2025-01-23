@@ -130,7 +130,7 @@ export class ParallelCutChecker {
         // Deklaration neuer, geteilter eventlogs
         let eventlogA1: EventLog = new EventLog([]);
         let eventlogA2: EventLog = new EventLog([]);
-        
+
         // Generiere Eventlogs
         for (const cTrace of eventlog.traces) {
 
