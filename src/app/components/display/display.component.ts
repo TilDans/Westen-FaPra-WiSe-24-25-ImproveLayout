@@ -15,6 +15,7 @@ import { PNMLWriterService } from 'src/app/services/file-export.service';
 import { Layout } from 'src/app/classes/Datastructure/enums';
 import { SvgLayoutService } from 'src/app/services/svg-layout.service';
 import { SvgArrowService } from 'src/app/services/svg-arrow.service';
+import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
 
 @Component({
     selector: 'app-display',
@@ -39,7 +40,7 @@ export class DisplayComponent implements OnDestroy {
 
     private _markedEdges: SVGLineElement[] = [];
     // to keep track in which event log the lines are drawn
-    private _selectedEventLogId?: string;
+    private _selectedEventLog?: EventLog;
 
     constructor(private _svgService: SvgService,
                 private _displayService: DisplayService,
@@ -165,29 +166,36 @@ export class DisplayComponent implements OnDestroy {
     public processMouseDown(e: MouseEvent) {
         if (e.button === 0 && this.drawingArea) {
             this._leftMouseDown = true;
-            if (this.isDomEventInEventLog(e)) {
+            const targetEventLog = this.isDomEventInEventLog(e);
+            if (targetEventLog) {
                 this.removeAllDrawnLines();
                 const {x, y} = this.calculateSvgCoordinates(e);
                 this.drawingArea.nativeElement.appendChild(this._svgService.createDrawnLine(x, y));
+                const newEL = this._petriNet?.getEventLogByID(targetEventLog.getAttribute('id') || '');
+                if (newEL) {
+                    this.setSelectedEventLog(newEL);
+                }
+            } else {
+                this.setSelectedEventLog();
             }
         }
     }
 
-    public isDomEventInEventLog(e: Event): boolean {
+    public isDomEventInEventLog(e: Event) {
         let target = e.target;
         while (target) {
             if (target instanceof SVGElement) {
                 if (target.classList.contains('canvas')) {   
-                    return false;
+                    return undefined;
                 } else {
                     if (target.classList.contains('eventLog')) {
-                        return true;
+                        return target;
                     }
                     target = target.parentNode;
                 }
             }
         }
-        return false;
+        return undefined;
     }
 
     private calculateSvgCoordinates(e: MouseEvent) {
@@ -225,11 +233,7 @@ export class DisplayComponent implements OnDestroy {
     }
 
     private isInEventLog(line: SVGLineElement): boolean {
-        if (this._selectedEventLogId === undefined) {
-            this._selectedEventLogId = line.parentElement?.getAttribute('id') || undefined;
-            return this._selectedEventLogId !== undefined;
-        }
-        return this._selectedEventLogId === line.parentElement!.getAttribute('id');
+        return this._selectedEventLog === this._petriNet?.getEventLogByID(line.parentElement?.getAttribute('id') || '');
     }
 
     private getAllLines(): SVGLineElement[] {
@@ -273,23 +277,33 @@ export class DisplayComponent implements OnDestroy {
         }
     }
 
-    public resetDFGHighlighting() {
-        this._petriNet!.removeHighlightingFromEventLogDFG(this._selectedEventLogId!);
+    private setSelectedEventLog(eventLog?: EventLog) {
+        if (eventLog) {
+            this._selectedEventLog = eventLog;
+            this._petriNet!.selectDFG(this._selectedEventLog!);
+        } else {
+            this._selectedEventLog = undefined;
+            this._petriNet!.selectDFG();
+        }
+    }
+
+    public resetDFGNodeHighlighting() {
+        this._petriNet!.removeHighlightingFromEventLogDFGNodes(this._selectedEventLog!);
     }
 
     public resetCut() {
-        if(this._selectedEventLogId) {
-            this.resetDFGHighlighting();
+        if(this._selectedEventLog) {
+            this.resetDFGNodeHighlighting();
         }
         this._markedEdges.forEach(edge => {
             edge.classList.remove('selectedEdge');
         });
         this._markedEdges = [];
-        this._selectedEventLogId = undefined;
+        this.setSelectedEventLog();
     }
 
     public performCut(applyResultToPetriNet: boolean) {
-        if (this._markedEdges.length === 0 || this._selectedEventLogId === undefined) {
+        if (this._markedEdges.length === 0 || this._selectedEventLog === undefined) {
             alert('No edges marked')
             return;
         }
@@ -307,28 +321,22 @@ export class DisplayComponent implements OnDestroy {
         }
         console.log('markedEdges: ', markedEdges)
 
-        const eventLog = this._petriNet!.getEventLogByID(this._selectedEventLogId!);
-
-
         if (applyResultToPetriNet) {
             try {
-                const result = this._inductiveMinerService.applyInductiveMiner(eventLog, markedEdges);
+                const result = this._inductiveMinerService.applyInductiveMiner(this._selectedEventLog!, markedEdges);
                 console.log('cut result: ', result);
-                this._petriNet?.handleCutResult(result.cutMade, eventLog, result.el[0], result.el[1])
+                this._petriNet?.handleCutResult(result.cutMade, this._selectedEventLog!, result.el[0], result.el[1])
                 this.draw();
             } catch (Error) {
                 console.log('no cut possible', Error);
             }
         } else {
             try {
-                const result = this._inductiveMinerService.applyInductiveMiner(eventLog, markedEdges);
+                const result = this._inductiveMinerService.applyInductiveMiner(this._selectedEventLog!, markedEdges);
                 console.log('cut result: ', result);
-                this._petriNet?.highlightSubsetInDFG(eventLog, result.el[0]);
-                if (applyResultToPetriNet) {
-                    this.draw();
-                }
+                this._petriNet?.highlightSubsetInDFG(this._selectedEventLog!, result.el[0]);
             } catch (Error) {
-                this.resetDFGHighlighting();
+                this.resetDFGNodeHighlighting();
                 console.log('no cut found');
             }
         }
