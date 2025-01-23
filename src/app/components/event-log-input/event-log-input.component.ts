@@ -25,6 +25,8 @@ export class EventLogInputComponent {
     @Output() eventLogChange = new EventEmitter<string>();
 
     onButtonClicked() {
-        this.eventLogChange.emit(this.inputEventLog);
+        if (this.inputEventLog !== '') {
+            this.eventLogChange.emit(this.inputEventLog);
+        }
     }
 }

@@ -27,6 +27,7 @@ export class DisplayComponent implements OnDestroy {
     @ViewChild('drawingArea') drawingArea: ElementRef<SVGElement> | undefined;
 
     @Output('fileContent') fileContent: EventEmitter<string>;
+    @Output() selectedEventLogChange = new EventEmitter<EventLog>();
 
     //Bedingung, damit der Button zum Download angezeigt wird. Siehe draw Methode
     isPetriNetFinished: boolean = false;
@@ -285,6 +286,8 @@ export class DisplayComponent implements OnDestroy {
             this._selectedEventLog = undefined;
             this._petriNet!.selectDFG();
         }
+        this.selectedEventLogChange.emit(eventLog);
+        console.log('emitted')
     }
 
     public resetDFGNodeHighlighting() {

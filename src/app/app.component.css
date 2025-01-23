@@ -46,29 +46,35 @@ hr {
     align-items: center;
 }
 
-.flexRowAlignSpaceEvenlyStart {
-    /*display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
-    align-items: flex-start;*/
-    display: flex;
-    flex-wrap: wrap;
-    width: 670px;
-}
-
 .sampleFile {
-
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    padding-right: 5px;
+    padding-right: 1px;
+    padding-top: 20pt;
     width: 100%;
+}
+
+.flexRowAlignSpaceEvenlyStart {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start; /* Align items to the start */
+    align-items: flex-start;
+    width: 40%; /* Reduced width to make items closer */
+    gap: 10px; /* Optional: controls space between items */
 }
 
 .inputFeature {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    width: 30%; /* Reduced width to make it closer to others */
+    margin-left: 20pt;
+}
 
-    width: 50%;
+.eventLogDisplay {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 30%; /* Reduced width to make it closer to others */
 }

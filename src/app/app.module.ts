@@ -15,22 +15,26 @@ import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {ExampleButtonComponent} from "./components/example-button/example-button.component";
 import {EventLogInputComponent} from "./components/event-log-input/event-log-input.component";
 import { MatSelectModule } from '@angular/material/select';
+import { EventLogDisplayComponent } from './components/event-log-display/event-log-display.component';
 
 @NgModule({
     declarations: [
         AppComponent,
         DisplayComponent,
         FooterComponent,
-        ExampleFileComponent
+        ExampleFileComponent, 
+        EventLogDisplayComponent
     ],
-    bootstrap: [AppComponent], imports: [BrowserModule,
+    bootstrap: [AppComponent], 
+    imports: [BrowserModule,
         BrowserAnimationsModule,
         MatFormFieldModule,
         MatInputModule,
         MatButtonModule,
         MatSelectModule,
         MatIconModule,
-        ReactiveFormsModule, EventLogInputComponent],
+        ReactiveFormsModule, 
+        EventLogInputComponent],
     exports: [ ],
     providers: [
         {
