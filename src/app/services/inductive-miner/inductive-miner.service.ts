@@ -7,6 +7,7 @@ import { LoopCutChecker } from './cuts/loop-cut';
 import { Edge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
 import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
 import { Cuts } from 'src/app/classes/Datastructure/enums';
+import { registerLocaleData } from '@angular/common';
 
 @Injectable({
     providedIn: 'root',
@@ -22,8 +23,6 @@ export class InductiveMinerService {
     ) {}
 
     public applyInductiveMiner(eventlog: EventLog, edges: Edge[]): {el: EventLog[], cutMade: Cuts} {
-        let splitEventlogs: EventLog[];
-        let cutMade = '';
 
         const cutCheckers = [
             { checker: this.sequenceCutChecker.checkSequenceCut.bind(this.sequenceCutChecker), cutType: Cuts.Sequence },
@@ -35,14 +34,14 @@ export class InductiveMinerService {
         for (const { checker, cutType } of cutCheckers) {
             console.log('checking for: ', cutType);
             const splitEventlogs = checker(eventlog, edges);
-            if (splitEventlogs.length !== 0) {
+            if (splitEventlogs.length != 0) {
                 return { el: splitEventlogs, cutMade: cutType };
             }
         }
         throw new Error ('no cut possible');
     }
 
-    public applyfallThrough(eventlog: EventLog): boolean {
+    public checkInductiveMiner(eventlog: EventLog): boolean {
         const uniqueActivities: Set<string> = this.helper.getUniqueActivities(eventlog);
 
         const cutCheckers = [
@@ -60,16 +59,15 @@ export class InductiveMinerService {
                continue;
             } else {
                 for (const activity of uniqueActivities) {
+                    if (activity == Array.from(uniqueActivities).pop()) continue;
                     A1.add(activity);
                     A2.delete(activity)
-                    const a: EventLog[] = cutChecker.checker(eventlog, A1, A2);
-                    if (a.length == 0) {
-                        console.log("HALLO1")
-                        return true;
-                    } else {
-                        console.log("HALLO " + a[0].traces[0]?.events[0].conceptName)
-                        return false;
-                    }
+                    const result: EventLog[] = cutChecker.checker(eventlog, A1, A2);
+                    console.log("A1: " + Array.from(A1))
+                    console.log("A2: " + Array.from(A2))
+                    console.log(cutChecker.cutType)
+                    console.log("result: " + result.length)
+                    if (result.length > 0) return true; // Wenn etwas zurückgegeben wird, ist ein Cut möglich --> Kein Fall Through!
                 }
             }
         }

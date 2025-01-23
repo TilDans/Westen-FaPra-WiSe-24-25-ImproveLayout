@@ -14,8 +14,8 @@
   <button mat-raised-button color="primary" class="aligned-element" (click)="resetCut()">
     Reset Marked Edges
   </button>
-  <button mat-raised-button color="primary" class="aligned-element" (click)="fallThrough()">
-    Fallthrough
+  <button mat-raised-button color="primary" class="aligned-element" (click)="applyFallThrough()">
+    Fall Through
   </button>
   <button mat-raised-button [disabled]="!isPetriNetFinished" color="primary" class="aligned-element" (click)="downloadPetriNet('pnml')" >
     Download PetriNet (PNML)

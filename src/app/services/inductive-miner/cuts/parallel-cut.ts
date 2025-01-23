@@ -29,8 +29,8 @@ export class ParallelCutChecker {
             } 
         }
 
-        // Wenn gar kein PLAY-Knoten markiert wurde, sofort returnen
-        if (cutPlayEdges.length == 0) return [];
+        // Wenn gar kein PLAY- oder STOP-Knoten markiert wurde, sofort returnen
+        if (cutPlayEdges.length == 0 || cutStopEdges.length == 0) return [];
     
         // Verwende beliebigen PLAY-Knoten als initiale Aktivität, um bidirektional-verbundene Knoten identifizieren zu können
         let initialActivity: string = cutPlayEdges[0].end.id;
@@ -123,10 +123,10 @@ export class ParallelCutChecker {
         if (this.helper.checkPathInSublog(eventlog, A2)) return [];
 
         // Wenn alle Bedingungen erfolgreich: Returne zwei eventlogs
-        return this.loopCutGenerateEventlogs(eventlog, A1, A2);
+        return this.parallelCutGenerateEventlogs(eventlog, A2);
     }
 
-    public loopCutGenerateEventlogs(eventlog: EventLog, A1: Set<string>, A2: Set<string>): EventLog[] {
+    public parallelCutGenerateEventlogs(eventlog: EventLog, A2: Set<string>): EventLog[] {
         // Deklaration neuer, geteilter eventlogs
         let eventlogA1: EventLog = new EventLog([]);
         let eventlogA2: EventLog = new EventLog([]);

@@ -1,6 +1,5 @@
 import { Injectable } from "@angular/core";
 import { EventLog } from "src/app/classes/Datastructure/event-log/event-log";
-import { TraceEvent } from "src/app/classes/Datastructure/event-log/trace-event";
 import { Edge } from "src/app/classes/Datastructure/InductiveGraph/edgeElement";
 
 

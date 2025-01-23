@@ -74,6 +74,7 @@ export class ExclusiveCutChecker {
         }
 
         // Falls diese Methode von der fallThrough-Funktion aufgerufen wurde, ist die "echte" Generierung eines eventlogs irrelevant
+        // Länge muss != 0 sein
         if (splitEventlogs === undefined) {
             return [new EventLog([new Trace([new TraceEvent('Fall Through found')])])]
         }

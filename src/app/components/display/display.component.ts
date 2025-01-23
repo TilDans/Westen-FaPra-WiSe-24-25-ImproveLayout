@@ -12,9 +12,12 @@ import {Edge} from "../../classes/Datastructure/InductiveGraph/edgeElement";
 import {DFGElement} from "../../classes/Datastructure/InductiveGraph/Elements/DFGElement";
 import {IntersectionCalculatorService} from "../../services/intersection-calculator.service";
 import { PNMLWriterService } from 'src/app/services/file-export.service';
-import { Layout } from 'src/app/classes/Datastructure/enums';
+import { Cuts, Layout } from 'src/app/classes/Datastructure/enums';
 import { SvgLayoutService } from 'src/app/services/svg-layout.service';
 import { SvgArrowService } from 'src/app/services/svg-arrow.service';
+import { FallThroughService } from 'src/app/services/inductive-miner/fall-throughs';
+import { InductiveMinerHelper } from 'src/app/services/inductive-miner/inductive-miner-helper';
+import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
 
 @Component({
     selector: 'app-display',
@@ -40,16 +43,19 @@ export class DisplayComponent implements OnDestroy {
     private _markedEdges: SVGLineElement[] = [];
     // to keep track in which event log the lines are drawn
     private _selectedEventLogId?: string;
+    helper: any;
 
     constructor(private _svgService: SvgService,
                 private _displayService: DisplayService,
                 private _fileReaderService: FileReaderService,
                 private _inductiveMinerService: InductiveMinerService,
+                private _inductiveMinerHelper: InductiveMinerHelper,
                 private _http: HttpClient,
                 private _intersectionCalculatorService: IntersectionCalculatorService,
                 private _pnmlWriterService: PNMLWriterService,
                 private _svgLayoutService: SvgLayoutService,
                 private _svgArrowService: SvgArrowService,
+                private _fallThroughService: FallThroughService,
     ) {
 
         this.fileContent = new EventEmitter<string>();
@@ -305,26 +311,22 @@ export class DisplayComponent implements OnDestroy {
         }
     }
     
-    public fallThrough() {
+    public applyFallThrough() {
         if (this._selectedEventLogId === undefined) {
             alert('No eventlog marked')
             return;
         }
 
         const eventLog = this._petriNet!.getMarkedEventLog(this._selectedEventLogId!);
-        try {
-            const result = this._inductiveMinerService.applyfallThrough(eventLog);
-            if (!result) {
-                alert('No Fall Through possible')
-                return;
-            } else {
-                alert('Fall Through applied')
-                return;
-            }
-            //this._petriNet?.handleCutResult(result.cutMade, eventLog, result.el[0], result.el[1])
+
+        if (this._inductiveMinerService.checkInductiveMiner(eventLog)) {
+            alert('No Fall Through possible')
+            return;
+        } else {
+            const result: EventLog[] = this._fallThroughService.getActivityOncePerTrace(eventLog);
+            this._petriNet?.handleCutResult(Cuts.Parallel, eventLog, result[0], result[1])
             this.draw();
-        } catch (Error) {
-            console.log('no cut possible', Error);
+            return;
         }
     }
 
