@@ -39,9 +39,11 @@ export class SequenceCutChecker {
             for (let i = 0; i < cEventLogTrace.events.length; i++) {
 
                 //TODO Events i+1 can be out of bounds
-                if (cEventLogTrace.events[i].conceptName == cEdge.start.id && cEventLogTrace.events[i+1].conceptName == cEdge.end.id ) {
-                    indexOfCutInTrace = i;
-                }
+                if (cEventLogTrace.events[i+1] ) {
+                    if (cEventLogTrace.events[i].conceptName == cEdge.start.id && cEventLogTrace.events[i+1].conceptName == cEdge.end.id ) {
+                        indexOfCutInTrace = i;
+                    }
+                } else break;
             }
             if (indexOfCutInTrace !== -1) { // wenn akt. cut-Vorschlag im akt. eventlog trace gefunden
                 cutPossible = true;
@@ -74,9 +76,10 @@ export class SequenceCutChecker {
 
     // Bedingungen prüfen
     // A1 und A2 dürfen keine intersection haben
-    if (this.helper.hasIntersection(A1, A2)) return [];
+    if (this.helper.hasIntersection(this.helper.getUniqueActivities(A1), this.helper.getUniqueActivities(A2))) return [];
     // A1 und A2 sollten alle events umfassen
-    if (!this.helper.isUnion(eventlog, A1, A2)) return [];
+    if (!this.helper.isUnion(eventlog, this.helper.getUniqueActivities(A1), this.helper.getUniqueActivities(A2))) return [];
+    
     /*
     1. für jede Aktivität in 𝐴1 gibt es in 𝐷 einen Weg zu jeder Aktivität in 𝐴2,
     2. für keine Aktivität in 𝐴2 gibt es in 𝐷 einen Weg zu einer Aktivität in 𝐴1.

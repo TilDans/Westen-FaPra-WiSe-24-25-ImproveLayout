@@ -13,20 +13,35 @@ body {
     stroke-width: 2; 
 }
 
+.non-selectable {
+    user-select: none;
+    pointer-events: none; /* Optional, to ensure clicks pass through the text */
+}
+
 .place {
-    fill: yellow;
+    fill: none;
     stroke: black;
     stroke-width: 4;
 }
 
 .transition {
-    fill: green;
+    fill: none;
+    stroke: black;
+    stroke-width: 1;
+}
+
+.transitionStyle {
+    fill: none;
     stroke: black;
     stroke-width: 4;
 }
 
 .dfgNode {
     fill: blue;
+}
+
+.highligtedDFGNode{
+    fill: yellow;
 }
 
 .dfgPlayNode {
