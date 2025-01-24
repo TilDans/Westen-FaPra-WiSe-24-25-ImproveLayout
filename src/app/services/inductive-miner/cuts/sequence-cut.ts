@@ -78,7 +78,7 @@ export class SequenceCutChecker {
     return this.sequenceCutConditionsChecker(eventlog, this.helper.getUniqueActivities(eventlogA1), this.helper.getUniqueActivities(eventlogA2), {A1: eventlogA1, A2: eventlogA2});
     }
 
-    public sequenceCutConditionsChecker(eventlog: EventLog, A1: Set<string>, A2: Set<string>, splitEventlogs?: {A1: EventLog, A2: EventLog}): EventLog[] {
+    public sequenceCutConditionsChecker(eventlog: EventLog, A1: Set<string>, A2: Set<string>, splitEventlogs?: {A1: EventLog, A2: EventLog}): EventLog[] {  
         // Bedingungen prüfen
         // A1 und A2 dürfen keine intersection haben
         if (this.helper.hasIntersection(A1, A2)) return [];

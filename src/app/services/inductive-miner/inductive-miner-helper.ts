@@ -34,7 +34,7 @@ export class InductiveMinerHelper {
 
     // Gibt alle einzigartigen Akitivtäten aus einem eventlog zurück
     public getUniqueActivities(eventlog: EventLog): Set<string> {
-        let eventlogSet: Set<string> = new Set();
+        let eventlogSet: Set<string> = new Set<string>();
         for (const trace of eventlog.traces) {
             for (const traceevent of trace.events) {
                 eventlogSet.add(traceevent.conceptName); 
@@ -148,8 +148,8 @@ export class InductiveMinerHelper {
         const eventlogMap: Map<string, string[]> = this.parseEventlogToNodes(eventlog);
     
         // Sammle PLAY- und STOP-Knoten
-        const playEdges: Set<string> = new Set();
-        const stopEdges: Set<string> = new Set();
+        const playEdges: Set<string> = new Set<string>();
+        const stopEdges: Set<string> = new Set<string>();
         for (const trace of eventlog.traces) {
             if (activities.has(trace.events[0].conceptName)) {
                 playEdges.add(trace.events[0].conceptName);
@@ -239,5 +239,36 @@ export class InductiveMinerHelper {
         }
 
         return inBetweenActivities;
+    }
+
+    // Generiere alle möglichen Aufteilungen einer Eventmenge in zwei disjunkte Teilmengen (um Cuts identifizieren zu können)
+    public generateSubsets<T>(set: Set<T>): Array<[Set<T>, Set<T>]> {
+        const elements = Array.from(set);
+        const n = elements.length;
+        const result: Array<[Set<T>, Set<T>]> = [];
+        
+        // Es gibt 2^n mögliche Teilmengen
+        const totalCombinations = 1 << n;
+
+        for (let mask = 0; mask < totalCombinations; mask++) {
+            const A1 = new Set<T>();
+            const A2 = new Set<T>();
+            
+            // Elemente je nach Bitmaske zu A1 oder A2 hinzufügen
+            for (let i = 0; i < n; i++) {
+                if (mask & (1 << i)) {
+                    A1.add(elements[i]);
+                } else {
+                    A2.add(elements[i]);
+                }
+            }
+
+            // Überspringe Fälle, in denen A1 oder A2 leer ist
+            if (A1.size === 0 || A2.size === 0) continue;
+
+            result.push([A1, A2]);
+        }
+
+        return result;
     }
 }

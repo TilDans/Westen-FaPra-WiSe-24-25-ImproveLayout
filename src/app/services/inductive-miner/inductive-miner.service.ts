@@ -52,10 +52,6 @@ export class InductiveMinerService {
         ];
         
         for (const cutChecker of cutCheckers) {
-            let A1: Set<string> = new Set<string>();
-            let A2: Set<string> = new Set<string>(uniqueActivities);
-            let result: EventLog[] = [];
-
             // Sonderfall: Loop Cut
             if (cutChecker.cutType == Cuts.Loop ) {
                 let A1Play: Set<string> = new Set<string>();
@@ -68,35 +64,39 @@ export class InductiveMinerService {
                     A1Play.add(cTrace.events[0].conceptName);
                     A1Stop.add(cTrace.events[cTrace.events.length-1].conceptName);
                 }
+
                 // A2Play / A2Stop identifizieren
                 for (const cTrace of eventlog.traces) {
-                    let cIndex: number = 0;
+                    let index: number = 0;
                     for (const cEvent of cTrace.events) {
-                        // Wenn akt. Event zu A1Play gehört und nicht an erster Stelle steht: Das vorige Event ist A2Stop
-                        if (A1Play.has(cEvent.conceptName) && cIndex != 0) { 
-                            if (!A1Play.has(cTrace.events[cIndex-1].conceptName)) {
-                                A2Stop.add(cTrace.events[cIndex-1].conceptName) 
+                        // Wenn akt. Event zu A1Play gehört und nicht an erster Stelle steht: Das vorige Event ist A2Stop, wenn es nicht von A1Play ist
+                        if (A1Play.has(cEvent.conceptName) && index != 0) { 
+                            if (!A1Play.has(cTrace.events[index-1].conceptName)) {
+                                A2Stop.add(cTrace.events[index-1].conceptName) 
                             }
                         }
-                        // Wenn akt. Event zu A1Stop gehört und nicht an letzter Stelle steht: Das nächste Event ist A2Play
-                        if (A1Stop.has(cEvent.conceptName) && cIndex != cTrace.events.length-1 ) {
-                            if (!A1Stop.has(cTrace.events[cIndex+1].conceptName)) {
-                                A2Play.add(cTrace.events[cIndex+1].conceptName)
+                        // Wenn akt. Event zu A1Stop gehört und nicht an letzter Stelle steht: Das nächste Event ist A2Play, wenn es nicht von A1Stop ist
+                        if (A1Stop.has(cEvent.conceptName) && index != cTrace.events.length-1 ) {
+                            if (!A1Stop.has(cTrace.events[index+1].conceptName)) {
+                                A2Play.add(cTrace.events[index+1].conceptName)
                             }
                         }
-                        cIndex++;
+                        index++;
                     }
                 }
-                result = cutChecker.checker(eventlog, A1Play, A1Stop, A2Play, A2Stop); 
+                if (cutChecker.checker(eventlog, A1Play, A1Stop, A2Play, A2Stop).length > 0) return true; // Wenn etwas zurückgegeben wird, ist ein Cut möglich --> Kein Fall Through!
+            
             } else {
-                for (const activity of uniqueActivities) {
-                    if (activity == Array.from(uniqueActivities).pop()) continue;
-                    A1.add(activity);
-                    A2.delete(activity)
-                    result = cutChecker.checker(eventlog, A1, A2);
+                const allSubsets: [Set<string>, Set<string>][] = this.helper.generateSubsets(uniqueActivities);
+
+                for (const [A1, A2] of allSubsets) {
+                    // Überprüfen, ob die Teilmengen disjunkt und vollständig sind
+                    if (A1.size + A2.size !== uniqueActivities.size) continue;
+
+                    // Checker-Funktion aufrufen
+                    if (cutChecker.checker(eventlog, A1, A2).length > 0) return true // Wenn etwas zurückgegeben wird, ist ein Cut möglich --> Kein Fall Through!
                 }
             }
-            if (result.length > 0) return true; // Wenn etwas zurückgegeben wird, ist ein Cut möglich --> Kein Fall Through!
         }
         return false;
     }

@@ -62,7 +62,6 @@ export class DisplayComponent implements OnDestroy {
 
         this._sub = this._displayService.InductivePetriNet$.subscribe(newNet => {
             this._petriNet = newNet;
-            this.isPetriNetFinished = false;
             this._petriNet.applyNewDFGLayout(this.selectedLayout);
             this.draw();
         });
@@ -131,7 +130,8 @@ export class DisplayComponent implements OnDestroy {
             return;
         }
 
-        this.resetCut();
+        this._markedEdges = [];
+        this._selectedEventLogId = undefined;
 
         this.clearDrawingArea();
 
@@ -207,7 +207,6 @@ export class DisplayComponent implements OnDestroy {
         if (e.button === 0) {
             this._leftMouseDown = false;
             const drawnLine = this.drawingArea?.nativeElement.getElementsByClassName('drawn-line')[0] as SVGLineElement;
-            let intersectionAndChange = false;
             if (drawnLine) {
                 const allLines = this.getAllLines();
                 const intersectingLines = allLines.filter(line => this.linesIntersect(drawnLine, line));
@@ -217,14 +216,8 @@ export class DisplayComponent implements OnDestroy {
                         continue;
                     }
                     line.classList.add('selectedEdge');
-                    if (this._markedEdges.indexOf(line) === -1) {
-                        this._markedEdges.push(line);
-                        intersectionAndChange = true;
-                    }
+                    this._markedEdges.push(line);
                 }
-            }
-            if (intersectionAndChange) {
-                this.performCut(false);
             }
             this.removeAllDrawnLines();
         }
@@ -279,14 +272,7 @@ export class DisplayComponent implements OnDestroy {
         }
     }
 
-    public resetDFGHighlighting() {
-        this._petriNet!.removeHighlightingFromEventLogDFG(this._selectedEventLogId!);
-    }
-
     public resetCut() {
-        if(this._selectedEventLogId) {
-            this.resetDFGHighlighting();
-        }
         this._markedEdges.forEach(edge => {
             edge.classList.remove('selectedEdge');
         });
@@ -294,7 +280,7 @@ export class DisplayComponent implements OnDestroy {
         this._selectedEventLogId = undefined;
     }
 
-    public performCut(applyResultToPetriNet: boolean) {
+    public performCut() {
         if (this._markedEdges.length === 0 || this._selectedEventLogId === undefined) {
             alert('No edges marked')
             return;
@@ -311,32 +297,17 @@ export class DisplayComponent implements OnDestroy {
 
             markedEdges.push(new Edge(new DFGElement(new TraceEvent(from)), new DFGElement(new TraceEvent(to))));
         }
+
         console.log('markedEdges: ', markedEdges)
 
         const eventLog = this._petriNet!.getEventLogByID(this._selectedEventLogId!);
-
-
-        if (applyResultToPetriNet) {
-            try {
-                const result = this._inductiveMinerService.applyInductiveMiner(eventLog, markedEdges);
-                console.log('cut result: ', result);
-                this._petriNet?.handleCutResult(result.cutMade, eventLog, result.el[0], result.el[1])
-                this.draw();
-            } catch (Error) {
-                console.log('no cut possible', Error);
-            }
-        } else {
-            try {
-                const result = this._inductiveMinerService.applyInductiveMiner(eventLog, markedEdges);
-                console.log('cut result: ', result);
-                this._petriNet?.highlightSubsetInDFG(eventLog, result.el[0]);
-                if (applyResultToPetriNet) {
-                    this.draw();
-                }
-            } catch (Error) {
-                this.resetDFGHighlighting();
-                console.log('no cut found');
-            }
+        try {
+            const result = this._inductiveMinerService.applyInductiveMiner(eventLog, markedEdges);
+            console.log('cut result: ', result);
+            this._petriNet?.handleCutResult(result.cutMade, eventLog, result.el[0], result.el[1])
+            this.draw();
+        } catch (Error) {
+            console.log('no cut possible', Error);
         }
     }
     
@@ -345,8 +316,7 @@ export class DisplayComponent implements OnDestroy {
             alert('No eventlog marked')
             return;
         }
-
-        const eventLog = this._petriNet!.getMarkedEventLog(this._selectedEventLogId!);
+        const eventLog = this._petriNet!.getEventLogByID(this._selectedEventLogId!);
 
         if (this._inductiveMinerService.checkInductiveMiner(eventLog)) {
             alert('No Fall Through possible')

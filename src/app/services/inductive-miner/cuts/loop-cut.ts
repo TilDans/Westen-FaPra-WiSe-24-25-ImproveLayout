@@ -15,8 +15,8 @@ export class LoopCutChecker {
     public checkLoopCut(eventlog: EventLog, edges: Edge[]): EventLog[] {
 
         // Identifiziere alle Play/STOP-Knoten
-        let playEdges: Set<string> = new Set();
-        let stopEdges: Set<string> = new Set();
+        let playEdges: Set<string> = new Set<string>();
+        let stopEdges: Set<string> = new Set<string>();
 
         for (const trace of eventlog.traces) {
             playEdges.add(trace.events[0].conceptName)
@@ -61,13 +61,6 @@ export class LoopCutChecker {
         const A1: Set<string> = new Set([...A1Play, ...A1Stop, ...A1Inbetween]);
         const A2: Set<string> = new Set([...A2Play, ...A2Stop, ...A2Inbetween]);
         
-        console.log("A1: " + Array.from(A1));
-        console.log("A2: " + Array.from(A2));
-        console.log("A1Play: " + Array.from(A1Play));
-        console.log("A1Stop: " + Array.from(A1Stop));
-        console.log("A2Play: " + Array.from(A2Play));
-        console.log("A2Stop: " + Array.from(A2Stop));
-
         // Bedingungen prüfen
         // A1 und A2 dürfen keine intersection haben
         if (this.helper.hasIntersection(A1, A2)) return [];
@@ -82,8 +75,8 @@ export class LoopCutChecker {
         */
         
         // Identifiziere PLAY/STOP-Knoten
-        let playEdges: Set<string> = new Set();
-        let stopEdges: Set<string> = new Set();
+        let playEdges: Set<string> = new Set<string>();
+        let stopEdges: Set<string> = new Set<string>();
 
         for (const trace of eventlog.traces) {
             playEdges.add(trace.events[0].conceptName)
