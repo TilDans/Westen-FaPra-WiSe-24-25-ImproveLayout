@@ -32,6 +32,9 @@ export class EventLogDisplayComponent {
     constructor(private snackBar: MatSnackBar) {} // Inject MatSnackBar
 
     copyEventLog() {
+        if (!this.selectedEventLog) {
+            return;
+        }
         let eventLogString = '';
         const selected = this.selectedEventLog;
         let displayedWarning = false;
@@ -49,6 +52,7 @@ export class EventLogDisplayComponent {
                     const cleanedConceptName = event.conceptName.replace(/\s+/g, '');
                     eventLogString = eventLogString.concat(cleanedConceptName, " ");    
                 }
+                eventLogString = eventLogString.trimEnd();
                 eventLogString = eventLogString.concat("+");
             }
         }
@@ -66,7 +70,6 @@ export class EventLogDisplayComponent {
             });
         }
         );
-        return true;
     }
 
 
