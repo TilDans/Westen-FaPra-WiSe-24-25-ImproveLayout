@@ -45,7 +45,14 @@ export class ExclusiveCutChecker {
         // Wenn einer der Kanten nicht im Eventlog zu finden war, abbrechen:
         const originalEdges: Set<string> = new Set(mappedEdges.map(pair => JSON.stringify(pair))); // Wandle mapped Edges in String um, um Vergleichen zu können
         if (!(usedEdges.size === originalEdges.size && [...usedEdges].every(x => originalEdges.has(x)))) return []; // Konvertiere Kanten zu Set und vergleiche
-   
+        
+        // Es dürfen nur PLAY/STOP-Kanten markiert worden sein
+        for (const cEdge of edges) {
+            if (cEdge.start.id != 'play' && cEdge.end.id != 'stop') {
+                return []
+            }
+        }
+
         // Prüfe Bedingungen
         return this.exclusiveCutConditionsChecker(eventlog, this.helper.getUniqueActivities(eventlogA1), this.helper.getUniqueActivities(eventlogA2), {A1: eventlogA1, A2: eventlogA2});
     }
@@ -64,13 +71,13 @@ export class ExclusiveCutChecker {
         const eventlogMap: Map<string, string[]> = this.helper.parseEventlogToNodes(eventlog); // Map, um Bedingungen prüfen zu können
         // 1.
         for (const cActivity of A1) {
-                const reachableActivities = this.helper.getAllReachableActivities(eventlogMap, cActivity);
-                if (this.helper.isSubset(reachableActivities, A2)) return []; // Aus A1 darf nichts von A2 erreichbar sein
+            const reachableActivities = this.helper.getAllReachableActivities(eventlogMap, cActivity);
+            if (this.helper.isSubset(reachableActivities, A2)) return []; // Aus A1 darf nichts von A2 erreichbar sein
         }
         // 2.
         for (const cActivity of A2) {
-                const reachableActivities = this.helper.getAllReachableActivities(eventlogMap, cActivity);
-                if (this.helper.isSubset(reachableActivities, A1)) return []; // Aus A2 darf nichts von A1 erreichbar sein
+            const reachableActivities = this.helper.getAllReachableActivities(eventlogMap, cActivity);
+            if (this.helper.isSubset(reachableActivities, A1)) return []; // Aus A2 darf nichts von A1 erreichbar sein
         }
 
         // Falls diese Methode von der fallThrough-Funktion aufgerufen wurde, ist die "echte" Generierung eines eventlogs irrelevant
