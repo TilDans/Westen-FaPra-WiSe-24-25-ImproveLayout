@@ -8,16 +8,37 @@
     </mat-select>
   </mat-form-field>
 
-  <button mat-raised-button color="primary" class="aligned-element" (click)="performCut(true)">
+  <button 
+    mat-raised-button 
+    color="primary" 
+    class="aligned-element" 
+    (click)="performCut(true)">
     Perform Cut
   </button>
-  <button mat-raised-button color="primary" class="aligned-element" (click)="resetCut()">
+  <button 
+    mat-raised-button 
+    color="primary" 
+    class="aligned-element" 
+    (click)="resetCut()">
     Reset Marked Edges
   </button>
-  <button mat-raised-button [disabled]="!isPetriNetFinished" color="primary" class="aligned-element" (click)="downloadPetriNet('pnml')" >
+  <button 
+    mat-raised-button 
+    [disabled]="!isPetriNetFinished" 
+    disabledInteractive color="primary" 
+    class="aligned-element" 
+    (click)="downloadPetriNet('pnml')" 
+    title="Download PetriNet as PNML (enabled when finished)">
     Download PetriNet (PNML)
   </button>
-  <button mat-raised-button [disabled]="!isPetriNetFinished" color="primary" class="aligned-element" (click)="downloadPetriNet('json')" >
+  <button 
+    mat-raised-button 
+    [disabled]="!isPetriNetFinished" 
+    disabledInteractive 
+    color="primary" 
+    class="aligned-element" 
+    (click)="downloadPetriNet('json')"
+    title="Download PetriNet as JSON (enabled when finished)">
     Download PetriNet (JSON)
   </button>
 </div>

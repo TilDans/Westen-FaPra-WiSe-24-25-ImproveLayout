@@ -12,7 +12,6 @@ import {FooterComponent} from './components/footer/footer.component';
 import {ExampleFileComponent} from './components/example-file/example-file.component';
 import {APP_BASE_HREF, PlatformLocation} from "@angular/common";
 import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
-import {ExampleButtonComponent} from "./components/example-button/example-button.component";
 import {EventLogInputComponent} from "./components/event-log-input/event-log-input.component";
 import { MatSelectModule } from '@angular/material/select';
 import { EventLogDisplayComponent } from './components/event-log-display/event-log-display.component';
@@ -22,8 +21,7 @@ import { EventLogDisplayComponent } from './components/event-log-display/event-l
         AppComponent,
         DisplayComponent,
         FooterComponent,
-        ExampleFileComponent, 
-        EventLogDisplayComponent
+        ExampleFileComponent
     ],
     bootstrap: [AppComponent], 
     imports: [BrowserModule,
@@ -34,7 +32,9 @@ import { EventLogDisplayComponent } from './components/event-log-display/event-l
         MatSelectModule,
         MatIconModule,
         ReactiveFormsModule, 
-        EventLogInputComponent],
+        EventLogInputComponent, 
+        EventLogDisplayComponent
+    ],
     exports: [ ],
     providers: [
         {

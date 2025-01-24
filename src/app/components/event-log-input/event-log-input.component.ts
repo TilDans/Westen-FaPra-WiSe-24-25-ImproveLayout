@@ -4,6 +4,7 @@ import {FormsModule} from "@angular/forms";
 import {CdkTextareaAutosize} from "@angular/cdk/text-field";
 import {MatFormField, MatLabel} from "@angular/material/form-field";
 import {MatInput} from "@angular/material/input";
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
     selector: 'app-event-log-input',
@@ -14,6 +15,7 @@ import {MatInput} from "@angular/material/input";
         FormsModule,
         CdkTextareaAutosize,
         MatFormField,
+        MatButtonModule,
         MatInput,
         MatLabel
     ],

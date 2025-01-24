@@ -28,7 +28,6 @@ export class AppComponent {
     updateSelectedEventLog(eventLog: any): void {
         this.selectedEventLog = eventLog;
         this.selectedEventLogChange.emit(eventLog);
-        console.log('change in app')
     }
 
     public processSourceChange(newSource: string) {

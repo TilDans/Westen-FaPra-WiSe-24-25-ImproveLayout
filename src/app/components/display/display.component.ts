@@ -280,14 +280,16 @@ export class DisplayComponent implements OnDestroy {
 
     private setSelectedEventLog(eventLog?: EventLog) {
         if (eventLog) {
-            this._selectedEventLog = eventLog;
+            if (this._selectedEventLog !== eventLog) {
+                this.resetCut();
+                this._selectedEventLog = eventLog;
+            }
             this._petriNet!.selectDFG(this._selectedEventLog!);
         } else {
             this._selectedEventLog = undefined;
             this._petriNet!.selectDFG();
         }
         this.selectedEventLogChange.emit(eventLog);
-        console.log('emitted')
     }
 
     public resetDFGNodeHighlighting() {
