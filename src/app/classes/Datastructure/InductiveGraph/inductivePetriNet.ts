@@ -10,6 +10,8 @@ import {IntersectionCalculatorService} from "../../../services/intersection-calc
 import { PetriLayerContainer } from "./PetriLayout/petriLayerContainer";
 import { Cuts, Layout } from "../enums";
 import { SvgLayoutService } from "src/app/services/svg-layout.service";
+import { Trace } from "../event-log/trace";
+import { TraceEvent } from "../event-log/trace-event";
 
 
 export class InductivePetriNet{
@@ -25,12 +27,14 @@ export class InductivePetriNet{
     _svgService : SvgService = new SvgService (new SvgArrowService(new IntersectionCalculatorService()), new SvgLayoutService());
 
     //OffSet sollte nicht frößer sein als kleinstes Element * 2 (Berechnung, ob ein Element in einem Layer ist)
-    static horizontalOffset = 150;
-    static verticalOffset = 150;
+    static horizontalOffset = 100;
+    static verticalOffset = 200;
 
     constructor() {
         EventLogDFG.logCounter = 0; // counter der logs für neues Netz resetten
     }
+
+    //#region getters/setters
 
     public get Transitions() {
         return this._transitions;
@@ -44,9 +48,16 @@ export class InductivePetriNet{
         return this._arcs;
     }
 
+    public get finished() {
+        return this._finished;
+    }
+
+    //#endregion
+
     ////////////////////////////////
     /* ----- INITIALIZATION ----- */
     ////////////////////////////////
+    //#region
 
     init(eventLog: EventLog): InductivePetriNet {
         //zwei Stellen zum Start generieren und die entsprechenden Kanten einfügen
@@ -78,11 +89,14 @@ export class InductivePetriNet{
         this.genArc(stopTrans, last);
     }
 
+    //#endregion
+
     ////////////////////////////////////
     /* ----- CUT HANDLING Start ----- */
     ////////////////////////////////////
+    //#region
 
-    public handleCutResult(cutType: Cuts, toRemove: EventLog, toInsertFirst: EventLog, toInsertSecond: EventLog){
+    public handleCutResult(cutType: Cuts, toRemove: EventLog, toInsertFirst: EventLog, toInsertSecond: EventLog) {
         const eventLogDFGToRemove = this._eventLogDFGs!.find(element => element.eventLog === toRemove)!;
         const eventLogDFGToInsertFirst = new EventLogDFG(this._svgService, toInsertFirst);
         const eventLogDFGToInsertSecond = new EventLogDFG(this._svgService, toInsertSecond);
@@ -109,8 +123,11 @@ export class InductivePetriNet{
         //Verbundene Kanten finden
         const connecionsInNet = this.getConnectedArcs(toRemove);
 
+        let isLoop = false;
+
         //für eingehende Kanten das erste einzufügende Element als Ziel setzen
         connecionsInNet.edgesToElem.forEach(edge => {
+            if (edge.start.x > toRemove.x) isLoop = true;
             edge.end = toInsertFirst;
         });
 
@@ -119,12 +136,16 @@ export class InductivePetriNet{
 
         //für ausgehende Kanten das zweite einzufügende Element als Start setzen
         connecionsInNet.edgesFromElem.forEach(edge => {
+            if (edge.end.x < toRemove.x) isLoop = true;
             edge.start = toInsertSecond;
         });
 
-        //Layout aktualisieren
-        this._petriLayersContained?.insertToNewLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
-
+        if (!isLoop) {
+            //Layout aktualisieren
+            this._petriLayersContained?.insertToNewLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+        } else {
+            this._petriLayersContained?.insertToNewLayerBeforeCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+        }
         //zu entfernendes Element ersetzen und zweites Element an das Ende des Arrays pushen.
         this._eventLogDFGs![this._eventLogDFGs!.findIndex(elem => elem === toRemove)] = toInsertFirst;
         this._eventLogDFGs!.push(toInsertSecond);
@@ -286,33 +307,24 @@ export class InductivePetriNet{
         this._eventLogDFGs!.push(toInsertSecond);
     }
 
-    //////////////////////////////////
-    /* ----- CUT HANDLING END ----- */
-    //////////////////////////////////
+    //#endregion
+
+    /////////////////////////////////////
+    /* ----- Other Methods Start ----- */
+    /////////////////////////////////////
+    //#region
 
     public netFinished() {
-        const netFin = this._eventLogDFGs?.length == 0;
-        if (netFin) {
-            const stopTransToModify = this._transitions[this._transitions.findIndex(trans => trans.id === 'tStop')];
-            stopTransToModify.id = ('t' + (this._transitions.length - 1).toString());
-            this._svgService.createSVGForTransition(stopTransToModify);
-            this._transitions.sort((a, b) => parseFloat(a.id.slice(1)) - parseFloat(b.id.slice(1)));
-        }
-        this._finished = true;
-    }
-
-    public get finished() {
-        return this._finished;
-    }
-
-    public getMarkedEventLog(eventLogID: string) {
-        for (const eventLog of this._eventLogDFGs!) {
-            if (eventLog?.id === eventLogID) {
-                return eventLog?.eventLog;
+        if (!this._finished) {
+            const netFin = this._eventLogDFGs?.length === 0;
+            if (netFin) {
+                const stopTransToModify = this._transitions[this._transitions.findIndex(trans => trans.id === 'tStop')];
+                stopTransToModify.id = ('t' + (this._transitions.length - 1).toString());
+                this._svgService.createSVGForTransition(stopTransToModify);
+                this._transitions.sort((a, b) => parseFloat(a.id.slice(1)) - parseFloat(b.id.slice(1)));
+                this._finished = true;
             }
         }
-        // should not happen
-        throw new Error('No event log found for id ' + eventLogID);
     }
 
     private getConnectedArcs(node: CustomElement): {edgesToElem: Edge[], edgesFromElem: Edge[] } {
@@ -322,10 +334,23 @@ export class InductivePetriNet{
         const edgesFromElem = (this._arcs.filter(edge => edge.start == node));
         return {edgesToElem, edgesFromElem}
     }
+    
+    public getEventLogByID(eventLogID: string) {
+        for (const eventLog of this._eventLogDFGs!) {
+            if (eventLog?.id === eventLogID) {
+                return eventLog?.eventLog;
+            }
+        }
+        // should not happen
+        throw new Error('No event log found for id ' + eventLogID);
+    }
+
+    //#endregion
 
     ////////////////////////////////////
     /* ----- Layout / Graphical ----- */
     ////////////////////////////////////
+    //#region
 
     applyNewDFGLayout(layout: Layout) {
         this._svgService.applyNewDFGLayout(layout);
@@ -334,6 +359,29 @@ export class InductivePetriNet{
                 elDfg.updateLayout();
             }
         }
+    }
+
+    public highlightSubsetInDFG(toHighlightIn: EventLog, subset: EventLog) {
+        const eventLogDFGMarked = this._eventLogDFGs!.find(element => element.eventLog === toHighlightIn)!;
+        //eventLogDFGMarked.removeColoring();
+        const uniqueActivities = new Set<string>();
+        if (subset && subset.traces) {
+            subset.traces.forEach((trace: Trace) => {
+                if (trace.events) {
+                trace.events.forEach((event: TraceEvent) => {
+                    if (event.conceptName) {
+                    uniqueActivities.add(event.conceptName);
+                    }
+                });
+                }
+            });
+        }
+        const uniqueActivitiesArray = Array.from(uniqueActivities);
+        eventLogDFGMarked.colorSubSet(uniqueActivitiesArray);
+    }
+    
+    public removeHighlightingFromEventLogDFG(eventLogID: string) {
+        const eventLogDFGToRemoveHighlightingFrom = this._eventLogDFGs!.find(element => element.id === eventLogID)?.colorSubSet([]);
     }
     
     public getSVGRepresentation(): SVGElement[] {
@@ -378,7 +426,6 @@ export class InductivePetriNet{
                 const currElemWidth = element.getWidth();
                 let yValToSet = currLayerYOffset;
                 let xValToSet = currLayerXOffSet + ((layerMaxWidth - currElemWidth) / 2);
-
                 element.setXYonSVG(xValToSet, yValToSet);
                 currLayerYOffset += (InductivePetriNet.verticalOffset + currElemHeight);
             });
@@ -502,9 +549,12 @@ export class InductivePetriNet{
         return result;
     }
 
+    //#endregion
+
     ///////////////////////////////////////////////
     /* ----- Element Generation / Deletion ----- */
     ///////////////////////////////////////////////
+    //#region
 
     private genArc(start: CustomElement, end: CustomElement) {
         const edgeToGen = new Edge(start, end);
@@ -566,4 +616,7 @@ export class InductivePetriNet{
         });
         this.netFinished();
     }
+
+    //#endregion
+
 }

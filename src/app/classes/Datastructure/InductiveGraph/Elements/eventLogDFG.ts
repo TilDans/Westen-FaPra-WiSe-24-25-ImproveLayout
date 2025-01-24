@@ -1,7 +1,5 @@
 import { SvgService } from "src/app/services/svg.service";
 import { EventLog } from "../../event-log/event-log";
-import { TraceEvent } from "../../event-log/trace-event";
-import { Edge } from "../edgeElement";
 import { CustomElement } from "./element";
 
 
@@ -44,6 +42,17 @@ export class EventLogDFG extends CustomElement{
         let centerX = (this.x + (this.getWidth() / 2));
         let centerY = (this.y + (this.getHeight() / 2));
         return {x: centerX, y: centerY};
+    }
+
+    public colorSubSet(events: Array<string>) {
+        const svg = this.getSvg();
+        const svgNodes = Array.from(svg.getElementsByClassName('dfgNode'));
+        svgNodes.forEach(dfgNode => {
+            dfgNode.classList.remove('highligtedDFGNode');
+            if (events.indexOf(dfgNode.id) !== -1) {
+                dfgNode.classList.add('highligtedDFGNode');
+            }
+        });
     }
 }
 

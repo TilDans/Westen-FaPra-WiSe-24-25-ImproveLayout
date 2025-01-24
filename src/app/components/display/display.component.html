@@ -1,14 +1,14 @@
 <div class="settingsForButtons">
   <mat-form-field appearance="fill" class="aligned-element">
     <mat-label>Select DFG Layout</mat-label>
-    <mat-select [(value)]="selectedLayout" (selectionChange)="applyLayout()">
+    <mat-select [(value)]="selectedLayout" (selectionChange)="applyLayout()" [disabled]="isPetriNetFinished">
       <mat-option *ngFor="let layout of availableLayouts" [value]="layout">
         {{ layout }}
       </mat-option>
     </mat-select>
   </mat-form-field>
 
-  <button mat-raised-button color="primary" class="aligned-element" (click)="performCut()">
+  <button mat-raised-button color="primary" class="aligned-element" (click)="performCut(true)">
     Perform Cut
   </button>
   <button mat-raised-button color="primary" class="aligned-element" (click)="resetCut()">
