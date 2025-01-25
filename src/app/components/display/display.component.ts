@@ -20,8 +20,6 @@ import { Cuts, Layout } from 'src/app/classes/Datastructure/enums';
 import { PNMLWriterService } from 'src/app/services/file-export.service';
 import { InductiveMinerHelper } from 'src/app/services/inductive-miner/inductive-miner-helper';
 import { FallThroughService } from 'src/app/services/inductive-miner/fall-throughs';
-import { Layout } from 'src/app/classes/Datastructure/enums';
-import { PNMLWriterService } from 'src/app/services/file-export.service';
 
 @Component({
     selector: 'app-display',
@@ -51,6 +49,7 @@ export class DisplayComponent implements OnDestroy {
     private _markedEdges: SVGLineElement[] = [];
     // to keep track in which event log the lines are drawn
     private _selectedEventLog?: EventLog;
+    private _previouslySelected?: EventLog;
 
     constructor(private _svgService: SvgService,
 
@@ -295,12 +294,13 @@ export class DisplayComponent implements OnDestroy {
 
     private setSelectedEventLog(eventLog?: EventLog) {
         if (eventLog) {
-            if (this._selectedEventLog !== eventLog) {
+            if (this._previouslySelected !== eventLog) {
                 this.resetCut();
-                this._selectedEventLog = eventLog;
             }
+            this._selectedEventLog = eventLog;
             this._petriNet!.selectDFG(this._selectedEventLog!);
         } else {
+            this._previouslySelected = this._selectedEventLog;
             this._selectedEventLog = undefined;
             this._petriNet!.selectDFG();
         }
