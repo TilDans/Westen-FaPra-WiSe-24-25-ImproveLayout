@@ -1,35 +1,47 @@
 body {
-  display: flex;
-  flex-direction: column;
-  gap: 16px; /* Add spacing between elements */
-  margin: 0; /* Remove any default body margins */
-  padding: 16px; /* Optional: Add padding around the entire layout */
-  box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    /* Add spacing between elements */
+    margin: 0;
+    /* Remove any default body margins */
+    padding: 16px;
+    /* Optional: Add padding around the entire layout */
+    box-sizing: border-box;
 }
 
 
 .resizable-container {
-  position: relative; /* Allows internal positioning */
-  resize: both; /* Enables resizing on both width and height */
-  overflow: hidden; /* Ensures content doesn't overflow when resizing */
-  width: 100%;
-  height: 600px;
-  border-style: solid;
-  border-color: lightgray;
+    position: relative;
+    /* Allows internal positioning */
+    resize: both;
+    /* Enables resizing on both width and height */
+    overflow: hidden;
+    /* Ensures content doesn't overflow when resizing */
+    width: 100%;
+    height: 600px;
+    border-style: solid;
+    border-color: lightgray;
 }
 
 .canvas {
-  width: 100%;
-  height: 100%;
+    overflow: scroll;
+
+    width: 100%;
+    height: 100%;
 }
 
 .settingsForButtons {
-  display: flex;
-  align-items: center; /* Align items vertically */
-  gap: 16px; /* Add space between elements */
+    display: flex;
+    align-items: center;
+    /* Align items vertically */
+    gap: 16px;
+    /* Add space between elements */
 }
-  
+
 .aligned-element {
-  flex: 1; /* Ensures both elements take equal width */
-  max-width: 250px; /* Optional: Restrict max width for form field and button */
+    flex: 1;
+    /* Ensures both elements take equal width */
+    max-width: 250px;
+    /* Optional: Restrict max width for form field and button */
 }

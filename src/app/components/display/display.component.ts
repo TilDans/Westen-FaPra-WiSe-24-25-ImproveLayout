@@ -1,21 +1,23 @@
-import {Component, ElementRef, EventEmitter, OnDestroy, Output, ViewChild} from '@angular/core';
-import {DisplayService} from '../../services/display.service';
-import {catchError, of, Subscription, take} from 'rxjs';
-import {SvgService} from '../../services/svg.service';
-import {ExampleFileComponent} from "../example-file/example-file.component";
-import {FileReaderService} from "../../services/file-reader.service";
-import {HttpClient} from "@angular/common/http";
-import {InductivePetriNet} from 'src/app/classes/Datastructure/InductiveGraph/inductivePetriNet';
-import {InductiveMinerService} from "../../services/inductive-miner/inductive-miner.service";
-import {TraceEvent} from "../../classes/Datastructure/event-log/trace-event";
-import {Edge} from "../../classes/Datastructure/InductiveGraph/edgeElement";
-import {DFGElement} from "../../classes/Datastructure/InductiveGraph/Elements/DFGElement";
-import {IntersectionCalculatorService} from "../../services/intersection-calculator.service";
-import { PNMLWriterService } from 'src/app/services/file-export.service';
-import { Layout } from 'src/app/classes/Datastructure/enums';
+
+import { AfterViewInit, Component, ElementRef, EventEmitter, HostListener, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { DisplayService } from '../../services/display.service';
+import { catchError, of, Subscription, take } from 'rxjs';
+import { SvgService } from '../../services/svg.service';
+import { ExampleFileComponent } from "../example-file/example-file.component";
+import { FileReaderService } from "../../services/file-reader.service";
+import { HttpClient } from "@angular/common/http";
+import { InductivePetriNet } from 'src/app/classes/Datastructure/InductiveGraph/inductivePetriNet';
+import { InductiveMinerService } from "../../services/inductive-miner/inductive-miner.service";
+import { TraceEvent } from "../../classes/Datastructure/event-log/trace-event";
+import { Edge } from "../../classes/Datastructure/InductiveGraph/edgeElement";
+import { DFGElement } from "../../classes/Datastructure/InductiveGraph/Elements/DFGElement";
+import { IntersectionCalculatorService } from "../../services/intersection-calculator.service";
+import svgPanZoom, { enableDblClickZoom } from 'svg-pan-zoom';
 import { SvgLayoutService } from 'src/app/services/svg-layout.service';
 import { SvgArrowService } from 'src/app/services/svg-arrow.service';
 import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
+import { Layout } from 'src/app/classes/Datastructure/enums';
+import { PNMLWriterService } from 'src/app/services/file-export.service';
 
 @Component({
     selector: 'app-display',
@@ -38,20 +40,24 @@ export class DisplayComponent implements OnDestroy {
     private _sub: Subscription;
     private _petriNet: InductivePetriNet | undefined;
     private _leftMouseDown = false;
+    private zoomInstance = svgPanZoom;
+    isZoomed = false;
+    zoomLevel: number = 0.5;
 
     private _markedEdges: SVGLineElement[] = [];
     // to keep track in which event log the lines are drawn
     private _selectedEventLog?: EventLog;
 
     constructor(private _svgService: SvgService,
-                private _displayService: DisplayService,
-                private _fileReaderService: FileReaderService,
-                private _inductiveMinerService: InductiveMinerService,
-                private _http: HttpClient,
-                private _intersectionCalculatorService: IntersectionCalculatorService,
-                private _pnmlWriterService: PNMLWriterService,
-                private _svgLayoutService: SvgLayoutService,
-                private _svgArrowService: SvgArrowService,
+
+        private _displayService: DisplayService,
+        private _fileReaderService: FileReaderService,
+        private _inductiveMinerService: InductiveMinerService,
+        private _http: HttpClient,
+        private _intersectionCalculatorService: IntersectionCalculatorService,
+        private _pnmlWriterService: PNMLWriterService,
+        private _svgLayoutService: SvgLayoutService,
+        private _svgArrowService: SvgArrowService,
     ) {
 
         this.fileContent = new EventEmitter<string>();
@@ -143,7 +149,7 @@ export class DisplayComponent implements OnDestroy {
         } catch (error) {
             console.log('net not initialized yet')
         }
-       
+
         // Netz nur herunterladbar, wenn fertig
         this.isPetriNetFinished = this._petriNet!.finished;
     }
@@ -170,7 +176,7 @@ export class DisplayComponent implements OnDestroy {
             const targetEventLog = this.isDomEventInEventLog(e);
             if (targetEventLog) {
                 this.removeAllDrawnLines();
-                const {x, y} = this.calculateSvgCoordinates(e);
+                const { x, y } = this.calculateSvgCoordinates(e);
                 this.drawingArea.nativeElement.appendChild(this._svgService.createDrawnLine(x, y));
                 const newEL = this._petriNet?.getEventLogByID(targetEventLog.getAttribute('id') || '');
                 if (newEL) {
@@ -186,8 +192,8 @@ export class DisplayComponent implements OnDestroy {
         let target = e.target;
         while (target) {
             if (target instanceof SVGElement) {
-                if (target.classList.contains('canvas')) {   
-                    return undefined;
+                if (target.classList.contains('canvas')) {
+                    return false;
                 } else {
                     if (target.classList.contains('eventLog')) {
                         return target;
@@ -203,7 +209,7 @@ export class DisplayComponent implements OnDestroy {
         const svgRect = this.drawingArea!.nativeElement.getBoundingClientRect();
         const x = e.clientX - svgRect.left;
         const y = e.clientY - svgRect.top;
-        return {x, y};
+        return { x, y };
     }
 
     public processMouseUp(e: MouseEvent) {
@@ -272,7 +278,7 @@ export class DisplayComponent implements OnDestroy {
             if (!line) {
                 return;
             }
-            const {x, y} = this.calculateSvgCoordinates(e);
+            const { x, y } = this.calculateSvgCoordinates(e);
             line.setAttribute('x2', x.toString());
             line.setAttribute('y2', y.toString());
         }
@@ -364,5 +370,47 @@ export class DisplayComponent implements OnDestroy {
         link.href = URL.createObjectURL(blob);
         link.click();
         URL.revokeObjectURL(link.href);
+    }
+
+    applyZoom() {
+
+        if (this.drawingArea != null) {
+            this.zoomInstance = svgPanZoom(this.drawingArea.nativeElement, {
+                // viewportSelector: '.svg-pan-zoom_viewport'
+                panEnabled: false
+                , controlIconsEnabled: true
+                , zoomEnabled: true
+                , dblClickZoomEnabled: false
+                , mouseWheelZoomEnabled: true
+                , preventMouseEventsDefault: true
+                , zoomScaleSensitivity: 0.2
+                , minZoom: 0.5
+                , maxZoom: 10
+                , fit: true
+                , contain: false
+                , center: true
+                , refreshRate: 'auto'
+                , beforeZoom: function () { }
+                , onZoom: function () { }
+                , beforePan: function (odPan, newPan) {
+                    const isLeftMouseClick = svgPanZoom;
+
+                    if (this.panEnabled) {
+                        return false;
+                    }
+                    return newPan;
+                }
+                , onPan: function () { }
+                , onUpdatedCTM: function () { }
+
+            });
+        }
+    }
+
+    onClick(e: MouseEvent) {
+        this.zoomLevel = this.zoomLevel + 0.5;
+        this.isZoomed = !this.isZoomed;
+        this.applyZoom()
+
     }
 }

@@ -1,6 +1,6 @@
 <div class="main">
     <mat-form-field appearance="outline" class="textarea">
-        <mat-label>File content</mat-label>
+        <mat-label>Event log (Format: A B C + A C B + ...)</mat-label>
         <textarea matInput cdkTextareaAutosize cdkAutosizeMinRows="10" cdkAutosizeMaxRows="20"
                   [(ngModel)]="inputEventLog" (keydown.enter)="onButtonClicked()"></textarea>
     </mat-form-field>
