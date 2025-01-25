@@ -29,8 +29,6 @@ export class DisplayComponent implements OnDestroy {
     @ViewChild('drawingArea') drawingArea: ElementRef<SVGElement> | undefined;
 
     @Output('fileContent') fileContent: EventEmitter<string>;
-    @Output("displaySvg")
-    displaySvg!: EventEmitter<ElementRef<SVGElement>> | null;
 
     //Bedingung, damit der Button zum Download angezeigt wird. Siehe draw Methode
     isPetriNetFinished: boolean = false;
@@ -364,7 +362,7 @@ export class DisplayComponent implements OnDestroy {
         if (this.drawingArea != null) {
             this.zoomInstance = svgPanZoom(this.drawingArea.nativeElement, {
                 // viewportSelector: '.svg-pan-zoom_viewport'
-                panEnabled: true
+                panEnabled: false
                 , controlIconsEnabled: true
                 , zoomEnabled: true
                 , dblClickZoomEnabled: false
