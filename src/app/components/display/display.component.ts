@@ -294,13 +294,16 @@ export class DisplayComponent implements OnDestroy {
 
     private setSelectedEventLog(eventLog?: EventLog) {
         if (eventLog) {
-            if (this._previouslySelected !== eventLog) {
+            if (eventLog !== this._previouslySelected && eventLog !== this._selectedEventLog) {
                 this.resetCut();
             }
             this._selectedEventLog = eventLog;
+            this._previouslySelected = undefined;
             this._petriNet!.selectDFG(this._selectedEventLog!);
         } else {
-            this._previouslySelected = this._selectedEventLog;
+            if(this._selectedEventLog) {
+                this._previouslySelected = this._selectedEventLog;
+            }
             this._selectedEventLog = undefined;
             this._petriNet!.selectDFG();
         }
@@ -308,13 +311,11 @@ export class DisplayComponent implements OnDestroy {
     }
 
     public resetDFGNodeHighlighting() {
-        this._petriNet!.removeHighlightingFromEventLogDFGNodes(this._selectedEventLog!);
+        this._petriNet!.removeHighlightingFromEventLogDFGNodes();
     }
 
     public resetCut() {
-        if(this._selectedEventLog) {
-            this.resetDFGNodeHighlighting();
-        }
+        this.resetDFGNodeHighlighting();
         this._markedEdges.forEach(edge => {
             edge.classList.remove('selectedEdge');
         });
@@ -324,7 +325,7 @@ export class DisplayComponent implements OnDestroy {
 
     public performCut(applyResultToPetriNet: boolean) {
         if (this.isPetriNetFinished) return;
-        if (this._markedEdges.length === 0 || this._selectedEventLog === undefined) {
+        if (this._markedEdges.length === 0) { //if any edge is marked, an event log is or was selected
             alert('No edges marked')
             return;
         }
