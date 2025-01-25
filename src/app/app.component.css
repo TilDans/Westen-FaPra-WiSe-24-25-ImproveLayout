@@ -72,3 +72,8 @@ hr {
 
     width: 50%;
 }
+
+.sources a {
+    text-decoration: underline;
+    font-style: italic;
+}
