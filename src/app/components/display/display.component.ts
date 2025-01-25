@@ -343,17 +343,24 @@ export class DisplayComponent implements OnDestroy {
         }
         console.log('markedEdges: ', markedEdges)
 
+        let eventLogToCutIn;
+        if (this._selectedEventLog) {
+            eventLogToCutIn = this._selectedEventLog;
+        } else {
+            eventLogToCutIn = this._previouslySelected;
+        }
+
         if (applyResultToPetriNet) {
             try {
-                const result = this._inductiveMinerService.applyInductiveMiner(this._selectedEventLog!, markedEdges);
+                const result = this._inductiveMinerService.applyInductiveMiner(eventLogToCutIn!, markedEdges);
                 console.log('cut result: ', result);
-                this._petriNet?.handleCutResult(result.cutMade, this._selectedEventLog!, result.el[0], result.el[1])
+                this._petriNet?.handleCutResult(result.cutMade, eventLogToCutIn!, result.el[0], result.el[1])
                 this.draw();
             } catch (Error) {
                 console.log('no cut possible', Error);
             }
         } else {
-            try {
+            try { // always an eventlog selected 
                 const result = this._inductiveMinerService.applyInductiveMiner(this._selectedEventLog!, markedEdges);
                 console.log('cut result: ', result);
                 this._petriNet?.highlightSubsetInDFG(this._selectedEventLog!, result.el[0]);
