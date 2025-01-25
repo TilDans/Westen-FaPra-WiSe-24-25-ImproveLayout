@@ -1,9 +1,10 @@
-import {Component} from '@angular/core';
-import {FormControl} from '@angular/forms';
-import {DisplayService} from './services/display.service';
-import {XmlParserService} from './services/xml-parser.service';
-import {TextParserService} from "./services/text-parser.service";
+import { AfterViewInit, Component, ViewChild } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { DisplayService } from './services/display.service';
+import { XmlParserService } from './services/xml-parser.service';
+import { TextParserService } from "./services/text-parser.service";
 import { InductivePetriNet } from './classes/Datastructure/InductiveGraph/inductivePetriNet';
+import { DisplayComponent } from './components/display/display.component';
 
 @Component({
     selector: 'app-root',
@@ -13,10 +14,10 @@ import { InductivePetriNet } from './classes/Datastructure/InductiveGraph/induct
 export class AppComponent {
 
     public textareaFc: FormControl;
-    
+
     constructor(private _xmlParserService: XmlParserService,
-                private _displayService: DisplayService,
-                private _textParserService: TextParserService) {
+        private _displayService: DisplayService,
+        private _textParserService: TextParserService) {
         this.textareaFc = new FormControl();
         this.textareaFc.disable();
     }
@@ -32,7 +33,7 @@ export class AppComponent {
 
     parseEventLog(newEventLog: string) {
         const result = this._textParserService.parse(newEventLog);
-        if(result) {
+        if (result) {
             this._displayService.display(new InductivePetriNet().init(result));
         }
     }
