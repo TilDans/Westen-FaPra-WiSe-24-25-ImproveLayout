@@ -20,8 +20,6 @@ import { Cuts, Layout } from 'src/app/classes/Datastructure/enums';
 import { PNMLWriterService } from 'src/app/services/file-export.service';
 import { InductiveMinerHelper } from 'src/app/services/inductive-miner/inductive-miner-helper';
 import { FallThroughService } from 'src/app/services/inductive-miner/fall-throughs';
-import { Layout } from 'src/app/classes/Datastructure/enums';
-import { PNMLWriterService } from 'src/app/services/file-export.service';
 
 @Component({
     selector: 'app-display',
@@ -51,6 +49,7 @@ export class DisplayComponent implements OnDestroy {
     private _markedEdges: SVGLineElement[] = [];
     // to keep track in which event log the lines are drawn
     private _selectedEventLog?: EventLog;
+    private _previouslySelected?: EventLog;
 
     constructor(private _svgService: SvgService,
 
@@ -295,12 +294,16 @@ export class DisplayComponent implements OnDestroy {
 
     private setSelectedEventLog(eventLog?: EventLog) {
         if (eventLog) {
-            if (this._selectedEventLog !== eventLog) {
+            if (eventLog !== this._previouslySelected && eventLog !== this._selectedEventLog) {
                 this.resetCut();
-                this._selectedEventLog = eventLog;
             }
+            this._selectedEventLog = eventLog;
+            this._previouslySelected = undefined;
             this._petriNet!.selectDFG(this._selectedEventLog!);
         } else {
+            if(this._selectedEventLog) {
+                this._previouslySelected = this._selectedEventLog;
+            }
             this._selectedEventLog = undefined;
             this._petriNet!.selectDFG();
         }
@@ -308,13 +311,11 @@ export class DisplayComponent implements OnDestroy {
     }
 
     public resetDFGNodeHighlighting() {
-        this._petriNet!.removeHighlightingFromEventLogDFGNodes(this._selectedEventLog!);
+        this._petriNet!.removeHighlightingFromEventLogDFGNodes();
     }
 
     public resetCut() {
-        if(this._selectedEventLog) {
-            this.resetDFGNodeHighlighting();
-        }
+        this.resetDFGNodeHighlighting();
         this._markedEdges.forEach(edge => {
             edge.classList.remove('selectedEdge');
         });
@@ -324,7 +325,7 @@ export class DisplayComponent implements OnDestroy {
 
     public performCut(applyResultToPetriNet: boolean) {
         if (this.isPetriNetFinished) return;
-        if (this._markedEdges.length === 0 || this._selectedEventLog === undefined) {
+        if (this._markedEdges.length === 0) { //if any edge is marked, an event log is or was selected
             alert('No edges marked')
             return;
         }
@@ -342,17 +343,24 @@ export class DisplayComponent implements OnDestroy {
         }
         console.log('markedEdges: ', markedEdges)
 
+        let eventLogToCutIn;
+        if (this._selectedEventLog) {
+            eventLogToCutIn = this._selectedEventLog;
+        } else {
+            eventLogToCutIn = this._previouslySelected;
+        }
+
         if (applyResultToPetriNet) {
             try {
-                const result = this._inductiveMinerService.applyInductiveMiner(this._selectedEventLog!, markedEdges);
+                const result = this._inductiveMinerService.applyInductiveMiner(eventLogToCutIn!, markedEdges);
                 console.log('cut result: ', result);
-                this._petriNet?.handleCutResult(result.cutMade, this._selectedEventLog!, result.el[0], result.el[1])
+                this._petriNet?.handleCutResult(result.cutMade, eventLogToCutIn!, result.el[0], result.el[1])
                 this.draw();
             } catch (Error) {
                 console.log('no cut possible', Error);
             }
         } else {
-            try {
+            try { // always an eventlog selected 
                 const result = this._inductiveMinerService.applyInductiveMiner(this._selectedEventLog!, markedEdges);
                 console.log('cut result: ', result);
                 this._petriNet?.highlightSubsetInDFG(this._selectedEventLog!, result.el[0]);
