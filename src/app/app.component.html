@@ -14,24 +14,46 @@
     <app-display class="padding full-size" (fileContent)="processSourceChange($event)"></app-display>
 
     <div class="sampleFile">
-
         <div class="flexRowAlignSpaceEvenlyStart">
             <app-example-file title="Lecture example" link="assets/lectureExample.xes"
-                              description="Event log from lecture notes"></app-example-file>
-            <app-example-file title="XES-File" link="assets/example.xes"
-                description="An example .xes log file"></app-example-file>
-            <app-example-file title="production example" link="assets/Production.xes"
-                description="production sample .xes log file"></app-example-file>
+                              description="Event log from lecture [1]"></app-example-file>
+            <app-example-file title="Sequence Cut example" link="assets/sequenceCut.xes"
+                              description="Example for Sequence Cut"></app-example-file>
+            <app-example-file title="Exclusive Cut example" link="assets/exclusiveCut.xes"
+                              description="Example for Exclusive Cut"></app-example-file>
+            <app-example-file title="Parallel Cut example" link="assets/parallelCut.xes"
+                              description="Example for Parallel Cut"></app-example-file>
+            <app-example-file title="Loop Cut example" link="assets/loopCut.xes"
+                              description="Example for Loop Cut"></app-example-file>
             <app-example-file title="Reviewing Example" link="assets/reviewing.xes"
-                description="reviewing .xes log file"></app-example-file>
-            <app-example-file title="repair Example" link="assets/repairExample.xes"
-                description="repair .xes log file"></app-example-file>
+                              description="Reviewing .xes log file [2]"></app-example-file>
+            <app-example-file title="Repair Example" link="assets/repairExample.xes"
+                              description="Repair .xes log file [3]"></app-example-file>
         </div>
 
         <div class="inputFeature">
             <app-event-log-input style="width: 100%" (eventLogChange)="parseEventLog($event)"></app-event-log-input>
         </div>
 
+    </div>
+
+    <div class="sources">
+        <br><br>
+        <div>
+            [1] s. lecture module 64090 figure 8.2.1 at Fernuni Hagen
+        </div>
+        <div>
+            [2] Adapted from the originals introduced in Chapter 8 of the
+            Process Mining: Data Science in Action book by Wil van der Aalst.
+            The original files can be downloaded
+            <a href="https://processmining.org/old-version/event-book.html" target="_blank">here</a>
+        </div>
+        <div>
+            [3] Original file taken from
+            <a href="https://promtools.org/prom-documentation/" target="_blank">ProM Tools Tutorial</a>.
+            The original files can be downloaded
+            <a href="https://promtools.org/?smd_process_download=1&amp;download_id=161" target="_blank">here</a>
+        </div>
     </div>
     <!--  Footer  -->
     <hr>
