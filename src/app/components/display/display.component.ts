@@ -348,6 +348,9 @@ export class DisplayComponent implements OnDestroy {
     }
 
     downloadPetriNet(type: string) {
+        if (!this.isPetriNetFinished){
+            return;
+        }
         const link = document.createElement('a');
         let content = 'type didn\'t match available export format';
         if (type === 'pnml') {
