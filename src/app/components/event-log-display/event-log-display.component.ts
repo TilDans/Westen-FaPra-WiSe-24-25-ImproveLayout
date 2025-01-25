@@ -41,16 +41,24 @@ export class EventLogDisplayComponent {
         if (selected) {
             for (const trace of selected.traces) {
                 for (const event of trace.events) {
-                    if (!displayedWarning && event.conceptName.includes(" ")) {
-                        this.snackBar.open(
-                            'Spaces in the Event Log were removed to ensure compatibility with the text input area.', 
-                            'Close', 
-                            { duration: 3000 } // Message will auto-dismiss after 3 seconds
-                        );
-                        displayedWarning = true;
+                    let cleanedConceptName = event.conceptName;
+                    if (cleanedConceptName.includes(" ")) {
+                        if (!displayedWarning) {
+                            this.snackBar.open(
+                                'Spaces in the Event Log were removed to ensure compatibility with the text input area.', 
+                                'Close', 
+                                { duration: 3000 } // Message will auto-dismiss after 3 seconds
+                            );
+                            displayedWarning = true;
+                        }
+                        let sequences = cleanedConceptName.split(" ");
+                        let capitalizedSequences = sequences.map(part => {
+                            if (sequences.indexOf(part) === 0) { return part }
+                            return part.charAt(0).toUpperCase() + part.slice(1);
+                        });
+                        cleanedConceptName = capitalizedSequences.join("");
                     }
-                    const cleanedConceptName = event.conceptName.replace(/\s+/g, '');
-                    eventLogString = eventLogString.concat(cleanedConceptName, " ");    
+                    eventLogString = eventLogString.concat(cleanedConceptName, " ");
                 }
                 eventLogString = eventLogString.trimEnd();
                 eventLogString = eventLogString.concat("+");

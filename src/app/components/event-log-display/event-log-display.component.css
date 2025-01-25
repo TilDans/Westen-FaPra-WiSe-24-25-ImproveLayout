@@ -22,7 +22,7 @@
 .concept-names {
   display: flex;
   gap: 10px; /* Adjust the gap as needed */
-  white-space: nowrap; /* Prevent wrapping within a single line */
+  /*white-space: nowrap; /* Prevent wrapping within a single line */
 }
 
 .trace-divider {
