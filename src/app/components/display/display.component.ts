@@ -1,23 +1,25 @@
-import {Component, ElementRef, EventEmitter, OnDestroy, Output, ViewChild} from '@angular/core';
-import {DisplayService} from '../../services/display.service';
-import {catchError, of, Subscription, take} from 'rxjs';
-import {SvgService} from '../../services/svg.service';
-import {ExampleFileComponent} from "../example-file/example-file.component";
-import {FileReaderService} from "../../services/file-reader.service";
-import {HttpClient} from "@angular/common/http";
-import {InductivePetriNet} from 'src/app/classes/Datastructure/InductiveGraph/inductivePetriNet';
-import {InductiveMinerService} from "../../services/inductive-miner/inductive-miner.service";
-import {TraceEvent} from "../../classes/Datastructure/event-log/trace-event";
-import {Edge} from "../../classes/Datastructure/InductiveGraph/edgeElement";
-import {DFGElement} from "../../classes/Datastructure/InductiveGraph/Elements/DFGElement";
-import {IntersectionCalculatorService} from "../../services/intersection-calculator.service";
-import { PNMLWriterService } from 'src/app/services/file-export.service';
-import { Cuts, Layout } from 'src/app/classes/Datastructure/enums';
+
+import { AfterViewInit, Component, ElementRef, EventEmitter, HostListener, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { DisplayService } from '../../services/display.service';
+import { catchError, of, Subscription, take } from 'rxjs';
+import { SvgService } from '../../services/svg.service';
+import { ExampleFileComponent } from "../example-file/example-file.component";
+import { FileReaderService } from "../../services/file-reader.service";
+import { HttpClient } from "@angular/common/http";
+import { InductivePetriNet } from 'src/app/classes/Datastructure/InductiveGraph/inductivePetriNet';
+import { InductiveMinerService } from "../../services/inductive-miner/inductive-miner.service";
+import { TraceEvent } from "../../classes/Datastructure/event-log/trace-event";
+import { Edge } from "../../classes/Datastructure/InductiveGraph/edgeElement";
+import { DFGElement } from "../../classes/Datastructure/InductiveGraph/Elements/DFGElement";
+import { IntersectionCalculatorService } from "../../services/intersection-calculator.service";
+import svgPanZoom, { enableDblClickZoom } from 'svg-pan-zoom';
 import { SvgLayoutService } from 'src/app/services/svg-layout.service';
 import { SvgArrowService } from 'src/app/services/svg-arrow.service';
-import { FallThroughService } from 'src/app/services/inductive-miner/fall-throughs';
-import { InductiveMinerHelper } from 'src/app/services/inductive-miner/inductive-miner-helper';
 import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
+import { Cuts, Layout } from 'src/app/classes/Datastructure/enums';
+import { PNMLWriterService } from 'src/app/services/file-export.service';
+import { InductiveMinerHelper } from 'src/app/services/inductive-miner/inductive-miner-helper';
+import { FallThroughService } from 'src/app/services/inductive-miner/fall-throughs';
 
 @Component({
     selector: 'app-display',
@@ -29,6 +31,7 @@ export class DisplayComponent implements OnDestroy {
     @ViewChild('drawingArea') drawingArea: ElementRef<SVGElement> | undefined;
 
     @Output('fileContent') fileContent: EventEmitter<string>;
+    @Output() selectedEventLogChange = new EventEmitter<EventLog>();
 
     //Bedingung, damit der Button zum Download angezeigt wird. Siehe draw Methode
     isPetriNetFinished: boolean = false;
@@ -39,23 +42,26 @@ export class DisplayComponent implements OnDestroy {
     private _sub: Subscription;
     private _petriNet: InductivePetriNet | undefined;
     private _leftMouseDown = false;
+    private zoomInstance = svgPanZoom;
+    isZoomed = false;
+    zoomLevel: number = 0.5;
 
     private _markedEdges: SVGLineElement[] = [];
     // to keep track in which event log the lines are drawn
-    private _selectedEventLogId?: string;
-    helper: any;
+    private _selectedEventLog?: EventLog;
 
     constructor(private _svgService: SvgService,
-                private _displayService: DisplayService,
-                private _fileReaderService: FileReaderService,
-                private _inductiveMinerService: InductiveMinerService,
-                private _inductiveMinerHelper: InductiveMinerHelper,
-                private _http: HttpClient,
-                private _intersectionCalculatorService: IntersectionCalculatorService,
-                private _pnmlWriterService: PNMLWriterService,
-                private _svgLayoutService: SvgLayoutService,
-                private _svgArrowService: SvgArrowService,
-                private _fallThroughService: FallThroughService,
+
+        private _displayService: DisplayService,
+        private _fileReaderService: FileReaderService,
+        private _inductiveMinerService: InductiveMinerService,
+        private _inductiveMinerHelper: InductiveMinerHelper,
+        private _http: HttpClient,
+        private _intersectionCalculatorService: IntersectionCalculatorService,
+        private _pnmlWriterService: PNMLWriterService,
+        private _svgLayoutService: SvgLayoutService,
+        private _svgArrowService: SvgArrowService,
+        private _fallThroughService: FallThroughService,
     ) {
 
         this.fileContent = new EventEmitter<string>();
@@ -131,7 +137,6 @@ export class DisplayComponent implements OnDestroy {
         }
 
         this._markedEdges = [];
-        this._selectedEventLogId = undefined;
 
         this.clearDrawingArea();
 
@@ -147,7 +152,7 @@ export class DisplayComponent implements OnDestroy {
         } catch (error) {
             console.log('net not initialized yet')
         }
-       
+
         // Netz nur herunterladbar, wenn fertig
         this.isPetriNetFinished = this._petriNet!.finished;
     }
@@ -171,42 +176,50 @@ export class DisplayComponent implements OnDestroy {
     public processMouseDown(e: MouseEvent) {
         if (e.button === 0 && this.drawingArea) {
             this._leftMouseDown = true;
-            if (this.isDomEventInEventLog(e)) {
+            const targetEventLog = this.isDomEventInEventLog(e);
+            if (targetEventLog) {
                 this.removeAllDrawnLines();
-                const {x, y} = this.calculateSvgCoordinates(e);
+                const { x, y } = this.calculateSvgCoordinates(e);
                 this.drawingArea.nativeElement.appendChild(this._svgService.createDrawnLine(x, y));
+                const newEL = this._petriNet?.getEventLogByID(targetEventLog.getAttribute('id') || '');
+                if (newEL) {
+                    this.setSelectedEventLog(newEL);
+                }
+            } else {
+                this.setSelectedEventLog();
             }
         }
     }
 
-    public isDomEventInEventLog(e: Event): boolean {
+    public isDomEventInEventLog(e: Event) {
         let target = e.target;
         while (target) {
             if (target instanceof SVGElement) {
-                if (target.classList.contains('canvas')) {   
+                if (target.classList.contains('canvas')) {
                     return false;
                 } else {
                     if (target.classList.contains('eventLog')) {
-                        return true;
+                        return target;
                     }
                     target = target.parentNode;
                 }
             }
         }
-        return false;
+        return undefined;
     }
 
     private calculateSvgCoordinates(e: MouseEvent) {
         const svgRect = this.drawingArea!.nativeElement.getBoundingClientRect();
         const x = e.clientX - svgRect.left;
         const y = e.clientY - svgRect.top;
-        return {x, y};
+        return { x, y };
     }
 
     public processMouseUp(e: MouseEvent) {
         if (e.button === 0) {
             this._leftMouseDown = false;
             const drawnLine = this.drawingArea?.nativeElement.getElementsByClassName('drawn-line')[0] as SVGLineElement;
+            let intersectionAndChange = false;
             if (drawnLine) {
                 const allLines = this.getAllLines();
                 const intersectingLines = allLines.filter(line => this.linesIntersect(drawnLine, line));
@@ -216,19 +229,25 @@ export class DisplayComponent implements OnDestroy {
                         continue;
                     }
                     line.classList.add('selectedEdge');
-                    this._markedEdges.push(line);
+                    if (this._markedEdges.indexOf(line) === -1) {
+                        this._markedEdges.push(line);
+                        intersectionAndChange = true;
+                    }
                 }
+            }
+            if (intersectionAndChange) {
+                this.performCut(false);
             }
             this.removeAllDrawnLines();
         }
     }
 
     private isInEventLog(line: SVGLineElement): boolean {
-        if (this._selectedEventLogId === undefined) {
-            this._selectedEventLogId = line.parentElement?.getAttribute('id') || undefined;
-            return this._selectedEventLogId !== undefined;
+        const eventLogID = line.parentElement?.getAttribute('id');
+        if (eventLogID && eventLogID.startsWith('eventLogNumber')) {
+            return this._selectedEventLog === this._petriNet?.getEventLogByID(eventLogID);
         }
-        return this._selectedEventLogId === line.parentElement!.getAttribute('id');
+        return false;
     }
 
     private getAllLines(): SVGLineElement[] {
@@ -266,22 +285,44 @@ export class DisplayComponent implements OnDestroy {
             if (!line) {
                 return;
             }
-            const {x, y} = this.calculateSvgCoordinates(e);
+            const { x, y } = this.calculateSvgCoordinates(e);
             line.setAttribute('x2', x.toString());
             line.setAttribute('y2', y.toString());
         }
     }
 
+    private setSelectedEventLog(eventLog?: EventLog) {
+        if (eventLog) {
+            if (this._selectedEventLog !== eventLog) {
+                this.resetCut();
+                this._selectedEventLog = eventLog;
+            }
+            this._petriNet!.selectDFG(this._selectedEventLog!);
+        } else {
+            this._selectedEventLog = undefined;
+            this._petriNet!.selectDFG();
+        }
+        this.selectedEventLogChange.emit(eventLog);
+    }
+
+    public resetDFGNodeHighlighting() {
+        this._petriNet!.removeHighlightingFromEventLogDFGNodes(this._selectedEventLog!);
+    }
+
     public resetCut() {
+        if(this._selectedEventLog) {
+            this.resetDFGNodeHighlighting();
+        }
         this._markedEdges.forEach(edge => {
             edge.classList.remove('selectedEdge');
         });
         this._markedEdges = [];
-        this._selectedEventLogId = undefined;
+        this.setSelectedEventLog();
     }
 
-    public performCut() {
-        if (this._markedEdges.length === 0 || this._selectedEventLogId === undefined) {
+    public performCut(applyResultToPetriNet: boolean) {
+        if (this.isPetriNetFinished) return;
+        if (this._markedEdges.length === 0 || this._selectedEventLog === undefined) {
             alert('No edges marked')
             return;
         }
@@ -297,39 +338,51 @@ export class DisplayComponent implements OnDestroy {
 
             markedEdges.push(new Edge(new DFGElement(new TraceEvent(from)), new DFGElement(new TraceEvent(to))));
         }
-
         console.log('markedEdges: ', markedEdges)
 
-        const eventLog = this._petriNet!.getEventLogByID(this._selectedEventLogId!);
-        try {
-            const result = this._inductiveMinerService.applyInductiveMiner(eventLog, markedEdges);
-            console.log('cut result: ', result);
-            this._petriNet?.handleCutResult(result.cutMade, eventLog, result.el[0], result.el[1])
-            this.draw();
-        } catch (Error) {
-            console.log('no cut possible', Error);
+        if (applyResultToPetriNet) {
+            try {
+                const result = this._inductiveMinerService.applyInductiveMiner(this._selectedEventLog!, markedEdges);
+                console.log('cut result: ', result);
+                this._petriNet?.handleCutResult(result.cutMade, this._selectedEventLog!, result.el[0], result.el[1])
+                this.draw();
+            } catch (Error) {
+                console.log('no cut possible', Error);
+            }
+        } else {
+            try {
+                const result = this._inductiveMinerService.applyInductiveMiner(this._selectedEventLog!, markedEdges);
+                console.log('cut result: ', result);
+                this._petriNet?.highlightSubsetInDFG(this._selectedEventLog!, result.el[0]);
+            } catch (Error) {
+                this.resetDFGNodeHighlighting();
+                console.log('no cut found');
+            }
         }
     }
     
     public applyFallThrough() {
-        if (this._selectedEventLogId === undefined) {
+        if (this.isPetriNetFinished) return;
+        if (this._selectedEventLog === undefined) {
             alert('No eventlog marked')
             return;
         }
-        const eventLog = this._petriNet!.getEventLogByID(this._selectedEventLogId!);
 
-        if (this._inductiveMinerService.checkInductiveMiner(eventLog)) {
+        if (this._inductiveMinerService.checkInductiveMiner(this._selectedEventLog)) {
             alert('No Fall Through possible')
             return;
         } else {
-            const result: EventLog[] = this._fallThroughService.getActivityOncePerTrace(eventLog);
-            this._petriNet?.handleCutResult(Cuts.Parallel, eventLog, result[0], result[1])
+            const result: EventLog[] = this._fallThroughService.getActivityOncePerTrace(this._selectedEventLog);
+            this._petriNet?.handleCutResult(Cuts.Parallel, this._selectedEventLog, result[0], result[1])
             this.draw();
             return;
         }
     }
 
     downloadPetriNet(type: string) {
+        if (!this.isPetriNetFinished){
+            return;
+        }
         const link = document.createElement('a');
         let content = 'type didn\'t match available export format';
         if (type === 'pnml') {
@@ -343,5 +396,47 @@ export class DisplayComponent implements OnDestroy {
         link.href = URL.createObjectURL(blob);
         link.click();
         URL.revokeObjectURL(link.href);
+    }
+
+    applyZoom() {
+
+        if (this.drawingArea != null) {
+            this.zoomInstance = svgPanZoom(this.drawingArea.nativeElement, {
+                // viewportSelector: '.svg-pan-zoom_viewport'
+                panEnabled: false
+                , controlIconsEnabled: true
+                , zoomEnabled: true
+                , dblClickZoomEnabled: false
+                , mouseWheelZoomEnabled: true
+                , preventMouseEventsDefault: true
+                , zoomScaleSensitivity: 0.2
+                , minZoom: 0.5
+                , maxZoom: 10
+                , fit: true
+                , contain: false
+                , center: true
+                , refreshRate: 'auto'
+                , beforeZoom: function () { }
+                , onZoom: function () { }
+                , beforePan: function (odPan, newPan) {
+                    const isLeftMouseClick = svgPanZoom;
+
+                    if (this.panEnabled) {
+                        return false;
+                    }
+                    return newPan;
+                }
+                , onPan: function () { }
+                , onUpdatedCTM: function () { }
+
+            });
+        }
+    }
+
+    onClick(e: MouseEvent) {
+        this.zoomLevel = this.zoomLevel + 0.5;
+        this.isZoomed = !this.isZoomed;
+        this.applyZoom()
+
     }
 }

@@ -54,5 +54,19 @@ export class EventLogDFG extends CustomElement{
             }
         });
     }
+
+    public highlight() {
+        const svgRect = Array.from(this.getSvg().getElementsByTagName!('rect'));
+        svgRect.forEach(rect => {
+            rect.classList.add('highlightedDFG');
+        });
+    }
+
+    public removeHighlight() {
+        const svgRect = Array.from(this.getSvg().getElementsByTagName!('rect'));
+        svgRect.forEach(rect => {
+            rect.classList.remove('highlightedDFG');
+        });
+    }
 }
 
