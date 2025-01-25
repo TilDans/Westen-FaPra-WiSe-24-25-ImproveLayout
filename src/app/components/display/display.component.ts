@@ -20,6 +20,8 @@ import { Cuts, Layout } from 'src/app/classes/Datastructure/enums';
 import { PNMLWriterService } from 'src/app/services/file-export.service';
 import { InductiveMinerHelper } from 'src/app/services/inductive-miner/inductive-miner-helper';
 import { FallThroughService } from 'src/app/services/inductive-miner/fall-throughs';
+import { Layout } from 'src/app/classes/Datastructure/enums';
+import { PNMLWriterService } from 'src/app/services/file-export.service';
 
 @Component({
     selector: 'app-display',
