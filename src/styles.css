@@ -13,6 +13,10 @@ body {
     stroke-width: 2; 
 }
 
+.highlightedDFG {
+    stroke-width: 6; 
+}
+
 .non-selectable {
     user-select: none;
     pointer-events: none; /* Optional, to ensure clicks pass through the text */

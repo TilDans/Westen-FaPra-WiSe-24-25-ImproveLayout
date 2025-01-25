@@ -380,8 +380,15 @@ export class InductivePetriNet{
         eventLogDFGMarked.colorSubSet(uniqueActivitiesArray);
     }
     
-    public removeHighlightingFromEventLogDFG(eventLogID: string) {
-        const eventLogDFGToRemoveHighlightingFrom = this._eventLogDFGs!.find(element => element.id === eventLogID)?.colorSubSet([]);
+    public removeHighlightingFromEventLogDFGNodes(eventLog: EventLog) {
+        const eventLogDFGToRemoveHighlightingFrom = this._eventLogDFGs!.find(element => element.eventLog === eventLog)?.colorSubSet([]);
+    }
+
+    public selectDFG(eventLog?: EventLog) {
+        this._eventLogDFGs?.forEach(eventLogDFG => eventLogDFG.removeHighlight())
+        if (eventLog) {
+            this._eventLogDFGs!.find(element => element.eventLog === eventLog)?.highlight();
+        }
     }
     
     public getSVGRepresentation(): SVGElement[] {

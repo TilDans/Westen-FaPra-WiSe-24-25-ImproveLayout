@@ -11,7 +11,7 @@
     </h2>
 
     <!--    Main content    -->
-    <app-display class="padding full-size" (fileContent)="processSourceChange($event)"></app-display>
+    <app-display class="padding full-size" (fileContent)="processSourceChange($event)" (selectedEventLogChange)="updateSelectedEventLog($event)"></app-display>
 
     <div class="sampleFile">
         <div class="flexRowAlignSpaceEvenlyStart">
@@ -29,6 +29,10 @@
                               description="Reviewing .xes log file [2]"></app-example-file>
             <app-example-file title="Repair Example" link="assets/repairExample.xes"
                               description="Repair .xes log file [3]"></app-example-file>
+        </div>
+
+        <div class="eventLogDisplay">
+            <app-event-log-display style="width: 100%" [selectedEventLog]="selectedEventLog" ></app-event-log-display>
         </div>
 
         <div class="inputFeature">
