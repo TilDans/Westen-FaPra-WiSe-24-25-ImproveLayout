@@ -380,8 +380,10 @@ export class InductivePetriNet{
         eventLogDFGMarked.colorSubSet(uniqueActivitiesArray);
     }
     
-    public removeHighlightingFromEventLogDFGNodes(eventLog: EventLog) {
-        const eventLogDFGToRemoveHighlightingFrom = this._eventLogDFGs!.find(element => element.eventLog === eventLog)?.colorSubSet([]);
+    public removeHighlightingFromEventLogDFGNodes() {
+        this._eventLogDFGs!.forEach(el => {
+            el.colorSubSet([]);
+        });
     }
 
     public selectDFG(eventLog?: EventLog) {

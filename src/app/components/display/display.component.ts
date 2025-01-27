@@ -16,8 +16,10 @@ import svgPanZoom, { enableDblClickZoom } from 'svg-pan-zoom';
 import { SvgLayoutService } from 'src/app/services/svg-layout.service';
 import { SvgArrowService } from 'src/app/services/svg-arrow.service';
 import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
-import { Layout } from 'src/app/classes/Datastructure/enums';
+import { Cuts, Layout } from 'src/app/classes/Datastructure/enums';
 import { PNMLWriterService } from 'src/app/services/file-export.service';
+import { InductiveMinerHelper } from 'src/app/services/inductive-miner/inductive-miner-helper';
+import { FallThroughService } from 'src/app/services/inductive-miner/fall-throughs';
 
 @Component({
     selector: 'app-display',
@@ -47,24 +49,26 @@ export class DisplayComponent implements OnDestroy {
     private _markedEdges: SVGLineElement[] = [];
     // to keep track in which event log the lines are drawn
     private _selectedEventLog?: EventLog;
+    private _previouslySelected?: EventLog;
 
     constructor(private _svgService: SvgService,
 
         private _displayService: DisplayService,
         private _fileReaderService: FileReaderService,
         private _inductiveMinerService: InductiveMinerService,
+        private _inductiveMinerHelper: InductiveMinerHelper,
         private _http: HttpClient,
         private _intersectionCalculatorService: IntersectionCalculatorService,
         private _pnmlWriterService: PNMLWriterService,
         private _svgLayoutService: SvgLayoutService,
         private _svgArrowService: SvgArrowService,
+        private _fallThroughService: FallThroughService,
     ) {
 
         this.fileContent = new EventEmitter<string>();
 
         this._sub = this._displayService.InductivePetriNet$.subscribe(newNet => {
             this._petriNet = newNet;
-            this.isPetriNetFinished = false;
             this._petriNet.applyNewDFGLayout(this.selectedLayout);
             this.draw();
         });
@@ -133,7 +137,7 @@ export class DisplayComponent implements OnDestroy {
             return;
         }
 
-        this.resetCut();
+        this._markedEdges = [];
 
         this.clearDrawingArea();
 
@@ -240,7 +244,11 @@ export class DisplayComponent implements OnDestroy {
     }
 
     private isInEventLog(line: SVGLineElement): boolean {
-        return this._selectedEventLog === this._petriNet?.getEventLogByID(line.parentElement?.getAttribute('id') || '');
+        const eventLogID = line.parentElement?.getAttribute('id');
+        if (eventLogID && eventLogID.startsWith('eventLogNumber')) {
+            return this._selectedEventLog === this._petriNet?.getEventLogByID(eventLogID);
+        }
+        return false;
     }
 
     private getAllLines(): SVGLineElement[] {
@@ -286,12 +294,16 @@ export class DisplayComponent implements OnDestroy {
 
     private setSelectedEventLog(eventLog?: EventLog) {
         if (eventLog) {
-            if (this._selectedEventLog !== eventLog) {
+            if (eventLog !== this._previouslySelected && eventLog !== this._selectedEventLog) {
                 this.resetCut();
-                this._selectedEventLog = eventLog;
             }
+            this._selectedEventLog = eventLog;
+            this._previouslySelected = undefined;
             this._petriNet!.selectDFG(this._selectedEventLog!);
         } else {
+            if(this._selectedEventLog) {
+                this._previouslySelected = this._selectedEventLog;
+            }
             this._selectedEventLog = undefined;
             this._petriNet!.selectDFG();
         }
@@ -299,13 +311,11 @@ export class DisplayComponent implements OnDestroy {
     }
 
     public resetDFGNodeHighlighting() {
-        this._petriNet!.removeHighlightingFromEventLogDFGNodes(this._selectedEventLog!);
+        this._petriNet!.removeHighlightingFromEventLogDFGNodes();
     }
 
     public resetCut() {
-        if(this._selectedEventLog) {
-            this.resetDFGNodeHighlighting();
-        }
+        this.resetDFGNodeHighlighting();
         this._markedEdges.forEach(edge => {
             edge.classList.remove('selectedEdge');
         });
@@ -314,7 +324,8 @@ export class DisplayComponent implements OnDestroy {
     }
 
     public performCut(applyResultToPetriNet: boolean) {
-        if (this._markedEdges.length === 0 || this._selectedEventLog === undefined) {
+        if (this.isPetriNetFinished) return;
+        if (this._markedEdges.length === 0) { //if any edge is marked, an event log is or was selected
             alert('No edges marked')
             return;
         }
@@ -332,17 +343,24 @@ export class DisplayComponent implements OnDestroy {
         }
         console.log('markedEdges: ', markedEdges)
 
+        let eventLogToCutIn;
+        if (this._selectedEventLog) {
+            eventLogToCutIn = this._selectedEventLog;
+        } else {
+            eventLogToCutIn = this._previouslySelected;
+        }
+
         if (applyResultToPetriNet) {
             try {
-                const result = this._inductiveMinerService.applyInductiveMiner(this._selectedEventLog!, markedEdges);
+                const result = this._inductiveMinerService.applyInductiveMiner(eventLogToCutIn!, markedEdges);
                 console.log('cut result: ', result);
-                this._petriNet?.handleCutResult(result.cutMade, this._selectedEventLog!, result.el[0], result.el[1])
+                this._petriNet?.handleCutResult(result.cutMade, eventLogToCutIn!, result.el[0], result.el[1])
                 this.draw();
             } catch (Error) {
                 console.log('no cut possible', Error);
             }
         } else {
-            try {
+            try { // always an eventlog selected 
                 const result = this._inductiveMinerService.applyInductiveMiner(this._selectedEventLog!, markedEdges);
                 console.log('cut result: ', result);
                 this._petriNet?.highlightSubsetInDFG(this._selectedEventLog!, result.el[0]);
@@ -350,6 +368,24 @@ export class DisplayComponent implements OnDestroy {
                 this.resetDFGNodeHighlighting();
                 console.log('no cut found');
             }
+        }
+    }
+    
+    public applyFallThrough() {
+        if (this.isPetriNetFinished) return;
+        if (this._selectedEventLog === undefined) {
+            alert('No eventlog marked')
+            return;
+        }
+
+        if (this._inductiveMinerService.checkInductiveMiner(this._selectedEventLog)) {
+            alert('No Fall Through possible')
+            return;
+        } else {
+            const result: EventLog[] = this._fallThroughService.getActivityOncePerTrace(this._selectedEventLog);
+            this._petriNet?.handleCutResult(Cuts.Parallel, this._selectedEventLog, result[0], result[1])
+            this.draw();
+            return;
         }
     }
 
