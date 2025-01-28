@@ -372,11 +372,9 @@ export class DisplayComponent implements OnDestroy {
         } else {
             try { // always an eventlog selected
                 const result = this._inductiveMinerService.applyInductiveMiner(this._selectedEventLog!, markedEdges);
-                console.log('cut result: ', result);
                 this._petriNet?.highlightSubsetInDFG(this._selectedEventLog!, result.el[0]);
             } catch (Error) {
                 this.resetDFGNodeHighlighting();
-                console.log('no cut found');
             }
         }
     }
@@ -405,7 +403,10 @@ export class DisplayComponent implements OnDestroy {
     }
 
     downloadPetriNet(type: string) {
-        if (!this.isPetriNetFinished){
+        if (!this.isPetriNetFinished) {
+            this._snackbar.open('Petri net not finished yet', 'Close', {
+                duration: 3000,
+            })
             return;
         }
         const link = document.createElement('a');
