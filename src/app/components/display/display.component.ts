@@ -390,8 +390,9 @@ export class DisplayComponent implements OnDestroy {
             return;
         }
 
-        if (this._inductiveMinerService.checkInductiveMiner(this._selectedEventLog)) {
-            this._snackbar.open('No fall through possible', 'Close', {
+        const cutResult = this._inductiveMinerService.checkInductiveMiner(this._selectedEventLog);
+        if (cutResult) {
+            this._snackbar.open(`No fall through possible. Possible cut: ${cutResult}`, 'Close', {
                 duration: 3000,
             })
             return;
