@@ -41,7 +41,7 @@ export class InductiveMinerService {
         throw new Error ('no cut possible');
     }
 
-    public checkInductiveMiner(eventlog: EventLog): boolean {
+    public checkInductiveMiner(eventlog: EventLog): false | Cuts {
         const uniqueActivities: Set<string> = this.helper.getUniqueActivities(eventlog);
 
         const cutCheckers = [
@@ -50,7 +50,7 @@ export class InductiveMinerService {
             { checker: this.parallelCutChecker.parallelCutConditionsChecker.bind(this.parallelCutChecker) as any, cutType: Cuts.Parallel },
             { checker: this.loopCutChecker.loopCutConditionsChecker.bind(this.loopCutChecker) as any, cutType: Cuts.Loop },
         ];
-        
+
         for (const cutChecker of cutCheckers) {
             // Sonderfall: Loop Cut
             if (cutChecker.cutType == Cuts.Loop ) {
@@ -70,9 +70,9 @@ export class InductiveMinerService {
                     let index: number = 0;
                     for (const cEvent of cTrace.events) {
                         // Wenn akt. Event zu A1Play gehört und nicht an erster Stelle steht: Das vorige Event ist A2Stop, wenn es nicht von A1Play ist
-                        if (A1Play.has(cEvent.conceptName) && index != 0) { 
+                        if (A1Play.has(cEvent.conceptName) && index != 0) {
                             if (!A1Play.has(cTrace.events[index-1].conceptName)) {
-                                A2Stop.add(cTrace.events[index-1].conceptName) 
+                                A2Stop.add(cTrace.events[index-1].conceptName)
                             }
                         }
                         // Wenn akt. Event zu A1Stop gehört und nicht an letzter Stelle steht: Das nächste Event ist A2Play, wenn es nicht von A1Stop ist
@@ -84,8 +84,8 @@ export class InductiveMinerService {
                         index++;
                     }
                 }
-                if (cutChecker.checker(eventlog, A1Play, A1Stop, A2Play, A2Stop).length > 0) return true; // Wenn etwas zurückgegeben wird, ist ein Cut möglich --> Kein Fall Through!
-            
+                if (cutChecker.checker(eventlog, A1Play, A1Stop, A2Play, A2Stop).length > 0) return cutChecker.cutType; // Wenn etwas zurückgegeben wird, ist ein Cut möglich --> Kein Fall Through!
+
             } else {
                 const allSubsets: [Set<string>, Set<string>][] = this.helper.generateSubsets(uniqueActivities);
 
@@ -94,7 +94,7 @@ export class InductiveMinerService {
                     if (A1.size + A2.size !== uniqueActivities.size) continue;
 
                     // Checker-Funktion aufrufen
-                    if (cutChecker.checker(eventlog, A1, A2).length > 0) return true // Wenn etwas zurückgegeben wird, ist ein Cut möglich --> Kein Fall Through!
+                    if (cutChecker.checker(eventlog, A1, A2).length > 0) return cutChecker.cutType // Wenn etwas zurückgegeben wird, ist ein Cut möglich --> Kein Fall Through!
                 }
             }
         }
