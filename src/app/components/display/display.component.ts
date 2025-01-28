@@ -379,12 +379,12 @@ export class DisplayComponent implements OnDestroy {
                 console.log('cut result: ', result);
                 this._petriNet?.handleCutResult(result.cutMade, eventLogToCutIn!, result.el[0], result.el[1])
                 this.draw();
-                this._snackbar.open(`Executed ${result.cutMade} cut`, 'Close', {
+                this._snackbar.open(`Executed ${result.cutMade} Cut`, 'Close', {
                     duration: 3000,
                 })
             } catch (Error) {
                 console.log('no cut possible', Error);
-                this._snackbar.open('No cut possible', 'Close', {
+                this._snackbar.open('No Cut possible', 'Close', {
                     duration: 3000,
                 })
             }
@@ -409,7 +409,7 @@ export class DisplayComponent implements OnDestroy {
 
         const cutResult = this._inductiveMinerService.checkInductiveMiner(this._selectedEventLog);
         if (cutResult) {
-            this._snackbar.open(`No fall through possible. Possible cut: ${cutResult}`, 'Close', {
+            this._snackbar.open(`No Fall Through possible. Possible cut: ${cutResult}`, 'Close', {
                 duration: 3000,
             })
             return;
@@ -417,6 +417,9 @@ export class DisplayComponent implements OnDestroy {
             const result: EventLog[] = this._fallThroughService.getActivityOncePerTrace(this._selectedEventLog);
             this._petriNet?.handleCutResult(Cuts.Parallel, this._selectedEventLog, result[0], result[1])
             this.draw();
+            this._snackbar.open(`ActivityOncePerTrace Fall Through applied`, 'Close', {
+                duration: 3000,
+            })
             return;
         }
     }
