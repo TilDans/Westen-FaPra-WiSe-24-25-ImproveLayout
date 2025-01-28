@@ -24,10 +24,21 @@
   </button>
   <button 
     mat-raised-button 
+    [disabled]="!selectedEventLog" 
+    disabledInteractive
     color="primary" 
     class="aligned-element" 
     (click)="applyFallThrough()">
     Apply Fall Through
+  </button>
+  <button 
+    mat-raised-button 
+    [disabled]="!selectedEventLog" 
+    disabledInteractive
+    color="primary"
+    class="aligned-element"
+    (click)="applyLayoutToSelectedEventLog()">
+    Redo DFG Layout
   </button>
   <button 
     mat-raised-button 

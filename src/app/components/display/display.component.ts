@@ -86,6 +86,20 @@ export class DisplayComponent implements OnDestroy {
         this.draw();
     }
 
+    applyLayoutToSelectedEventLog() {
+        if (this._selectedEventLog === undefined) {
+            this._snackbar.open('No eventlog marked', 'Close', {
+                duration: 3000,
+            })
+            return;
+        }
+        if (this.selectedLayout === Layout.Sugiyama) {
+            return;
+        }
+        this._petriNet!.applyLayoutToSingleDFG(this._selectedEventLog!);
+        this.draw();
+    }
+
     public processDropEvent(e: DragEvent) {
         e.preventDefault();
 
@@ -156,6 +170,7 @@ export class DisplayComponent implements OnDestroy {
             console.log('net not initialized yet')
         }
 
+        this.setSelectedEventLog(this._selectedEventLog);
         // Netz nur herunterladbar, wenn fertig
         this.isPetriNetFinished = this._petriNet!.finished;
     }
@@ -310,6 +325,10 @@ export class DisplayComponent implements OnDestroy {
             this._petriNet!.selectDFG();
         }
         this.selectedEventLogChange.emit(eventLog);
+    }
+
+    public get selectedEventLog() {
+        return this._selectedEventLog;
     }
 
     public resetDFGNodeHighlighting() {
