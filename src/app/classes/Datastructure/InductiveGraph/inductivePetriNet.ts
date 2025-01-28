@@ -463,17 +463,20 @@ export class InductivePetriNet{
 
     private setPlacePosition(place: Place, yOffset: number) {
         const { edgesToElem: toPlace, edgesFromElem: fromPlace } = this.getConnectedArcs(place);
+        const connectedElems: CustomElement[] = [];
         //X und Y Werte für die Stellen berechnen.
         let xValToSet = 0;
         let yValToSet = 0;
 
         //Summiere alle x und y Werte der Elemente vor und nach der Stelle
         toPlace.forEach(edge => {
+            connectedElems.push(edge.start)
             const centerCoord = edge.start.getCenterXY();
             xValToSet += centerCoord.x;
             yValToSet += centerCoord.y;
         });
         fromPlace.forEach(edge => {
+            connectedElems.push(edge.end)
             const centerCoord = edge.end.getCenterXY();
             xValToSet += centerCoord.x;
             yValToSet += centerCoord.y;
@@ -491,9 +494,11 @@ export class InductivePetriNet{
                 layerBeforePlace = (currStartElemLayer > layerBeforePlace) ? currStartElemLayer : layerBeforePlace;
             });
             let maxLayerAfterPlace = -1;
+            let minLayerAfterPlace = -1;
             fromPlace.forEach(edge => {
                 const currEndElemLayer = this.getLayer(edge.end);
                 maxLayerAfterPlace = (currEndElemLayer > maxLayerAfterPlace) ? currEndElemLayer : maxLayerAfterPlace;
+                minLayerAfterPlace = (currEndElemLayer < maxLayerAfterPlace) ? currEndElemLayer : maxLayerAfterPlace;
             });
             let collidingLayerCoordinates;
             if (layerBeforePlace >= collidingLayer && maxLayerAfterPlace > layerBeforePlace) {
@@ -511,17 +516,17 @@ export class InductivePetriNet{
         }
         // Kollisionen auf der Mittellinie vermeiden, wenn Stelle dort nah dran liegt
         if (yOffset - 15 < yValToSet && yValToSet < yOffset + 15) {
-            let followingLayer = true;
+            let moreThanOneApart = true;
             //nur für Stellen, deren Layer nicht direkt aufeinander folgen
-            for (const toEdge of toPlace) {
-                for (const fromEdge of fromPlace) {
-                    let test = Math.abs(this.getLayer(toEdge.start) - this.getLayer(fromEdge.end))
+            for (const connectedElem of connectedElems) {
+                for (const connectedElemTwo of connectedElems) {
+                    let test = Math.abs(this.getLayer(connectedElem) - this.getLayer(connectedElemTwo))
                     if (test > 1) {
-                        followingLayer = false;
+                        moreThanOneApart = false;
                     }
-                }
+                }   
             }
-            if (!followingLayer){
+            if (!moreThanOneApart){
                     yValToSet += 50;
             }
         }
