@@ -20,6 +20,7 @@ import { Cuts, Layout } from 'src/app/classes/Datastructure/enums';
 import { PNMLWriterService } from 'src/app/services/file-export.service';
 import { InductiveMinerHelper } from 'src/app/services/inductive-miner/inductive-miner-helper';
 import { FallThroughService } from 'src/app/services/inductive-miner/fall-throughs';
+import {MatSnackBar} from "@angular/material/snack-bar";
 
 @Component({
     selector: 'app-display',
@@ -63,6 +64,7 @@ export class DisplayComponent implements OnDestroy {
         private _svgLayoutService: SvgLayoutService,
         private _svgArrowService: SvgArrowService,
         private _fallThroughService: FallThroughService,
+        private _snackbar: MatSnackBar
     ) {
 
         this.fileContent = new EventEmitter<string>();
@@ -326,7 +328,9 @@ export class DisplayComponent implements OnDestroy {
     public performCut(applyResultToPetriNet: boolean) {
         if (this.isPetriNetFinished) return;
         if (this._markedEdges.length === 0) { //if any edge is marked, an event log is or was selected
-            alert('No edges marked')
+            this._snackbar.open('No edges marked', 'Close', {
+                duration: 3000,
+            })
             return;
         }
 
@@ -356,11 +360,17 @@ export class DisplayComponent implements OnDestroy {
                 console.log('cut result: ', result);
                 this._petriNet?.handleCutResult(result.cutMade, eventLogToCutIn!, result.el[0], result.el[1])
                 this.draw();
+                this._snackbar.open(`Executed ${result.cutMade} cut`, 'Close', {
+                    duration: 3000,
+                })
             } catch (Error) {
                 console.log('no cut possible', Error);
+                this._snackbar.open('No cut possible', 'Close', {
+                    duration: 3000,
+                })
             }
         } else {
-            try { // always an eventlog selected 
+            try { // always an eventlog selected
                 const result = this._inductiveMinerService.applyInductiveMiner(this._selectedEventLog!, markedEdges);
                 console.log('cut result: ', result);
                 this._petriNet?.highlightSubsetInDFG(this._selectedEventLog!, result.el[0]);
@@ -370,16 +380,20 @@ export class DisplayComponent implements OnDestroy {
             }
         }
     }
-    
+
     public applyFallThrough() {
         if (this.isPetriNetFinished) return;
         if (this._selectedEventLog === undefined) {
-            alert('No eventlog marked')
+            this._snackbar.open('No eventlog marked', 'Close', {
+                duration: 3000,
+            })
             return;
         }
 
         if (this._inductiveMinerService.checkInductiveMiner(this._selectedEventLog)) {
-            alert('No Fall Through possible')
+            this._snackbar.open('No fall through possible', 'Close', {
+                duration: 3000,
+            })
             return;
         } else {
             const result: EventLog[] = this._fallThroughService.getActivityOncePerTrace(this._selectedEventLog);
