@@ -7,9 +7,6 @@
     margin-right: 10px;
 }
 
-.textarea{
-    height: 50%;
-}
 .aligned-element {
     align-self: center; /* Ensures the button is centered */
     height: fit-content;

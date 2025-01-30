@@ -96,8 +96,17 @@ export class DisplayComponent implements OnDestroy {
         return true;
     }
 
+    private netFinishedSnackbar() : boolean {
+        if(!this.isPetriNetFinished) {return false}
+        this._snackbar.open('PetriNet is finished. Please import next EventLog', 'Close', {
+            duration: 3000,
+        })
+        return true;
+    }
+
     applyLayoutToSelectedEventLog() {
         if (this.noDFGinNet()) return;
+        if (this.netFinishedSnackbar()) return;
         if (this._selectedEventLog === undefined) {
             this._snackbar.open('No eventlog marked', 'Close', {
                 duration: 3000,
@@ -351,6 +360,7 @@ export class DisplayComponent implements OnDestroy {
 
     public resetCut() {
         if (this.noDFGinNet()) return;
+        if (this.netFinishedSnackbar()) return;
         this.resetDFGNodeHighlighting();
         this._markedEdges.forEach(edge => {
             edge.classList.remove('selectedEdge');
@@ -361,7 +371,7 @@ export class DisplayComponent implements OnDestroy {
 
     public performCut(applyResultToPetriNet: boolean) {
         if (this.noDFGinNet()) return;
-        if (this.isPetriNetFinished) return;
+        if (this.netFinishedSnackbar()) return;
         if (this._markedEdges.length === 0) { //if any edge is marked, an event log is or was selected
             this._snackbar.open('No edges marked', 'Close', {
                 duration: 3000,
@@ -416,7 +426,7 @@ export class DisplayComponent implements OnDestroy {
 
     public applyFallThrough() {
         if (this.noDFGinNet()) return;
-        if (this.isPetriNetFinished) return;
+        if (this.netFinishedSnackbar()) return;
         if (this._selectedEventLog === undefined) {
             this._snackbar.open('No eventlog marked', 'Close', {
                 duration: 3000,

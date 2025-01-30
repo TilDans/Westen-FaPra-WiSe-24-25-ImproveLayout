@@ -7,7 +7,7 @@
             </mat-option>
         </mat-select>
     </mat-form-field>
-  <div class="settingsForButtons" *ngIf="!isPetriNetFinished">
+  <div class="settingsForButtons">
     <button 
       mat-raised-button 
       [disabled]="!isDFGinNet || isPetriNetFinished" 
@@ -44,16 +44,6 @@
       (click)="applyLayoutToSelectedEventLog()">
       Redo DFG Layout
     </button>
-  </div>
-
-  <div class="settingsForButtons" *ngIf="isPetriNetFinished"> 
-    <button 
-    mat-raised-button 
-    color="primary" 
-    class="aligned-element" 
-    title="You've finished the miner successfully!">
-    You've finished the miner. Please download PetriNet and/or import EventLog to restart.
-  </button>
   </div>
 
   <button 
