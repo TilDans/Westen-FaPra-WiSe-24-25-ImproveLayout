@@ -118,6 +118,12 @@ export class InductivePetriNet{
         }
     }
 
+    public handleFlowerModelFallThrough(toRemove: EventLog, toInsert: EventLog[]) {
+        const eventLogDFGToRemove = this._eventLogDFGs!.find(element => element.eventLog === toRemove)!;
+        
+        
+    }
+
     //Elemente hintereinander
     public applySequenceCut(toRemove: EventLogDFG, toInsertFirst: EventLogDFG, toInsertSecond: EventLogDFG){
         //Verbundene Kanten finden
