@@ -84,6 +84,7 @@ export class InductiveMinerService {
                         index++;
                     }
                 }
+                if (A1Play.size == 0 || A2Play.size == 0 || A1Stop.size == 0 || A2Stop.size == 0) return false;
                 if (cutChecker.checker(eventlog, A1Play, A1Stop, A2Play, A2Stop).length > 0) return cutChecker.cutType; // Wenn etwas zurückgegeben wird, ist ein Cut möglich --> Kein Fall Through!
 
             } else {

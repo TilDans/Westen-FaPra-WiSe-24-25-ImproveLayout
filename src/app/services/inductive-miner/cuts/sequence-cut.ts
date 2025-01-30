@@ -101,6 +101,19 @@ export class SequenceCutChecker {
             if (this.helper.isSubset(reachableActivities, A1)) return []; // Aus A2 darf nichts von A1 erreichbar sein
         }
 
+        // Zusätzliche Überprüfung
+        for (const cActivity of A1) {
+            for (const cTrace of eventlog.traces) {
+                if (cActivity == cTrace.events[cTrace.events.length-1].conceptName) return []
+            }
+        }
+        for (const cActivity of A2) {
+            for (const cTrace of eventlog.traces) {
+                if (cActivity == cTrace.events[0].conceptName) return []
+            }
+        }
+
+
         // Falls diese Methode von der fallThrough-Funktion aufgerufen wurde, ist die "echte" Generierung eines eventlogs irrelevant
         if (splitEventlogs === undefined) {
             return [new EventLog([new Trace([new TraceEvent('Fall Through found')])])]
