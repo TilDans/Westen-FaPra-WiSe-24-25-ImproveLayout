@@ -139,4 +139,52 @@ export class PetriLayerContainer extends CustomArray<PetriLayer> {
         }
     }
 
+    // Layer ab dem genannten item nach hinten schieben.
+    public insertToExistingLayerAfterCurrentElement(toInsertAfter: CustomElement, newElement: CustomElement) {
+        const layerIndex = this.getLayer(toInsertAfter);
+        if (layerIndex == -1) { //Element nicht vorhanden
+            console.log(`Something went wrong, element not contained within the layers`);
+            return;
+        }
+
+        //Gerade zu bearbeitendes Layer
+        const currentLayer = this[layerIndex];
+
+        //Index des zu bearbeitenden Elements
+        const indexInLayer = currentLayer.indexOf(toInsertAfter);
+
+        if (indexInLayer == currentLayer.length - 1) { //Element befindet sich am Ende der Liste
+            currentLayer.push(newElement);
+        } else {
+            //Elemente nach rechts schieben, letztes Element ist indexInLayer + 2.
+            for (let i = currentLayer.length - 1; i > indexInLayer; i --) {
+                currentLayer[i + 1] = currentLayer[i];
+            }
+            //weiteres Element in bestehendes Layer einfügen
+            currentLayer[indexInLayer + 1] = newElement;
+        }
+    }
+
+    // Layer ab dem genannten item nach hinten schieben.
+    public insertToExistingLayerBeforeCurrentElement(toInsertBefore: CustomElement, newElement: CustomElement) {
+        const layerIndex = this.getLayer(toInsertBefore);
+        if (layerIndex == -1) { //Element nicht vorhanden
+            console.log(`Something went wrong, element not contained within the layers`);
+            return;
+        }
+
+        //Gerade zu bearbeitendes Layer
+        const currentLayer = this[layerIndex];
+
+        //Index des zu bearbeitenden Elements
+        const indexInLayer = currentLayer.indexOf(toInsertBefore);
+        
+        //Elemente nach rechts schieben, letztes Element ist indexInLayer + 1.
+        for (let i = currentLayer.length - 1; i = indexInLayer; i --) {
+            currentLayer[i + 1] = currentLayer[i];
+        }
+        //weiteres Element in bestehendes Layer einfügen
+        currentLayer[indexInLayer] = newElement;
+    }
+
 }

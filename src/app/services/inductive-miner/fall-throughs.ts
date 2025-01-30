@@ -44,7 +44,7 @@ export class FallThroughService {
     }
 
     public getFlowerModel(eventlog: EventLog): EventLog[] {
-        let floweredEventlogs: EventLog[] = []
+        let floweredEventlogs: EventLog[] = [];
         const uniqueActivities: Set<string> = this.helper.getUniqueActivities(eventlog);
 
         for (const uniqueActivity of uniqueActivities) {

@@ -12,6 +12,7 @@ import { Cuts, Layout } from "../enums";
 import { SvgLayoutService } from "src/app/services/svg-layout.service";
 import { Trace } from "../event-log/trace";
 import { TraceEvent } from "../event-log/trace-event";
+import { first } from "rxjs";
 
 
 export class InductivePetriNet{
@@ -118,10 +119,62 @@ export class InductivePetriNet{
         }
     }
 
-    public handleFlowerModelFallThrough(toRemove: EventLog, toInsert: EventLog[]) {
+    public handleFlowerModelFallThrough(toRemove: EventLog, toInsertEventLogs: EventLog[]) {
         const eventLogDFGToRemove = this._eventLogDFGs!.find(element => element.eventLog === toRemove)!;
+        const connecionsInNet = this.getConnectedArcs(eventLogDFGToRemove);
+
+        //mock Elemente generieren
+        const mockTrans1 = this.genTransition();
+        const mockTrans2 = this.genTransition();
+        const mockPlace = this.genPlace();
+
+        //Verbindungen für mock Elemente aktualisieren
+        connecionsInNet.edgesToElem.forEach(edge => {
+            edge.end = mockTrans1;
+        });
+        connecionsInNet.edgesFromElem.forEach(edge => {
+            edge.start = mockTrans2;
+        });
+        this.genArc(mockTrans1, mockPlace);
+        this.genArc(mockPlace, mockTrans2);
+
+        //mock Transitionen in Layout einfügen wie Sequence Cut
+        this._petriLayersContained?.insertToNewLayerAfterCurrentElementAndReplaceFormer(eventLogDFGToRemove, mockTrans1, mockTrans2);
+
+        //neue EventLogs verarbeiten (DFGs generieren und verbinden)
+        const newEventLogDFGs: EventLogDFG[] = [];
+        for (const eventLog of toInsertEventLogs) {
+            const newEL = new EventLogDFG(this._svgService, eventLog);
+            newEventLogDFGs.push(newEL);
+            this._eventLogDFGs?.push(newEL);
+            this.genArc(mockPlace, newEL);
+            this.genArc(newEL, mockPlace);
+        }
+
+        //eventLogDFGs in Layout einfügen
+        const halfOfLength = Math.round(newEventLogDFGs.length / 2);
+        const firstQuarter = Math.round(halfOfLength / 2);
+        const thirdQuarter = (halfOfLength + firstQuarter);
         
+        //erstes Viertel über mocktrans 1
+        for (let i = 0; i < firstQuarter; i++) {
+            this._petriLayersContained?.insertToExistingLayerBeforeCurrentElement(mockTrans1, newEventLogDFGs[i]);
+        }
+
+        //zweites Viertel unter mocktrans 1
+        for (let i = firstQuarter; i < halfOfLength; i++) {
+            this._petriLayersContained?.insertToExistingLayerAfterCurrentElement(mockTrans1, newEventLogDFGs[i]);
+        }
+
+        //drittes Viertel über mocktrans 2
+        for (let i = halfOfLength; i < thirdQuarter; i++) {
+            this._petriLayersContained?.insertToExistingLayerBeforeCurrentElement(mockTrans1, newEventLogDFGs[i]);
+        }
         
+        //viertes Viertel unter mocktrans 2
+        for (let i = thirdQuarter; i < newEventLogDFGs.length; i++) {
+            this._petriLayersContained?.insertToExistingLayerAfterCurrentElement(mockTrans1, newEventLogDFGs[i]);
+        }
     }
 
     //Elemente hintereinander
