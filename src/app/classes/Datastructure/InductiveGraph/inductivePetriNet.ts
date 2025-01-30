@@ -1,3 +1,4 @@
+//#region Imports
 import {EventLog} from "../event-log/event-log";
 import {EventLogDFG} from "./Elements/eventLogDFG";
 import {SvgService} from "src/app/services/svg.service";
@@ -12,8 +13,7 @@ import { Cuts, Layout } from "../enums";
 import { SvgLayoutService } from "src/app/services/svg-layout.service";
 import { Trace } from "../event-log/trace";
 import { TraceEvent } from "../event-log/trace-event";
-import { first } from "rxjs";
-
+//#endregion
 
 export class InductivePetriNet{
     //#region Header
