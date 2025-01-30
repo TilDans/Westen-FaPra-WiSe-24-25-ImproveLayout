@@ -156,7 +156,7 @@ export class PetriLayerContainer extends CustomArray<PetriLayer> {
         if (indexInLayer == currentLayer.length - 1) { //Element befindet sich am Ende der Liste
             currentLayer.push(newElement);
         } else {
-            //Elemente nach rechts schieben, letztes Element ist indexInLayer + 2.
+            //Elemente nach rechts schieben, letztes Element von indexInLayer + 1 auf +2.
             for (let i = currentLayer.length - 1; i > indexInLayer; i --) {
                 currentLayer[i + 1] = currentLayer[i];
             }
@@ -180,7 +180,7 @@ export class PetriLayerContainer extends CustomArray<PetriLayer> {
         const indexInLayer = currentLayer.indexOf(toInsertBefore);
         
         //Elemente nach rechts schieben, letztes Element ist indexInLayer + 1.
-        for (let i = currentLayer.length - 1; i = indexInLayer; i --) {
+        for (let i = currentLayer.length - 1; i === indexInLayer; i --) {
             currentLayer[i + 1] = currentLayer[i];
         }
         //weiteres Element in bestehendes Layer einfügen

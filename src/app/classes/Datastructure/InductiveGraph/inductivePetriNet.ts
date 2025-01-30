@@ -123,6 +123,7 @@ export class InductivePetriNet{
         const eventLogDFGToRemove = this._eventLogDFGs!.find(element => element.eventLog === toRemove)!;
         const connecionsInNet = this.getConnectedArcs(eventLogDFGToRemove);
 
+        this._eventLogDFGs?.splice(this._eventLogDFGs.indexOf(eventLogDFGToRemove),1);
         //mock Elemente generieren
         const mockTrans1 = this.genTransition();
         const mockTrans2 = this.genTransition();
@@ -168,12 +169,12 @@ export class InductivePetriNet{
 
         //drittes Viertel über mocktrans 2
         for (let i = halfOfLength; i < thirdQuarter; i++) {
-            this._petriLayersContained?.insertToExistingLayerBeforeCurrentElement(mockTrans1, newEventLogDFGs[i]);
+            this._petriLayersContained?.insertToExistingLayerBeforeCurrentElement(mockTrans2, newEventLogDFGs[i]);
         }
         
         //viertes Viertel unter mocktrans 2
         for (let i = thirdQuarter; i < newEventLogDFGs.length; i++) {
-            this._petriLayersContained?.insertToExistingLayerAfterCurrentElement(mockTrans1, newEventLogDFGs[i]);
+            this._petriLayersContained?.insertToExistingLayerAfterCurrentElement(mockTrans2, newEventLogDFGs[i]);
         }
     }
 
@@ -660,7 +661,7 @@ export class InductivePetriNet{
         } else {
             transID = 't0';
         };
-        const transToGen = new Transition(transID, name || '');
+        const transToGen = new Transition(transID, name || transID);
         this._svgService.createSVGForTransition(transToGen);
         this._transitions.push(transToGen);
         return transToGen;
