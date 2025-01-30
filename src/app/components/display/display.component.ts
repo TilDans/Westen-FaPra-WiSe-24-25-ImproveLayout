@@ -36,6 +36,7 @@ export class DisplayComponent implements OnDestroy {
 
     //Bedingung, damit der Button zum Download angezeigt wird. Siehe draw Methode
     isPetriNetFinished: boolean = false;
+    isDFGinNet = false;
 
     availableLayouts = Object.values(Layout); // Extract the enum values as an array
     selectedLayout: Layout = this._svgLayoutService.getLayout(); // Set a default layout
@@ -70,6 +71,7 @@ export class DisplayComponent implements OnDestroy {
         this.fileContent = new EventEmitter<string>();
 
         this._sub = this._displayService.InductivePetriNet$.subscribe(newNet => {
+            this.isDFGinNet = false;
             this._petriNet = newNet;
             this._petriNet.applyNewDFGLayout(this.selectedLayout);
             this.draw();
@@ -86,7 +88,16 @@ export class DisplayComponent implements OnDestroy {
         this.draw();
     }
 
+    private noDFGinNet() : boolean {
+        if(this.isDFGinNet) {return false}
+        this._snackbar.open('No PetriNet initialized yet', 'Close', {
+            duration: 3000,
+        })
+        return true;
+    }
+
     applyLayoutToSelectedEventLog() {
+        if (this.noDFGinNet()) return;
         if (this._selectedEventLog === undefined) {
             this._snackbar.open('No eventlog marked', 'Close', {
                 duration: 3000,
@@ -164,6 +175,9 @@ export class DisplayComponent implements OnDestroy {
         try {
             const petriGraph = this._petriNet!.getSVGRepresentation();
             for (const node of petriGraph) {
+                if (!this.isDFGinNet) {
+                    this.isDFGinNet = true;
+                }
                 this.drawingArea.nativeElement.prepend(node);
             }
         } catch (error) {
@@ -336,6 +350,7 @@ export class DisplayComponent implements OnDestroy {
     }
 
     public resetCut() {
+        if (this.noDFGinNet()) return;
         this.resetDFGNodeHighlighting();
         this._markedEdges.forEach(edge => {
             edge.classList.remove('selectedEdge');
@@ -345,6 +360,7 @@ export class DisplayComponent implements OnDestroy {
     }
 
     public performCut(applyResultToPetriNet: boolean) {
+        if (this.noDFGinNet()) return;
         if (this.isPetriNetFinished) return;
         if (this._markedEdges.length === 0) { //if any edge is marked, an event log is or was selected
             this._snackbar.open('No edges marked', 'Close', {
@@ -399,6 +415,7 @@ export class DisplayComponent implements OnDestroy {
     }
 
     public applyFallThrough() {
+        if (this.noDFGinNet()) return;
         if (this.isPetriNetFinished) return;
         if (this._selectedEventLog === undefined) {
             this._snackbar.open('No eventlog marked', 'Close', {
@@ -425,6 +442,7 @@ export class DisplayComponent implements OnDestroy {
     }
 
     downloadPetriNet(type: string) {
+        if (this.noDFGinNet()) return;
         if (!this.isPetriNetFinished) {
             this._snackbar.open('Petri net not finished yet', 'Close', {
                 duration: 3000,
