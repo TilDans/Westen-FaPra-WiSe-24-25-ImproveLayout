@@ -16,6 +16,7 @@ import { first } from "rxjs";
 
 
 export class InductivePetriNet{
+    //#region Header
     private _places: Place[]= new Array<Place>;
     private _transitions: Transition[] = new Array<Transition>;
     private _arcs: Edge[] = new Array<Edge>;
@@ -35,6 +36,11 @@ export class InductivePetriNet{
         EventLogDFG.logCounter = 0; // counter der logs für neues Netz resetten
     }
 
+    //#endregion
+    
+    ///////////////////////////////
+    /* ----- Getter/Setter ----- */
+    ///////////////////////////////
     //#region getters/setters
 
     public get Transitions() {
@@ -58,7 +64,7 @@ export class InductivePetriNet{
     ////////////////////////////////
     /* ----- INITIALIZATION ----- */
     ////////////////////////////////
-    //#region
+    //#region Initialization
 
     init(eventLog: EventLog): InductivePetriNet {
         //zwei Stellen zum Start generieren und die entsprechenden Kanten einfügen
@@ -95,7 +101,7 @@ export class InductivePetriNet{
     ////////////////////////////////////
     /* ----- CUT HANDLING Start ----- */
     ////////////////////////////////////
-    //#region
+    //#region Cut handling
 
     public handleCutResult(cutType: Cuts, toRemove: EventLog, toInsertFirst: EventLog, toInsertSecond: EventLog) {
         const eventLogDFGToRemove = this._eventLogDFGs!.find(element => element.eventLog === toRemove)!;
@@ -372,7 +378,7 @@ export class InductivePetriNet{
     /////////////////////////////////////
     /* ----- Other Methods Start ----- */
     /////////////////////////////////////
-    //#region
+    //#region Further Methods
 
     public netFinished() {
         if (!this._finished) {
@@ -410,7 +416,7 @@ export class InductivePetriNet{
     ////////////////////////////////////
     /* ----- Layout / Graphical ----- */
     ////////////////////////////////////
-    //#region
+    //#region Layout / Graphical
 
     applyNewDFGLayout(layout: Layout) {
         this._svgService.applyNewDFGLayout(layout);
@@ -628,7 +634,7 @@ export class InductivePetriNet{
     ///////////////////////////////////////////////
     /* ----- Element Generation / Deletion ----- */
     ///////////////////////////////////////////////
-    //#region
+    //#region Element Generation
 
     private genArc(start: CustomElement, end: CustomElement) {
         const edgeToGen = new Edge(start, end);
