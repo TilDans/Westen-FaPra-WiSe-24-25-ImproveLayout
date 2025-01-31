@@ -580,6 +580,25 @@ export class InductivePetriNet{
                 }
             }            
         }
+        
+        if (toPlace.length === 1 && fromPlace.length === 1) {
+            const toPlaceX = toPlace[0].start.getCenterXY().x;
+            const fromPlaceX = fromPlace[0].end.getCenterXY().x;
+            const toPlaceY = toPlace[0].start.getCenterXY().y;
+            const fromPlaceY = fromPlace[0].end.getCenterXY().y;
+        
+            // Calculate differences
+            const xOffsetBetweenNodes = fromPlaceX - toPlaceX;
+            const yOffsetBetweenNodes = fromPlaceY - toPlaceY;
+        
+            if (xOffsetBetweenNodes !== 0) {
+                const slope = yOffsetBetweenNodes / xOffsetBetweenNodes;
+        
+                //Wert berechnen y = mx + b
+                yValToSet = toPlaceY + slope * (xValToSet - toPlaceX);
+            }
+        }
+        
         // Kollisionen auf der Mittellinie vermeiden, wenn Stelle dort nah dran liegt
         if (yOffset - 15 < yValToSet && yValToSet < yOffset + 15) {
             let moreThanOneApart = true;
