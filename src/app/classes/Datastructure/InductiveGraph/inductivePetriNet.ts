@@ -129,7 +129,6 @@ export class InductivePetriNet{
         const eventLogDFGToRemove = this._eventLogDFGs!.find(element => element.eventLog === toRemove)!;
         const connecionsInNet = this.getConnectedArcs(eventLogDFGToRemove);
 
-        this._eventLogDFGs?.splice(this._eventLogDFGs.indexOf(eventLogDFGToRemove),1);
         //mock Elemente generieren
         const mockTrans1 = this.genTransition();
         const mockTrans2 = this.genTransition();
@@ -182,6 +181,7 @@ export class InductivePetriNet{
         for (let i = thirdQuarter; i < newEventLogDFGs.length; i++) {
             this._petriLayersContained?.insertToExistingLayerAfterCurrentElement(mockTrans2, newEventLogDFGs[i]);
         }
+        this._eventLogDFGs?.splice(this._eventLogDFGs.indexOf(eventLogDFGToRemove),1);
     }
 
     //Elemente hintereinander

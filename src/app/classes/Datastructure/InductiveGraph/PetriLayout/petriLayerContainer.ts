@@ -21,7 +21,10 @@ export class PetriLayerContainer extends CustomArray<PetriLayer> {
     }
 
     override updateElem(toRemove: CustomElement, toInsert: CustomElement): void {
-        this[this.findIndex(petriLayer => petriLayer.includes(toRemove))].updateElem(toRemove, toInsert);
+        const index = this.findIndex(petriLayer => petriLayer.includes(toRemove));
+        if (index !== -1){
+           this[index].updateElem(toRemove, toInsert);
+        }
     }
 
     public getLayerCoordinates(layerIndex: number) {
@@ -180,7 +183,7 @@ export class PetriLayerContainer extends CustomArray<PetriLayer> {
         const indexInLayer = currentLayer.indexOf(toInsertBefore);
         
         //Elemente nach rechts schieben, letztes Element ist indexInLayer + 1.
-        for (let i = currentLayer.length - 1; i === indexInLayer; i --) {
+        for (let i = currentLayer.length - 1; i >= indexInLayer; i --) {
             currentLayer[i + 1] = currentLayer[i];
         }
         //weiteres Element in bestehendes Layer einfügen
