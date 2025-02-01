@@ -29,7 +29,7 @@ export class InductivePetriNet{
     _svgService : SvgService = new SvgService (new SvgArrowService(new IntersectionCalculatorService()), new SvgLayoutService());
 
     //OffSet sollte nicht frößer sein als kleinstes Element * 2 (Berechnung, ob ein Element in einem Layer ist)
-    static horizontalOffset = 100;
+    static horizontalOffset = 150;
     static verticalOffset = 200;
 
     constructor() {

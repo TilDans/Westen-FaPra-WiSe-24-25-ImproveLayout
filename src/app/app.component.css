@@ -49,7 +49,7 @@ hr {
 .sampleFile {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: start;
     padding-right: 1px;
     padding-top: 20pt;
     width: 100%;
@@ -57,12 +57,14 @@ hr {
 
 .flexRowAlignSpaceEvenlyStart {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start; /* Align items to the start */
-    align-items: flex-start;
-    width: 40%; /* Reduced width to make items closer */
-    gap: 10px; /* Optional: controls space between items */
+    flex-direction: column;
+    justify-content: flex-start; /* Centers buttons horizontally */
+    align-items: flex-start; /* Aligns items in the center */
+    flex-wrap: nowrap; /* Prevents wrapping */
+    width: fit-content; /* Limits width to only fit the buttons */
+    max-width: fit-content; /* Ensures row only takes up necessary space */
 }
+
 
 .inputFeature {
     display: flex;
@@ -70,13 +72,15 @@ hr {
     justify-content: space-between;
     width: 30%; /* Reduced width to make it closer to others */
     margin-left: 20pt;
+    margin-top: 10px;
 }
 
 .eventLogDisplay {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    width: 30%; /* Reduced width to make it closer to others */
+    width: 30%; /* Reduced width to make it closer to others */  
+    margin-top: 10px;
 }
 
 .sources a {
