@@ -74,6 +74,8 @@ export class DisplayComponent implements OnDestroy {
             this.isDFGinNet = false;
             this._petriNet = newNet;
             this._petriNet.applyNewDFGLayout(this.selectedLayout);
+            this.setSelectedEventLog(undefined);
+            this._previouslySelected = undefined;
             this.draw();
         });
     }
