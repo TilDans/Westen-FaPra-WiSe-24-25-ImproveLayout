@@ -41,6 +41,7 @@ export class DisplayComponent implements OnDestroy {
     private _leftMouseDown = false;
     private zoomInstance = svgPanZoom;
     isZoomed = false;
+    isZoomInstanceInitialized = false;
     zoomLevel: number = 0.5;
 
     private _markedEdges: SVGLineElement[] = [];
@@ -145,10 +146,10 @@ export class DisplayComponent implements OnDestroy {
             for (const node of petriGraph) {
                 this.drawingArea.nativeElement.prepend(node);
             }
+            this.reset();
         } catch (error) {
             console.log('net not initialized yet')
         }
-
         // Netz nur herunterladbar, wenn fertig
         this.isPetriNetFinished = this._petriNet!.finished;
     }
@@ -171,6 +172,7 @@ export class DisplayComponent implements OnDestroy {
 
     public processMouseDown(e: MouseEvent) {
         if (e.button === 0 && this.drawingArea) {
+            e.stopImmediatePropagation()
             this._leftMouseDown = true;
             if (this.isDomEventInEventLog(e)) {
                 this.removeAllDrawnLines();
@@ -323,6 +325,7 @@ export class DisplayComponent implements OnDestroy {
                 console.log('cut result: ', result);
                 this._petriNet?.handleCutResult(result.cutMade, eventLog, result.el[0], result.el[1])
                 this.draw();
+                this.reset();
             } catch (Error) {
                 console.log('no cut possible', Error);
             }
@@ -361,9 +364,8 @@ export class DisplayComponent implements OnDestroy {
 
         if (this.drawingArea != null) {
             this.zoomInstance = svgPanZoom(this.drawingArea.nativeElement, {
-                // viewportSelector: '.svg-pan-zoom_viewport'
-                panEnabled: false
-                , controlIconsEnabled: true
+                panEnabled: true
+                , controlIconsEnabled: false
                 , zoomEnabled: true
                 , dblClickZoomEnabled: false
                 , mouseWheelZoomEnabled: true
@@ -392,10 +394,16 @@ export class DisplayComponent implements OnDestroy {
         }
     }
 
-    onClick(e: MouseEvent) {
-        this.zoomLevel = this.zoomLevel + 0.5;
-        this.isZoomed = !this.isZoomed;
-        this.applyZoom()
 
+
+    private reset() {
+        if (this.zoomInstance != null) {
+            if (this.isZoomInstanceInitialized) {
+                this.zoomInstance.destroy();
+            }
+
+            this.applyZoom();
+        }
     }
+
 }
