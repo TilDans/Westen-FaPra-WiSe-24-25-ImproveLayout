@@ -9,4 +9,8 @@
 
 .aligned-element {
     align-self: center; /* Ensures the button is centered */
+    height: fit-content;
+    padding: 15px;
+    font-size: large;
+    max-width: fit-content;
 }
