@@ -3,6 +3,8 @@ import { Edge } from 'src/app/classes/Datastructure/InductiveGraph/edgeElement';
 import { EventLog } from 'src/app/classes/Datastructure/event-log/event-log';
 import { InductiveMinerHelper } from './inductive-miner-helper';
 import { ParallelCutChecker } from './cuts/parallel-cut';
+import { Trace } from 'src/app/classes/Datastructure/event-log/trace';
+import { TraceEvent } from 'src/app/classes/Datastructure/event-log/trace-event';
 
 @Injectable({
     providedIn: 'root',
@@ -38,6 +40,17 @@ export class FallThroughService {
                 return this.parallelCutChecker.parallelCutGenerateEventlogs(eventlog, new Set<string>([activity]));
             }
         }
-        throw new Error("No ActivityOncePerTrace Fall Through found")
+        return [];
+    }
+
+    public getFlowerModel(eventlog: EventLog): EventLog[] {
+        let floweredEventlogs: EventLog[] = [];
+        const uniqueActivities: Set<string> = this.helper.getUniqueActivities(eventlog);
+
+        for (const uniqueActivity of uniqueActivities) {
+            floweredEventlogs.push(new EventLog([new Trace([new TraceEvent(uniqueActivity)])]));
+        }
+
+        return floweredEventlogs;
     }
 }

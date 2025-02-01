@@ -434,21 +434,32 @@ export class DisplayComponent implements OnDestroy {
             return;
         }
 
+        // Prüfe, ob ein Cut möglich ist
         const cutResult = this._inductiveMinerService.checkInductiveMiner(this._selectedEventLog);
         if (cutResult) {
             this._snackbar.open(`No Fall Through possible. Possible cut: ${cutResult}`, 'Close', {
                 duration: 3000,
             })
             return;
-        } else {
-            const result: EventLog[] = this._fallThroughService.getActivityOncePerTrace(this._selectedEventLog);
+        } 
+
+        let result: EventLog[] = [];
+        result = this._fallThroughService.getActivityOncePerTrace(this._selectedEventLog);
+        if (result.length != 0) { // ActivityOncePerTrace erfolgreich
             this._petriNet?.handleCutResult(Cuts.Parallel, this._selectedEventLog, result[0], result[1])
-            this.draw();
             this._snackbar.open(`ActivityOncePerTrace Fall Through applied`, 'Close', {
                 duration: 3000,
             })
-            return;
+        } else { // Flower Model
+            result = this._fallThroughService.getFlowerModel(this._selectedEventLog);
+            this._petriNet?.handleFlowerModelFallThrough(this._selectedEventLog, result)
+            this._snackbar.open(`Flower Model Fall Through applied`, 'Close', {
+                duration: 3000,
+            })
         }
+        
+        this.draw();
+        return;
     }
 
     downloadPetriNet(type: string) {
