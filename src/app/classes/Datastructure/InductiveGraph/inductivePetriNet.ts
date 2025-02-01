@@ -104,7 +104,7 @@ export class InductivePetriNet{
     //#region Cut handling
 
     public handleCutResult(cutType: Cuts, toRemove: EventLog, toInsertFirst: EventLog, toInsertSecond: EventLog) {
-        const eventLogDFGToRemove = this._eventLogDFGs!.find(element => element.eventLog === toRemove)!;
+        const eventLogDFGToRemove = this.getDFGByEventLog(toRemove)!;
         const eventLogDFGToInsertFirst = new EventLogDFG(this._svgService, toInsertFirst);
         const eventLogDFGToInsertSecond = new EventLogDFG(this._svgService, toInsertSecond);
         switch (cutType) {
@@ -400,6 +400,10 @@ export class InductivePetriNet{
         const edgesFromElem = (this._arcs.filter(edge => edge.start == node));
         return {edgesToElem, edgesFromElem}
     }
+
+    private getDFGByEventLog(eventLogToFind: EventLog) {
+        return this._eventLogDFGs!.find(element => element.eventLog === eventLogToFind)!;
+    }
     
     public getEventLogByID(eventLogID: string) {
         for (const eventLog of this._eventLogDFGs!) {
@@ -427,8 +431,12 @@ export class InductivePetriNet{
         }
     }
 
+    public applyLayoutToSingleDFG(eventLog: EventLog) {
+        this.getDFGByEventLog(eventLog).updateLayout();
+    }
+
     public highlightSubsetInDFG(toHighlightIn: EventLog, subset: EventLog) {
-        const eventLogDFGMarked = this._eventLogDFGs!.find(element => element.eventLog === toHighlightIn)!;
+        const eventLogDFGMarked = this.getDFGByEventLog(toHighlightIn)!;
         //eventLogDFGMarked.removeColoring();
         const uniqueActivities = new Set<string>();
         if (subset && subset.traces) {
@@ -455,7 +463,7 @@ export class InductivePetriNet{
     public selectDFG(eventLog?: EventLog) {
         this._eventLogDFGs?.forEach(eventLogDFG => eventLogDFG.removeHighlight())
         if (eventLog) {
-            this._eventLogDFGs!.find(element => element.eventLog === eventLog)?.highlight();
+            this.getDFGByEventLog(eventLog)?.highlight();
         }
     }
     

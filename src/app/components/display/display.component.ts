@@ -36,6 +36,7 @@ export class DisplayComponent implements OnDestroy {
 
     //Bedingung, damit der Button zum Download angezeigt wird. Siehe draw Methode
     isPetriNetFinished: boolean = false;
+    isDFGinNet = false;
 
     availableLayouts = Object.values(Layout); // Extract the enum values as an array
     selectedLayout: Layout = this._svgLayoutService.getLayout(); // Set a default layout
@@ -70,6 +71,7 @@ export class DisplayComponent implements OnDestroy {
         this.fileContent = new EventEmitter<string>();
 
         this._sub = this._displayService.InductivePetriNet$.subscribe(newNet => {
+            this.isDFGinNet = false;
             this._petriNet = newNet;
             this._petriNet.applyNewDFGLayout(this.selectedLayout);
             this.draw();
@@ -83,6 +85,38 @@ export class DisplayComponent implements OnDestroy {
 
     applyLayout() {
         this._petriNet!.applyNewDFGLayout(this.selectedLayout);
+        this.draw();
+    }
+
+    private noDFGinNet() : boolean {
+        if(this.isDFGinNet) {return false}
+        this._snackbar.open('No PetriNet initialized yet', 'Close', {
+            duration: 3000,
+        })
+        return true;
+    }
+
+    private netFinishedSnackbar() : boolean {
+        if(!this.isPetriNetFinished) {return false}
+        this._snackbar.open('PetriNet is finished. Please import next EventLog', 'Close', {
+            duration: 3000,
+        })
+        return true;
+    }
+
+    applyLayoutToSelectedEventLog() {
+        if (this.noDFGinNet()) return;
+        if (this.netFinishedSnackbar()) return;
+        if (this._selectedEventLog === undefined) {
+            this._snackbar.open('No eventlog marked', 'Close', {
+                duration: 3000,
+            })
+            return;
+        }
+        if (this.selectedLayout === Layout.Sugiyama) {
+            return;
+        }
+        this._petriNet!.applyLayoutToSingleDFG(this._selectedEventLog!);
         this.draw();
     }
 
@@ -150,12 +184,16 @@ export class DisplayComponent implements OnDestroy {
         try {
             const petriGraph = this._petriNet!.getSVGRepresentation();
             for (const node of petriGraph) {
+                if (!this.isDFGinNet) {
+                    this.isDFGinNet = true;
+                }
                 this.drawingArea.nativeElement.prepend(node);
             }
         } catch (error) {
             console.log('net not initialized yet')
         }
 
+        this.setSelectedEventLog(this._selectedEventLog);
         // Netz nur herunterladbar, wenn fertig
         this.isPetriNetFinished = this._petriNet!.finished;
     }
@@ -312,11 +350,17 @@ export class DisplayComponent implements OnDestroy {
         this.selectedEventLogChange.emit(eventLog);
     }
 
+    public get selectedEventLog() {
+        return this._selectedEventLog;
+    }
+
     public resetDFGNodeHighlighting() {
         this._petriNet!.removeHighlightingFromEventLogDFGNodes();
     }
 
     public resetCut() {
+        if (this.noDFGinNet()) return;
+        if (this.netFinishedSnackbar()) return;
         this.resetDFGNodeHighlighting();
         this._markedEdges.forEach(edge => {
             edge.classList.remove('selectedEdge');
@@ -326,7 +370,8 @@ export class DisplayComponent implements OnDestroy {
     }
 
     public performCut(applyResultToPetriNet: boolean) {
-        if (this.isPetriNetFinished) return;
+        if (this.noDFGinNet()) return;
+        if (this.netFinishedSnackbar()) return;
         if (this._markedEdges.length === 0) { //if any edge is marked, an event log is or was selected
             this._snackbar.open('No edges marked', 'Close', {
                 duration: 3000,
@@ -360,12 +405,12 @@ export class DisplayComponent implements OnDestroy {
                 console.log('cut result: ', result);
                 this._petriNet?.handleCutResult(result.cutMade, eventLogToCutIn!, result.el[0], result.el[1])
                 this.draw();
-                this._snackbar.open(`Executed ${result.cutMade} cut`, 'Close', {
+                this._snackbar.open(`Executed ${result.cutMade} Cut`, 'Close', {
                     duration: 3000,
                 })
             } catch (Error) {
                 console.log('no cut possible', Error);
-                this._snackbar.open('No cut possible', 'Close', {
+                this._snackbar.open('No Cut possible', 'Close', {
                     duration: 3000,
                 })
             }
@@ -380,7 +425,8 @@ export class DisplayComponent implements OnDestroy {
     }
 
     public applyFallThrough() {
-        if (this.isPetriNetFinished) return;
+        if (this.noDFGinNet()) return;
+        if (this.netFinishedSnackbar()) return;
         if (this._selectedEventLog === undefined) {
             this._snackbar.open('No eventlog marked', 'Close', {
                 duration: 3000,
@@ -391,7 +437,7 @@ export class DisplayComponent implements OnDestroy {
         // Prüfe, ob ein Cut möglich ist
         const cutResult = this._inductiveMinerService.checkInductiveMiner(this._selectedEventLog);
         if (cutResult) {
-            this._snackbar.open(`No fall through possible. Possible cut: ${cutResult}`, 'Close', {
+            this._snackbar.open(`No Fall Through possible. Possible cut: ${cutResult}`, 'Close', {
                 duration: 3000,
             })
             return;
@@ -401,6 +447,9 @@ export class DisplayComponent implements OnDestroy {
         result = this._fallThroughService.getActivityOncePerTrace(this._selectedEventLog);
         if (result.length != 0) { // ActivityOncePerTrace erfolgreich
             this._petriNet?.handleCutResult(Cuts.Parallel, this._selectedEventLog, result[0], result[1])
+            this._snackbar.open(`ActivityOncePerTrace Fall Through applied`, 'Close', {
+                duration: 3000,
+            })
         } else { // Flower Model
             result = this._fallThroughService.getFlowerModel(this._selectedEventLog);
             this._petriNet?.handleFlowerModelFallThrough(this._selectedEventLog, result)
@@ -408,12 +457,13 @@ export class DisplayComponent implements OnDestroy {
                 duration: 3000,
             })
         }
-
+        
         this.draw();
         return;
     }
 
     downloadPetriNet(type: string) {
+        if (this.noDFGinNet()) return;
         if (!this.isPetriNetFinished) {
             this._snackbar.open('Petri net not finished yet', 'Close', {
                 duration: 3000,
