@@ -45,8 +45,7 @@ export class DisplayComponent implements OnDestroy {
     private _petriNet: InductivePetriNet | undefined;
     private _leftMouseDown = false;
     private zoomInstance = svgPanZoom;
-    isZoomed = false;
-    zoomLevel: number = 0.5;
+    isZoomInstanceInitialized = false;
 
     private _markedEdges: SVGLineElement[] = [];
     // to keep track in which event log the lines are drawn
@@ -195,7 +194,8 @@ export class DisplayComponent implements OnDestroy {
             console.log('net not initialized yet')
         }
 
-        this.setSelectedEventLog(this._selectedEventLog);
+        this.setSelectedEventLog(this._selectedEventLog)
+        this.resetZoomObject();
         // Netz nur herunterladbar, wenn fertig
         this.isPetriNetFinished = this._petriNet!.finished;
     }
@@ -218,6 +218,7 @@ export class DisplayComponent implements OnDestroy {
 
     public processMouseDown(e: MouseEvent) {
         if (e.button === 0 && this.drawingArea) {
+            e.stopImmediatePropagation()
             this._leftMouseDown = true;
             const targetEventLog = this.isDomEventInEventLog(e);
             if (targetEventLog) {
@@ -407,9 +408,11 @@ export class DisplayComponent implements OnDestroy {
                 console.log('cut result: ', result);
                 this._petriNet?.handleCutResult(result.cutMade, eventLogToCutIn!, result.el[0], result.el[1])
                 this.draw();
+
                 this._snackbar.open(`Executed ${result.cutMade} Cut`, 'Close', {
                     duration: 3000,
                 })
+
             } catch (Error) {
                 console.log('no cut possible', Error);
                 this._snackbar.open('No Cut possible', 'Close', {
@@ -443,7 +446,7 @@ export class DisplayComponent implements OnDestroy {
                 duration: 3000,
             })
             return;
-        } 
+        }
 
         let result: EventLog[] = [];
         result = this._fallThroughService.getActivityOncePerTrace(this._selectedEventLog);
@@ -459,8 +462,9 @@ export class DisplayComponent implements OnDestroy {
                 duration: 3000,
             })
         }
-        
+
         this.draw();
+
         return;
     }
 
@@ -491,9 +495,8 @@ export class DisplayComponent implements OnDestroy {
 
         if (this.drawingArea != null) {
             this.zoomInstance = svgPanZoom(this.drawingArea.nativeElement, {
-                // viewportSelector: '.svg-pan-zoom_viewport'
-                panEnabled: false
-                , controlIconsEnabled: true
+                panEnabled: true
+                , controlIconsEnabled: false
                 , zoomEnabled: true
                 , dblClickZoomEnabled: false
                 , mouseWheelZoomEnabled: true
@@ -522,10 +525,16 @@ export class DisplayComponent implements OnDestroy {
         }
     }
 
-    onClick(e: MouseEvent) {
-        this.zoomLevel = this.zoomLevel + 0.5;
-        this.isZoomed = !this.isZoomed;
-        this.applyZoom()
+    private resetZoomObject() {
+        if (this.zoomInstance != null) {
+            try{
+                    this.zoomInstance.destroy();
+            }catch(Error){
+                console.log("error occured "+Error)
+            }
 
+            this.applyZoom();
+        }
     }
+
 }
