@@ -1,14 +1,16 @@
 .main {
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly;
+    justify-content: flex-start;
     height: 100%;
     margin-bottom: 10px;
     margin-right: 10px;
 }
 
-input {
-    height: 30px;
-    width: 300px;
-    font-size: 18px;
+.aligned-element {
+    align-self: center; /* Ensures the button is centered */
+    height: fit-content;
+    padding: 15px;
+    font-size: large;
+    max-width: fit-content;
 }

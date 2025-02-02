@@ -13,31 +13,27 @@ export class ParallelCutChecker {
     constructor(private helper: InductiveMinerHelper) {}
 
     public checkParallelCut(eventlog: EventLog, edges: Edge[]): EventLog[] {
-        // Deklaration neuer, geteilter eventlogs
-        let A1: EventLog = new EventLog([]);
-        let A2: EventLog = new EventLog([]);
-
         // Hilfsvariable, um Bidirektionale Verbindungen zu speichern
         let bidirectionalActivities: Set <string> = new Set<string>(); 
-        // Hilfsvariablen, um geschnittene START-/STOP-Knoten zu speichern
-        let cutStartEdges: Edge[] = [];
+        // Hilfsvariablen, um geschnittene PLAY-/STOP-Knoten zu speichern
+        let cutPlayEdges: Edge[] = [];
         let cutStopEdges: Edge[] = [];
 
-        // Fülle Array mit geschnittenen START-/STOP-Knoten
+        // Fülle Array mit geschnittenen PLAY-/STOP-Knoten
         for (const edge of edges) {
             if (edge.start.id == 'play' && (edge.end.id)) {
-                cutStartEdges.push(edge);
+                cutPlayEdges.push(edge);
             } 
             if ((edge.start.id) && edge.end.id == 'stop') {
                 cutStopEdges.push(edge);
             } 
         }
 
-        // Wenn gar kein Start-Knoten markiert wurde, sofort returnen
-        if (cutStartEdges.length == 0) return [];
+        // Wenn gar kein PLAY- oder STOP-Knoten markiert wurde, sofort returnen
+        if (cutPlayEdges.length == 0 || cutStopEdges.length == 0) return [];
     
-        // Verwende beliebigen START-Knoten als initiale Aktivität, um bidirektional-verbundene Knoten identifizieren zu können
-        let initialActivity: string = cutStartEdges[0].end.id;
+        // Verwende beliebigen PLAY-Knoten als initiale Aktivität, um bidirektional-verbundene Knoten identifizieren zu können
+        let initialActivity: string = cutPlayEdges[0].end.id;
         
         // Identifiziere geschnittene(!) bidirektionale Verbindungen
         const neighbors: string[] = this.helper.parseEventlogToNodes(eventlog).get(initialActivity) || [];
@@ -78,48 +74,36 @@ export class ParallelCutChecker {
             }
         }
 
-        // Es müssen korrekte Start- und Stop-Kanten markiert worden sein
-        let startActivites: Set<string>  = new Set<string>();
+        // Es müssen korrekte PLAY- und STOP-Kanten markiert worden sein
+        let playActivites: Set<string>  = new Set<string>();
         let stopActivites: Set<string>  = new Set<string>();
         
-        // Identifiziere alle Start-/Stop-Kanten, die ausgeschnitten werden sollen. Verwende dafür die identifizierten cutoutAcitivities
+        // Identifiziere alle PLAY-/STOP-Kanten, die ausgeschnitten werden sollen. Verwende dafür die identifizierten cutoutAcitivities
         for (const trace of eventlog.traces) {
             if (cutoutActivities.has(trace.events[0].conceptName)) {
-                startActivites.add(trace.events[0].conceptName);
+                playActivites.add(trace.events[0].conceptName);
             }
             if (cutoutActivities.has(trace.events[trace.events.length-1].conceptName)) {
                 stopActivites.add(trace.events[trace.events.length-1].conceptName);
             }
         }
-        // Vergleiche alle tatsächlich zu schneidenden START-/STOP-Kanten mit denen, die markiert wurden 
-        const cutStartEdgesSet: Set<string> = new Set(cutStartEdges.map(edge => edge.end.id));
-        if (!(startActivites.size === cutStartEdgesSet.size && [...startActivites].every(x => cutStartEdgesSet.has(x)))) return [];
+        // Vergleiche alle tatsächlich zu schneidenden PLAY-/STOP-Kanten mit denen, die markiert wurden 
+        const cutPlayEdgesSet: Set<string> = new Set(cutPlayEdges.map(edge => edge.end.id));
+        if (!(playActivites.size === cutPlayEdgesSet.size && [...playActivites].every(x => cutPlayEdgesSet.has(x)))) return [];
 
         const cutStopEdgesSet: Set<string> = new Set(cutStopEdges.map(edge => edge.start.id));
         if (!(stopActivites.size === cutStopEdgesSet.size && [...stopActivites].every(x => cutStopEdgesSet.has(x)))) return [];
 
-        // Befülle Teilmengen A1 und A2
-        for (const cTrace of eventlog.traces) {
+        // Prüfe Bedingungen
+        return this.parallelCutConditionsChecker(eventlog, cutoutActivities, bidirectionalActivities);
+    }
 
-            let A1Trace: Trace = new Trace([]);
-            let A2Trace: Trace = new Trace([]);
-
-            for (const cTraceEvent of cTrace.events) {
-                if (bidirectionalActivities.has(cTraceEvent.conceptName)) {
-                    A2Trace.events.push(new TraceEvent(cTraceEvent.conceptName));
-                } else {
-                    A1Trace.events.push(new TraceEvent(cTraceEvent.conceptName));
-                }
-            }
-            A1.traces.push(new Trace(A1Trace.events))
-            A2.traces.push(new Trace(A2Trace.events))
-        }
-
+    public parallelCutConditionsChecker(eventlog: EventLog, A1: Set<string>, A2: Set<string>): EventLog[] {
         // Bedingungen prüfen
         // A1 und A2 dürfen keine intersection haben
-        if (this.helper.hasIntersection(this.helper.getUniqueActivities(A1), this.helper.getUniqueActivities(A2))) return [];
+        if (this.helper.hasIntersection(A1, A2)) return [];
         // A1 und A2 sollten alle events umfassen
-        if (!this.helper.isUnion(eventlog, this.helper.getUniqueActivities(A1), this.helper.getUniqueActivities(A2))) return [];
+        if (!this.helper.isUnion(eventlog, A1, A2)) return [];
             
         /* 
         1. für jede Aktivität in 𝐴1 gibt es in 𝐷 eine Kante zu jeder Aktivität in 𝐴2,
@@ -129,16 +113,40 @@ export class ParallelCutChecker {
         */
         
         // 1:
-        if (!this.helper.checkDirectNeighbors(eventlog, this.helper.getUniqueActivities(A1), this.helper.getUniqueActivities(A2))) return [];
+        if (!this.helper.checkDirectNeighbors(eventlog, A1, A2)) return [];
         // 2:
-        if (!this.helper.checkDirectNeighbors(eventlog, this.helper.getUniqueActivities(A2), this.helper.getUniqueActivities(A1))) return [];
+        if (!this.helper.checkDirectNeighbors(eventlog, A2, A1)) return [];
         
         // 3:
-        if (this.helper.checkPathInSublog(eventlog, this.helper.getUniqueActivities(A1))) return [];
+        if (this.helper.checkPathInSublog(eventlog, A1)) return [];
         // 4:
-        if (this.helper.checkPathInSublog(eventlog, this.helper.getUniqueActivities(A2))) return [];
+        if (this.helper.checkPathInSublog(eventlog, A2)) return [];
 
         // Wenn alle Bedingungen erfolgreich: Returne zwei eventlogs
-        return [A1, A2];
+        return this.parallelCutGenerateEventlogs(eventlog, A2);
+    }
+
+    public parallelCutGenerateEventlogs(eventlog: EventLog, A2: Set<string>): EventLog[] {
+        // Deklaration neuer, geteilter eventlogs
+        let eventlogA1: EventLog = new EventLog([]);
+        let eventlogA2: EventLog = new EventLog([]);
+
+        // Generiere Eventlogs
+        for (const cTrace of eventlog.traces) {
+
+            let A1Trace: Trace = new Trace([]);
+            let A2Trace: Trace = new Trace([]);
+
+            for (const cTraceEvent of cTrace.events) {
+                if (A2.has(cTraceEvent.conceptName)) {
+                    A2Trace.events.push(new TraceEvent(cTraceEvent.conceptName));
+                } else {
+                    A1Trace.events.push(new TraceEvent(cTraceEvent.conceptName));
+                }
+            }
+            eventlogA1.traces.push(new Trace(A1Trace.events))
+            eventlogA2.traces.push(new Trace(A2Trace.events))
+        }
+        return [eventlogA1, eventlogA2];
     }
 }

@@ -1,3 +1,4 @@
+//#region Imports
 import {EventLog} from "../event-log/event-log";
 import {EventLogDFG} from "./Elements/eventLogDFG";
 import {SvgService} from "src/app/services/svg.service";
@@ -12,9 +13,10 @@ import { Cuts, Layout } from "../enums";
 import { SvgLayoutService } from "src/app/services/svg-layout.service";
 import { Trace } from "../event-log/trace";
 import { TraceEvent } from "../event-log/trace-event";
-
+//#endregion
 
 export class InductivePetriNet{
+    //#region Header
     private _places: Place[]= new Array<Place>;
     private _transitions: Transition[] = new Array<Transition>;
     private _arcs: Edge[] = new Array<Edge>;
@@ -27,13 +29,18 @@ export class InductivePetriNet{
     _svgService : SvgService = new SvgService (new SvgArrowService(new IntersectionCalculatorService()), new SvgLayoutService());
 
     //OffSet sollte nicht frößer sein als kleinstes Element * 2 (Berechnung, ob ein Element in einem Layer ist)
-    static horizontalOffset = 100;
+    static horizontalOffset = 150;
     static verticalOffset = 200;
 
     constructor() {
         EventLogDFG.logCounter = 0; // counter der logs für neues Netz resetten
     }
 
+    //#endregion
+    
+    ///////////////////////////////
+    /* ----- Getter/Setter ----- */
+    ///////////////////////////////
     //#region getters/setters
 
     public get Transitions() {
@@ -57,7 +64,7 @@ export class InductivePetriNet{
     ////////////////////////////////
     /* ----- INITIALIZATION ----- */
     ////////////////////////////////
-    //#region
+    //#region Initialization
 
     init(eventLog: EventLog): InductivePetriNet {
         //zwei Stellen zum Start generieren und die entsprechenden Kanten einfügen
@@ -94,10 +101,10 @@ export class InductivePetriNet{
     ////////////////////////////////////
     /* ----- CUT HANDLING Start ----- */
     ////////////////////////////////////
-    //#region
+    //#region Cut handling
 
     public handleCutResult(cutType: Cuts, toRemove: EventLog, toInsertFirst: EventLog, toInsertSecond: EventLog) {
-        const eventLogDFGToRemove = this._eventLogDFGs!.find(element => element.eventLog === toRemove)!;
+        const eventLogDFGToRemove = this.getDFGByEventLog(toRemove)!;
         const eventLogDFGToInsertFirst = new EventLogDFG(this._svgService, toInsertFirst);
         const eventLogDFGToInsertSecond = new EventLogDFG(this._svgService, toInsertSecond);
         switch (cutType) {
@@ -116,6 +123,65 @@ export class InductivePetriNet{
             default:
                 throw new Error(`Falscher Wert für Cut: ${cutType}`);
         }
+    }
+
+    public handleFlowerModelFallThrough(toRemove: EventLog, toInsertEventLogs: EventLog[]) {
+        const eventLogDFGToRemove = this._eventLogDFGs!.find(element => element.eventLog === toRemove)!;
+        const connecionsInNet = this.getConnectedArcs(eventLogDFGToRemove);
+
+        //mock Elemente generieren
+        const mockTrans1 = this.genTransition();
+        const mockTrans2 = this.genTransition();
+        const mockPlace = this.genPlace();
+
+        //Verbindungen für mock Elemente aktualisieren
+        connecionsInNet.edgesToElem.forEach(edge => {
+            edge.end = mockTrans1;
+        });
+        connecionsInNet.edgesFromElem.forEach(edge => {
+            edge.start = mockTrans2;
+        });
+        this.genArc(mockTrans1, mockPlace);
+        this.genArc(mockPlace, mockTrans2);
+
+        //mock Transitionen in Layout einfügen wie Sequence Cut
+        this._petriLayersContained?.insertToNewLayerAfterCurrentElementAndReplaceFormer(eventLogDFGToRemove, mockTrans1, mockTrans2);
+
+        //neue EventLogs verarbeiten (DFGs generieren und verbinden)
+        const newEventLogDFGs: EventLogDFG[] = [];
+        for (const eventLog of toInsertEventLogs) {
+            const newEL = new EventLogDFG(this._svgService, eventLog);
+            newEventLogDFGs.push(newEL);
+            this._eventLogDFGs?.push(newEL);
+            this.genArc(mockPlace, newEL);
+            this.genArc(newEL, mockPlace);
+        }
+
+        //eventLogDFGs in Layout einfügen
+        const halfOfLength = Math.round(newEventLogDFGs.length / 2);
+        const firstQuarter = Math.round(halfOfLength / 2);
+        const thirdQuarter = (halfOfLength + firstQuarter);
+        
+        //erstes Viertel über mocktrans 1
+        for (let i = 0; i < firstQuarter; i++) {
+            this._petriLayersContained?.insertToExistingLayerBeforeCurrentElement(mockTrans1, newEventLogDFGs[i]);
+        }
+
+        //zweites Viertel unter mocktrans 1
+        for (let i = firstQuarter; i < halfOfLength; i++) {
+            this._petriLayersContained?.insertToExistingLayerAfterCurrentElement(mockTrans1, newEventLogDFGs[i]);
+        }
+
+        //drittes Viertel über mocktrans 2
+        for (let i = halfOfLength; i < thirdQuarter; i++) {
+            this._petriLayersContained?.insertToExistingLayerBeforeCurrentElement(mockTrans2, newEventLogDFGs[i]);
+        }
+        
+        //viertes Viertel unter mocktrans 2
+        for (let i = thirdQuarter; i < newEventLogDFGs.length; i++) {
+            this._petriLayersContained?.insertToExistingLayerAfterCurrentElement(mockTrans2, newEventLogDFGs[i]);
+        }
+        this._eventLogDFGs?.splice(this._eventLogDFGs.indexOf(eventLogDFGToRemove),1);
     }
 
     //Elemente hintereinander
@@ -312,7 +378,7 @@ export class InductivePetriNet{
     /////////////////////////////////////
     /* ----- Other Methods Start ----- */
     /////////////////////////////////////
-    //#region
+    //#region Further Methods
 
     public netFinished() {
         if (!this._finished) {
@@ -334,6 +400,10 @@ export class InductivePetriNet{
         const edgesFromElem = (this._arcs.filter(edge => edge.start == node));
         return {edgesToElem, edgesFromElem}
     }
+
+    private getDFGByEventLog(eventLogToFind: EventLog) {
+        return this._eventLogDFGs!.find(element => element.eventLog === eventLogToFind)!;
+    }
     
     public getEventLogByID(eventLogID: string) {
         for (const eventLog of this._eventLogDFGs!) {
@@ -350,7 +420,7 @@ export class InductivePetriNet{
     ////////////////////////////////////
     /* ----- Layout / Graphical ----- */
     ////////////////////////////////////
-    //#region
+    //#region Layout / Graphical
 
     applyNewDFGLayout(layout: Layout) {
         this._svgService.applyNewDFGLayout(layout);
@@ -361,8 +431,12 @@ export class InductivePetriNet{
         }
     }
 
+    public applyLayoutToSingleDFG(eventLog: EventLog) {
+        this.getDFGByEventLog(eventLog).updateLayout();
+    }
+
     public highlightSubsetInDFG(toHighlightIn: EventLog, subset: EventLog) {
-        const eventLogDFGMarked = this._eventLogDFGs!.find(element => element.eventLog === toHighlightIn)!;
+        const eventLogDFGMarked = this.getDFGByEventLog(toHighlightIn)!;
         //eventLogDFGMarked.removeColoring();
         const uniqueActivities = new Set<string>();
         if (subset && subset.traces) {
@@ -380,8 +454,17 @@ export class InductivePetriNet{
         eventLogDFGMarked.colorSubSet(uniqueActivitiesArray);
     }
     
-    public removeHighlightingFromEventLogDFG(eventLogID: string) {
-        const eventLogDFGToRemoveHighlightingFrom = this._eventLogDFGs!.find(element => element.id === eventLogID)?.colorSubSet([]);
+    public removeHighlightingFromEventLogDFGNodes() {
+        this._eventLogDFGs!.forEach(el => {
+            el.colorSubSet([]);
+        });
+    }
+
+    public selectDFG(eventLog?: EventLog) {
+        this._eventLogDFGs?.forEach(eventLogDFG => eventLogDFG.removeHighlight())
+        if (eventLog) {
+            this.getDFGByEventLog(eventLog)?.highlight();
+        }
     }
     
     public getSVGRepresentation(): SVGElement[] {
@@ -454,17 +537,20 @@ export class InductivePetriNet{
 
     private setPlacePosition(place: Place, yOffset: number) {
         const { edgesToElem: toPlace, edgesFromElem: fromPlace } = this.getConnectedArcs(place);
+        const connectedElems: CustomElement[] = [];
         //X und Y Werte für die Stellen berechnen.
         let xValToSet = 0;
         let yValToSet = 0;
 
         //Summiere alle x und y Werte der Elemente vor und nach der Stelle
         toPlace.forEach(edge => {
+            connectedElems.push(edge.start)
             const centerCoord = edge.start.getCenterXY();
             xValToSet += centerCoord.x;
             yValToSet += centerCoord.y;
         });
         fromPlace.forEach(edge => {
+            connectedElems.push(edge.end)
             const centerCoord = edge.end.getCenterXY();
             xValToSet += centerCoord.x;
             yValToSet += centerCoord.y;
@@ -482,9 +568,11 @@ export class InductivePetriNet{
                 layerBeforePlace = (currStartElemLayer > layerBeforePlace) ? currStartElemLayer : layerBeforePlace;
             });
             let maxLayerAfterPlace = -1;
+            let minLayerAfterPlace = -1;
             fromPlace.forEach(edge => {
                 const currEndElemLayer = this.getLayer(edge.end);
                 maxLayerAfterPlace = (currEndElemLayer > maxLayerAfterPlace) ? currEndElemLayer : maxLayerAfterPlace;
+                minLayerAfterPlace = (currEndElemLayer < maxLayerAfterPlace) ? currEndElemLayer : maxLayerAfterPlace;
             });
             let collidingLayerCoordinates;
             if (layerBeforePlace >= collidingLayer && maxLayerAfterPlace > layerBeforePlace) {
@@ -500,19 +588,38 @@ export class InductivePetriNet{
                 }
             }            
         }
+        
+        if (toPlace.length === 1 && fromPlace.length === 1) {
+            const toPlaceX = toPlace[0].start.getCenterXY().x;
+            const fromPlaceX = fromPlace[0].end.getCenterXY().x;
+            const toPlaceY = toPlace[0].start.getCenterXY().y;
+            const fromPlaceY = fromPlace[0].end.getCenterXY().y;
+        
+            // Calculate differences
+            const xOffsetBetweenNodes = fromPlaceX - toPlaceX;
+            const yOffsetBetweenNodes = fromPlaceY - toPlaceY;
+        
+            if (xOffsetBetweenNodes !== 0) {
+                const slope = yOffsetBetweenNodes / xOffsetBetweenNodes;
+        
+                //Wert berechnen y = mx + b
+                yValToSet = toPlaceY + slope * (xValToSet - toPlaceX);
+            }
+        }
+        
         // Kollisionen auf der Mittellinie vermeiden, wenn Stelle dort nah dran liegt
         if (yOffset - 15 < yValToSet && yValToSet < yOffset + 15) {
-            let followingLayer = true;
+            let moreThanOneApart = true;
             //nur für Stellen, deren Layer nicht direkt aufeinander folgen
-            for (const toEdge of toPlace) {
-                for (const fromEdge of fromPlace) {
-                    let test = Math.abs(this.getLayer(toEdge.start) - this.getLayer(fromEdge.end))
+            for (const connectedElem of connectedElems) {
+                for (const connectedElemTwo of connectedElems) {
+                    let test = Math.abs(this.getLayer(connectedElem) - this.getLayer(connectedElemTwo))
                     if (test > 1) {
-                        followingLayer = false;
+                        moreThanOneApart = false;
                     }
-                }
+                }   
             }
-            if (!followingLayer){
+            if (!moreThanOneApart){
                     yValToSet += 50;
             }
         }
@@ -554,7 +661,7 @@ export class InductivePetriNet{
     ///////////////////////////////////////////////
     /* ----- Element Generation / Deletion ----- */
     ///////////////////////////////////////////////
-    //#region
+    //#region Element Generation
 
     private genArc(start: CustomElement, end: CustomElement) {
         const edgeToGen = new Edge(start, end);
@@ -587,7 +694,7 @@ export class InductivePetriNet{
         } else {
             transID = 't0';
         };
-        const transToGen = new Transition(transID, name || '');
+        const transToGen = new Transition(transID, name || transID);
         this._svgService.createSVGForTransition(transToGen);
         this._transitions.push(transToGen);
         return transToGen;

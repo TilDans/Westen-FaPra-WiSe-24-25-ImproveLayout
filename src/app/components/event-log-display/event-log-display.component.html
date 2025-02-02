@@ -1,0 +1,26 @@
+<div class="selected-event-log">
+  <h3>Selected Event Log <button 
+                            mat-icon-button
+                            disabledInteractive 
+                            [disabled]="!selectedEventLog" 
+                            (click)="copyEventLog()" 
+                            title="Copy Event Log to Clipboard">
+                            <mat-icon>content_copy</mat-icon>
+  </button></h3>  
+  
+  
+  <div *ngIf="selectedEventLog">
+    <div *ngFor="let trace of selectedEventLog.traces" class="trace">
+      <div class="concept-names">
+        Trace {{ getTraceIndex(trace) }}:
+        {{ getFormattedConceptNames(trace) }}
+      </div>
+      <div class="trace-divider"></div>
+    </div>
+  </div>
+
+  <div *ngIf="!selectedEventLog">
+    <div class="concept-names">
+      No event log selected.
+    </div>
+</div>

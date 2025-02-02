@@ -1,0 +1,50 @@
+.selected-event-log {
+  padding: 10pt;
+  max-height: 400px; /* Set the maximum height of the container */
+  overflow: auto; /* Adds scrollbars when content overflows */
+  border: 1px solid #ccc; /* Optional: border around the container */
+  position: relative; /* Needed for custom scrollbar */
+}
+
+.trace {
+  display: flex; /* Use flexbox to align content */
+  align-items: flex-start; /* Align content to the top of the line */
+  margin-bottom: 10px; /* Space between traces */
+  overflow: auto;
+  padding: 16px 5px; /* Add padding above and below each trace */
+}
+
+.trace-title {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.concept-names {
+  display: flex;
+  gap: 10px; /* Adjust the gap as needed */
+  /*white-space: nowrap; /* Prevent wrapping within a single line */
+}
+
+.trace-divider {
+  display: block; /* Ensure it behaves as a block element */
+  border: none; /* Remove other borders */
+  border-top: 2px solid #555; /* Define the top border */
+  margin: 10px 0; /* Add spacing around the divider */
+}
+
+/* Custom scrollbar styles */
+.selected-event-log::-webkit-scrollbar {
+  width: 4px; /* Width of the scrollbar */
+}
+
+.selected-event-log::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Track color */
+}
+
+.selected-event-log::-webkit-scrollbar-thumb {
+  background: #888; /* Thumb color */
+}
+
+.selected-event-log::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Thumb color on hover */
+}

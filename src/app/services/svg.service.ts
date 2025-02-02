@@ -155,7 +155,7 @@ export class SvgService {
         });
 
         // Convert the unique events set to an array if needed
-        const uniqueEventsArray = Array.from(uniqueEvents);
+        const uniqueEventsArray = Array.from([...uniqueEvents]);
 
         // Convert edges set to an array of objects with from and to properties
         const edgesArray = Array.from(edges).map(edge => {

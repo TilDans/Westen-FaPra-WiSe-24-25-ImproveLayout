@@ -32,6 +32,7 @@ body {
 }
 
 .settingsForButtons {
+    font-size: xx-large;
     display: flex;
     align-items: center;
     /* Align items vertically */
@@ -39,10 +40,18 @@ body {
     /* Add space between elements */
 }
 
-.aligned-element {
+.settingsForButtons.aligned-element {
+    height: fit-content;
+    padding: 15px;
+    font-size: large;
     flex: 1;
-    /* Ensures both elements take equal width */
-    max-width: 250px;
-    /* Optional: Restrict max width for form field and button */
+    max-width: fit-content;
 }
 
+.aligned-element {
+    height: fit-content;
+    padding: 15px;
+    font-size: large;
+    flex: 1;
+    max-width: fit-content;
+}

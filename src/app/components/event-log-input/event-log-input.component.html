@@ -2,7 +2,7 @@
     <mat-form-field appearance="outline" class="textarea">
         <mat-label>Event log (Format: A B C + A C B + ...)</mat-label>
         <textarea matInput cdkTextareaAutosize cdkAutosizeMinRows="10" cdkAutosizeMaxRows="20"
-                  [(ngModel)]="inputEventLog"></textarea>
+                  [(ngModel)]="inputEventLog" (keydown.enter)="onButtonClicked()"></textarea>
     </mat-form-field>
-    <app-example-button (click)="onButtonClicked()" title="Parse Event Log"></app-example-button>
+    <button mat-raised-button color="primary" class="aligned-element" (click)="onButtonClicked()" title="Parse Event Log"> Parse EventLog </button>
 </div>

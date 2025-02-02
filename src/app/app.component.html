@@ -11,24 +11,38 @@
     </h2>
 
     <!--    Main content    -->
-    <app-display class="padding full-size" (fileContent)="processSourceChange($event)"></app-display>
+    <app-display class="padding full-size" (fileContent)="processSourceChange($event)" (selectedEventLogChange)="updateSelectedEventLog($event)"></app-display>
 
     <div class="sampleFile">
         <div class="flexRowAlignSpaceEvenlyStart">
             <app-example-file title="Lecture example" link="assets/lectureExample.xes"
                               description="Event log from lecture [1]"></app-example-file>
-            <app-example-file title="Sequence Cut example" link="assets/sequenceCut.xes"
-                              description="Example for Sequence Cut"></app-example-file>
-            <app-example-file title="Exclusive Cut example" link="assets/exclusiveCut.xes"
-                              description="Example for Exclusive Cut"></app-example-file>
-            <app-example-file title="Parallel Cut example" link="assets/parallelCut.xes"
-                              description="Example for Parallel Cut"></app-example-file>
-            <app-example-file title="Loop Cut example" link="assets/loopCut.xes"
-                              description="Example for Loop Cut"></app-example-file>
             <app-example-file title="Reviewing Example" link="assets/reviewing.xes"
                               description="Reviewing .xes log file [2]"></app-example-file>
             <app-example-file title="Repair Example" link="assets/repairExample.xes"
                               description="Repair .xes log file [3]"></app-example-file>
+        </div>
+
+        <div class="flexRowAlignSpaceEvenlyStart">
+            <app-example-file title="Sequence Cut example" link="assets/sequenceCut.xes"
+                            description="Example for Sequence Cut"></app-example-file>
+            <app-example-file title="Exclusive Cut example" link="assets/exclusiveCut.xes"
+                            description="Example for Exclusive Cut"></app-example-file>
+            <app-example-file title="Parallel Cut example" link="assets/parallelCut.xes"
+                            description="Example for Parallel Cut"></app-example-file>
+            <app-example-file title="Loop Cut example" link="assets/loopCut.xes"
+                            description="Example for Loop Cut"></app-example-file>
+        </div>
+
+        <div class="flexRowAlignSpaceEvenlyStart">
+            <app-example-file title="Flower Model example" link="assets/fallthrough-flower.xes"
+                            description="Example for Flower Model"></app-example-file>
+            <app-example-file title="Activity once per Trace example" link="assets/fallthrough-aopt.xes"
+                            description="Example for Activity once per Trace"></app-example-file>
+        </div>
+
+        <div class="eventLogDisplay">
+            <app-event-log-display style="width: 100%" [selectedEventLog]="selectedEventLog" ></app-event-log-display>
         </div>
 
         <div class="inputFeature">
