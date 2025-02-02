@@ -45,9 +45,7 @@ export class DisplayComponent implements OnDestroy {
     private _petriNet: InductivePetriNet | undefined;
     private _leftMouseDown = false;
     private zoomInstance = svgPanZoom;
-    isZoomed = false;
     isZoomInstanceInitialized = false;
-    zoomLevel: number = 0.5;
 
     private _markedEdges: SVGLineElement[] = [];
     // to keep track in which event log the lines are drawn
@@ -76,9 +74,6 @@ export class DisplayComponent implements OnDestroy {
             this._petriNet = newNet;
             this._petriNet.applyNewDFGLayout(this.selectedLayout);
             this.draw();
-
-            this.isZoomInstanceInitialized = true;
-
         });
     }
 
@@ -198,7 +193,7 @@ export class DisplayComponent implements OnDestroy {
         }
 
         this.setSelectedEventLog(this._selectedEventLog)
-        this.reset();
+        this.resetZoomObject();
         // Netz nur herunterladbar, wenn fertig
         this.isPetriNetFinished = this._petriNet!.finished;
     }
@@ -528,9 +523,7 @@ export class DisplayComponent implements OnDestroy {
         }
     }
 
-
-
-    private reset() {
+    private resetZoomObject() {
         if (this.zoomInstance != null) {
             try{
                     this.zoomInstance.destroy();
