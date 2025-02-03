@@ -76,6 +76,7 @@ export class DisplayComponent implements OnDestroy {
             this.setSelectedEventLog(undefined);
             this._previouslySelected = undefined;
             this.draw();
+            this.resetZoomObject();
         });
     }
 
@@ -195,7 +196,6 @@ export class DisplayComponent implements OnDestroy {
         }
 
         this.setSelectedEventLog(this._selectedEventLog)
-        this.resetZoomObject();
         // Netz nur herunterladbar, wenn fertig
         this.isPetriNetFinished = this._petriNet!.finished;
     }
@@ -409,6 +409,7 @@ export class DisplayComponent implements OnDestroy {
                 this._petriNet?.handleCutResult(result.cutMade, eventLogToCutIn!, result.el[0], result.el[1])
                 this.draw();
 
+                this.resetZoomObject();
                 this._snackbar.open(`Executed ${result.cutMade} Cut`, 'Close', {
                     duration: 3000,
                 })
@@ -464,7 +465,7 @@ export class DisplayComponent implements OnDestroy {
         }
 
         this.draw();
-
+        this.resetZoomObject();
         return;
     }
 
