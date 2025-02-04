@@ -44,7 +44,7 @@ export class DisplayComponent implements OnDestroy {
     private _sub: Subscription;
     private _petriNet: InductivePetriNet | undefined;
     private _leftMouseDown = false;
-    private zoomInstance = svgPanZoom;
+    private zoomInstance: SvgPanZoom.Instance | undefined = undefined;
     isZoomInstanceInitialized = false;
 
     private _markedEdges: SVGLineElement[] = [];
@@ -76,7 +76,7 @@ export class DisplayComponent implements OnDestroy {
             this.setSelectedEventLog(undefined);
             this._previouslySelected = undefined;
             this.draw();
-            this.resetZoomObject();
+            this.applyZoom();
         });
     }
 
@@ -198,6 +198,9 @@ export class DisplayComponent implements OnDestroy {
         this.setSelectedEventLog(this._selectedEventLog)
         // Netz nur herunterladbar, wenn fertig
         this.isPetriNetFinished = this._petriNet!.finished;
+        // Store the current zoom and pan state before redrawing
+        
+        this.resetZoomObject();
     }
 
     public dropLines() {
@@ -409,7 +412,6 @@ export class DisplayComponent implements OnDestroy {
                 this._petriNet?.handleCutResult(result.cutMade, eventLogToCutIn!, result.el[0], result.el[1])
                 this.draw();
 
-                this.resetZoomObject();
                 this._snackbar.open(`Executed ${result.cutMade} Cut`, 'Close', {
                     duration: 3000,
                 })
@@ -465,7 +467,6 @@ export class DisplayComponent implements OnDestroy {
         }
 
         this.draw();
-        this.resetZoomObject();
         return;
     }
 
@@ -527,14 +528,21 @@ export class DisplayComponent implements OnDestroy {
     }
 
     private resetZoomObject() {
-        if (this.zoomInstance != null) {
+        
+        if (this.zoomInstance != undefined) {
+            console.log(this.zoomInstance)
+            let zoomLevel = this.zoomInstance.getZoom();
+            let pan = this.zoomInstance.getPan();
             try{
-                    this.zoomInstance.destroy();
+                this.zoomInstance.destroy();
             }catch(Error){
                 console.log("error occured "+Error)
             }
 
             this.applyZoom();
+            // Restore the zoom and pan state after redrawing
+            this.zoomInstance.zoom(zoomLevel);
+            this.zoomInstance.pan(pan);
         }
     }
 
