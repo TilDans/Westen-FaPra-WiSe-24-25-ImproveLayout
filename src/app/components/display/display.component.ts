@@ -198,7 +198,6 @@ export class DisplayComponent implements OnDestroy {
         this.setSelectedEventLog(this._selectedEventLog)
         // Netz nur herunterladbar, wenn fertig
         this.isPetriNetFinished = this._petriNet!.finished;
-        // Store the current zoom and pan state before redrawing
         
         this.resetZoomObject();
     }
@@ -530,7 +529,7 @@ export class DisplayComponent implements OnDestroy {
     private resetZoomObject() {
         
         if (this.zoomInstance != undefined) {
-            console.log(this.zoomInstance)
+            // Store the current zoom and pan state before redrawing
             let zoomLevel = this.zoomInstance.getZoom();
             let pan = this.zoomInstance.getPan();
             try{
