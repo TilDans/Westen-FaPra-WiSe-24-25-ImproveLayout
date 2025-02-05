@@ -87,7 +87,7 @@ export class DisplayComponent implements OnDestroy {
 
     applyLayout() {
         this._petriNet!.applyNewDFGLayout(this.selectedLayout);
-        this.draw();
+        this.drawKeepZoom();
     }
 
     private noDFGinNet() : boolean {
