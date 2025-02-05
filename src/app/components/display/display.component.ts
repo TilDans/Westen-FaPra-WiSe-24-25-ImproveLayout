@@ -44,7 +44,7 @@ export class DisplayComponent implements OnDestroy {
     private _sub: Subscription;
     private _petriNet: InductivePetriNet | undefined;
     private _leftMouseDown = false;
-    private zoomInstance = svgPanZoom;
+    private zoomInstance: SvgPanZoom.Instance | undefined = undefined;
     isZoomInstanceInitialized = false;
 
     private _markedEdges: SVGLineElement[] = [];
@@ -76,6 +76,7 @@ export class DisplayComponent implements OnDestroy {
             this.setSelectedEventLog(undefined);
             this._previouslySelected = undefined;
             this.draw();
+            this.applyZoom();
         });
     }
 
@@ -86,7 +87,7 @@ export class DisplayComponent implements OnDestroy {
 
     applyLayout() {
         this._petriNet!.applyNewDFGLayout(this.selectedLayout);
-        this.draw();
+        this.drawKeepZoom();
     }
 
     private noDFGinNet() : boolean {
@@ -118,7 +119,7 @@ export class DisplayComponent implements OnDestroy {
             return;
         }
         this._petriNet!.applyLayoutToSingleDFG(this._selectedEventLog!);
-        this.draw();
+        this.drawKeepZoom();
     }
 
     public processDropEvent(e: DragEvent) {
@@ -195,9 +196,43 @@ export class DisplayComponent implements OnDestroy {
         }
 
         this.setSelectedEventLog(this._selectedEventLog)
-        this.resetZoomObject();
         // Netz nur herunterladbar, wenn fertig
         this.isPetriNetFinished = this._petriNet!.finished;
+        
+        this.resetZoomObject();
+    }
+
+    private drawKeepZoom() {
+        if (this.drawingArea === undefined) {
+            console.debug('drawing area not ready yet')
+            return;
+        }
+
+        this._markedEdges = [];
+
+        this.clearDrawingArea();
+
+        this._svgArrowService.appendArrowMarker(this.drawingArea.nativeElement);
+
+        this.dropLines();
+        this._petriNet?.handleBaseCases();
+        try {
+            const petriGraph = this._petriNet!.getSVGRepresentation();
+            for (const node of petriGraph) {
+                if (!this.isDFGinNet) {
+                    this.isDFGinNet = true;
+                }
+                this.drawingArea.nativeElement.prepend(node);
+            }
+        } catch (error) {
+            console.log('net not initialized yet')
+        }
+
+        this.setSelectedEventLog(this._selectedEventLog)
+        // Netz nur herunterladbar, wenn fertig
+        this.isPetriNetFinished = this._petriNet!.finished;
+        
+        this.resetZoomObjectKeepZoomLevel();
     }
 
     public dropLines() {
@@ -464,7 +499,6 @@ export class DisplayComponent implements OnDestroy {
         }
 
         this.draw();
-
         return;
     }
 
@@ -526,14 +560,30 @@ export class DisplayComponent implements OnDestroy {
     }
 
     private resetZoomObject() {
-        if (this.zoomInstance != null) {
+        if (this.zoomInstance != undefined) {
             try{
-                    this.zoomInstance.destroy();
+                this.zoomInstance.destroy();
             }catch(Error){
                 console.log("error occured "+Error)
             }
-
             this.applyZoom();
+        }
+    }
+
+    private resetZoomObjectKeepZoomLevel() {
+        if (this.zoomInstance != undefined) {
+            // Store the current zoom and pan state before redrawing
+            let zoomLevel = this.zoomInstance.getZoom();
+            let pan = this.zoomInstance.getPan();
+            try{
+                this.zoomInstance.destroy();
+            }catch(Error){
+                console.log("error occured "+Error)
+            }
+            this.applyZoom();
+            // Restore the zoom and pan state after redrawing
+            this.zoomInstance.zoom(zoomLevel);
+            this.zoomInstance.pan(pan);
         }
     }
 
