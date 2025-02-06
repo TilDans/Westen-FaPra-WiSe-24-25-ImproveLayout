@@ -134,7 +134,7 @@ export class DisplayComponent implements OnDestroy {
         }
     }
 
-    public prevent(e: DragEvent) {
+    public prevent(e: Event) {
         // dragover must be prevented for drop to work
         e.preventDefault();
     }
@@ -198,7 +198,7 @@ export class DisplayComponent implements OnDestroy {
         this.setSelectedEventLog(this._selectedEventLog)
         // Netz nur herunterladbar, wenn fertig
         this.isPetriNetFinished = this._petriNet!.finished;
-        
+
         this.resetZoomObject();
     }
 
@@ -231,7 +231,7 @@ export class DisplayComponent implements OnDestroy {
         this.setSelectedEventLog(this._selectedEventLog)
         // Netz nur herunterladbar, wenn fertig
         this.isPetriNetFinished = this._petriNet!.finished;
-        
+
         this.resetZoomObjectKeepZoomLevel();
     }
 

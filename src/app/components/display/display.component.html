@@ -70,6 +70,6 @@
 
 <div class="resizable-container">
     <svg #drawingArea id="drawing" class="canvas" (drop)="processDropEvent($event)" (mousedown)="processMouseDown($event)"
-        (mouseup)="processMouseUp($event)" (mousemove)="processMouseMove($event)" (dragover)="prevent($event)">
+        (mouseup)="processMouseUp($event)" (mousemove)="processMouseMove($event)" (dragover)="prevent($event)" (contextmenu)="prevent($event)">
     </svg>
 </div>
