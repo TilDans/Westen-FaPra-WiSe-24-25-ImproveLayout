@@ -30,7 +30,7 @@ export class InductivePetriNet{
 
     //OffSet sollte nicht frößer sein als kleinstes Element * 2 (Berechnung, ob ein Element in einem Layer ist)
     static horizontalOffset = 150;
-    static verticalOffset = 200;
+    static verticalOffset = 150;
 
     constructor() {
         EventLogDFG.logCounter = 0; // counter der logs für neues Netz resetten

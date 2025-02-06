@@ -117,7 +117,7 @@ export class SvgLayoutService {
     private springEmbedder(nodes: string[], edges: { from: string; to: string; }[]) {
         const positions: { [key: string]: { x: number; y: number; }; } = {};
         const width = 500; // Canvas width
-        const height = 800; // Canvas height
+        const height = 600; // Canvas height
         const maxIterations = 300; // Number of iterations for the layout
         const k = 100; // Ideal edge length
         const repulsiveForce = 1500; // Force constant for repulsion
