@@ -17,10 +17,10 @@ export class TextParserService {
         const sequences = eventLog.split('+');
         eventLog = eventLog.replace(/\s+/g, ' ');
 
-        const traces = sequences.filter(sequence => sequence.length > 0).map(trace => {
+        const traces = sequences.filter(sequence => sequence.length > 0 && sequence != " ").map(trace => {
             const events = trace.split(' ').filter(trace => trace.length > 0).map(eventName => new TraceEvent(eventName.trim()));
             return new Trace(events);
         });
-        return new EventLog(traces.filter(trace => trace.events[0].conceptName != ""));
+        return new EventLog(traces.filter(trace => trace.events[0] && trace.events[0].conceptName != ""));
     }
 }
