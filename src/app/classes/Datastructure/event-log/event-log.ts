@@ -4,8 +4,22 @@ export class EventLog {
     private readonly _traces: Trace[]
 
     constructor(traces: Trace[]) {
-        this._traces = traces
+        let uniqueTraces: Trace[] = [];
+        let seenTraces = new Set<string>();
+    
+        traces.forEach(trace => {
+            // Create a unique string representation of the trace's events
+            let eventSignature = trace.events.map(event => event.conceptName).join(",");
+    
+            if (!seenTraces.has(eventSignature)) {
+                seenTraces.add(eventSignature);
+                uniqueTraces.push(trace);
+            }
+        });
+    
+        this._traces = uniqueTraces;
     }
+    
 
     get traces(): Trace[] {
         return this._traces
