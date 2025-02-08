@@ -44,6 +44,12 @@ export class LoopCutChecker {
             }
         }
 
+        // Es dürfen nicht zu viele Kanten markiert worden sein
+        // Abbruch-Bedingung, falls ein Loop Cut markiert wurde und anschließend weitere Kanten markiert werden
+        for (const cEdge of edges) {
+            if (!A1Stop.has(cEdge.start.id) && !A1Play.has(cEdge.end.id)) return []
+        }
+
         // Prüfe Bedingungen
         return this.loopCutConditionsChecker(eventlog, A1Play, A1Stop, A2Play, A2Stop,);
     }
