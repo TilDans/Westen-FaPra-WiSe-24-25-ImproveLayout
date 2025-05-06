@@ -192,7 +192,7 @@ export class DisplayComponent implements OnDestroy {
                 this.drawingArea.nativeElement.prepend(node);
             }
         } catch (error) {
-            console.log('net not initialized yet')
+            console.log('net not initialized yet', error)
         }
 
         this.setSelectedEventLog(this._selectedEventLog)

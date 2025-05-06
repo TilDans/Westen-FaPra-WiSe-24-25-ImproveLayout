@@ -1,6 +1,6 @@
 import { SvgService } from "src/app/services/svg.service";
 import { EventLog } from "../../event-log/event-log";
-import { CustomElement } from "./element";
+import { CustomElement } from "./customElement";
 
 
 export class EventLogDFG extends CustomElement{

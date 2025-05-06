@@ -9,3 +9,21 @@ export enum Cuts {
     Parallel = 'Parallel',
     Loop = 'Loop',
 }
+
+export enum RecursiveType {
+    Sequence = 'Sequence',
+    Exclusive = 'Exclusive',
+    Parallel = 'Parallel',
+    Loop = 'Loop',
+    Flower = 'Flower',
+}
+
+export enum LayoutDirection {
+    Horizontal = 'Horizontal',
+    Vertical = 'Vertical',
+}
+
+export enum PetriLayout {
+    Recursive = 'Recursive',
+    Before = 'Before'
+}

@@ -5,14 +5,15 @@ import {SvgService} from "src/app/services/svg.service";
 import {Place} from "./Elements/place";
 import {Transition} from "./Elements/transition";
 import {Edge} from "./edgeElement";
-import {CustomElement} from "./Elements/element";
+import {CustomElement} from "./Elements/customElement";
 import {SvgArrowService} from "../../../services/svg-arrow.service";
 import {IntersectionCalculatorService} from "../../../services/intersection-calculator.service";
 import { PetriLayerContainer } from "./PetriLayout/petriLayerContainer";
-import { Cuts, Layout } from "../enums";
+import { Cuts, Layout, LayoutDirection, PetriLayout } from "../enums";
 import { SvgLayoutService } from "src/app/services/svg-layout.service";
 import { Trace } from "../event-log/trace";
 import { TraceEvent } from "../event-log/trace-event";
+import { RecursiveNode } from "./Elements/recursiveNode";
 //#endregion
 
 export class InductivePetriNet{
@@ -22,6 +23,7 @@ export class InductivePetriNet{
     private _arcs: Edge[] = new Array<Edge>;
     private _eventLogDFGs?: EventLogDFG[]; //wenn diese hier eingefügt sind, sind sie fertig berechnet (Knoten, Kanten, Koordinaten, Größe)
     private _petriLayersContained?: PetriLayerContainer;
+    private _rootNode: RecursiveNode = new RecursiveNode([]);
 
     private _endPlaceIndex = 0;
     private _finished: boolean = false;
@@ -31,6 +33,8 @@ export class InductivePetriNet{
     //OffSet sollte nicht frößer sein als kleinstes Element * 2 (Berechnung, ob ein Element in einem Layer ist)
     static horizontalOffset = 150;
     static verticalOffset = 150;
+
+    static chosenPetriLayout = PetriLayout.Recursive;
 
     constructor() {
         EventLogDFG.logCounter = 0; // counter der logs für neues Netz resetten
@@ -60,12 +64,12 @@ export class InductivePetriNet{
     }
 
     //#endregion
-
+    
     ////////////////////////////////
     /* ----- INITIALIZATION ----- */
     ////////////////////////////////
     //#region Initialization
-
+    
     init(eventLog: EventLog): InductivePetriNet {
         //zwei Stellen zum Start generieren und die entsprechenden Kanten einfügen
         this._eventLogDFGs = [new EventLogDFG(this._svgService, eventLog)];
@@ -86,7 +90,8 @@ export class InductivePetriNet{
 
         const stopTrans = this.genTransition('stop');
 
-        this._petriLayersContained = new PetriLayerContainer(playTrans, firstEventLogDFG, stopTrans);
+        this._rootNode = new RecursiveNode([playTrans, firstEventLogDFG, stopTrans], LayoutDirection.Horizontal);
+        //this._petriLayersContained = new PetriLayerContainer(playTrans, firstEventLogDFG, stopTrans);
 
         this.genArc(first, playTrans);
         this.genArc(playTrans, second);
@@ -97,7 +102,7 @@ export class InductivePetriNet{
     }
 
     //#endregion
-
+    //+//
     ////////////////////////////////////
     /* ----- CUT HANDLING Start ----- */
     ////////////////////////////////////
@@ -189,11 +194,11 @@ export class InductivePetriNet{
         //Verbundene Kanten finden
         const connecionsInNet = this.getConnectedArcs(toRemove);
 
-        let isLoop = false;
+        let isWithinLoop = false;
 
         //für eingehende Kanten das erste einzufügende Element als Ziel setzen
         connecionsInNet.edgesToElem.forEach(edge => {
-            if (edge.start.x > toRemove.x) isLoop = true;
+            if (edge.start.x > toRemove.x) isWithinLoop = true;
             edge.end = toInsertFirst;
         });
 
@@ -202,16 +207,26 @@ export class InductivePetriNet{
 
         //für ausgehende Kanten das zweite einzufügende Element als Start setzen
         connecionsInNet.edgesFromElem.forEach(edge => {
-            if (edge.end.x < toRemove.x) isLoop = true;
+            if (edge.end.x < toRemove.x) isWithinLoop = true;
             edge.start = toInsertSecond;
         });
 
-        if (!isLoop) {
-            //Layout aktualisieren
-            this._petriLayersContained?.insertToNewLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
-        } else {
-            this._petriLayersContained?.insertToNewLayerBeforeCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+        switch (InductivePetriNet.chosenPetriLayout) {
+            case PetriLayout.Before:
+                if (!isWithinLoop) {
+                    //Layout aktualisieren
+                    this._petriLayersContained?.insertToNewLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+                } else {
+                    this._petriLayersContained?.insertToNewLayerBeforeCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+                }
+                break;
+            case PetriLayout.Recursive:
+                const newNode = new RecursiveNode([toInsertFirst, toInsertSecond], LayoutDirection.Horizontal);
+                this._rootNode.replaceWithCustomElement(toRemove, newNode);
+                break;
         }
+       
+
         //zu entfernendes Element ersetzen und zweites Element an das Ende des Arrays pushen.
         this._eventLogDFGs![this._eventLogDFGs!.findIndex(elem => elem === toRemove)] = toInsertFirst;
         this._eventLogDFGs!.push(toInsertSecond);
@@ -234,8 +249,17 @@ export class InductivePetriNet{
             this.genArc(toInsertSecond, edge.end);
         });
 
-        //Layout aktualisieren
-        this._petriLayersContained?.insertToExistingLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+        switch (InductivePetriNet.chosenPetriLayout) {
+            case PetriLayout.Before:
+                //Layout aktualisieren
+                this._petriLayersContained?.insertToExistingLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+                break;
+            case PetriLayout.Recursive:
+                const newNode = new RecursiveNode([toInsertFirst, toInsertSecond], LayoutDirection.Vertical);
+                this._rootNode.replaceWithCustomElement(toRemove, newNode);
+                break;
+        }
+        
 
         //zu entfernendes Element ersetzen und zweites Element an das Ende des Arrays pushen.
         this.replaceDFGAndInsertNewDFG(toRemove, toInsertFirst, toInsertSecond);
@@ -298,12 +322,22 @@ export class InductivePetriNet{
 
             //vorherigen DFG durch die beiden neuen ersetzen
             this.replaceDFGAndInsertNewDFG(toRemove, toInsertFirst, toInsertSecond);
-
-            //künstliche Transitionen in neues Layer vor/nach dem DFG einfügen
-            this._petriLayersContained!.insertToNewLayerBeforeElement(toRemove, mockTrans1);
-            this._petriLayersContained!.insertToNewLayerAfterElement(toRemove, mockTrans2);
-            //aktuellen DFG durch die beiden neu generierten ersetzen
-            this._petriLayersContained!.insertToExistingLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+            
+            
+            switch (InductivePetriNet.chosenPetriLayout) {
+                case PetriLayout.Before:
+                    //künstliche Transitionen in neues Layer vor/nach dem DFG einfügen
+                    this._petriLayersContained!.insertToNewLayerBeforeElement(toRemove, mockTrans1);
+                    this._petriLayersContained!.insertToNewLayerAfterElement(toRemove, mockTrans2);
+                    //aktuellen DFG durch die beiden neu generierten ersetzen
+                    this._petriLayersContained!.insertToExistingLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+                    break;
+                case PetriLayout.Recursive:
+                    const newInnerNode = new RecursiveNode([toInsertFirst, toInsertSecond], LayoutDirection.Vertical);
+                    const newOuterNode = new RecursiveNode([mockTrans1, newInnerNode, mockTrans2], LayoutDirection.Horizontal);
+                    this._rootNode.replaceWithCustomElement(toRemove, newOuterNode);
+                    break;
+            }
         } else { // Stellen im Vorbereich haben nur eine ausgehende und solche im Nachbereich nur eine eingehende Kante
             //Für jede eingehende Kante die entsprechende Stelle duplizieren
             connecionsInNet.edgesToElem.forEach(edgeBeforeElem => {
@@ -333,7 +367,15 @@ export class InductivePetriNet{
             });
 
             this.replaceDFGAndInsertNewDFG(toRemove, toInsertFirst, toInsertSecond);
-            this._petriLayersContained?.insertToExistingLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+            switch (InductivePetriNet.chosenPetriLayout) {
+                case PetriLayout.Before:
+                    this._petriLayersContained?.insertToExistingLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+                    break;
+                case PetriLayout.Recursive:
+                    const newNode = new RecursiveNode([toInsertFirst, toInsertSecond], LayoutDirection.Vertical);
+                    this._rootNode.replaceWithCustomElement(toRemove, newNode);
+                    break;
+            }
         }
                 
     }
@@ -355,8 +397,17 @@ export class InductivePetriNet{
             this.genArc(edge.end, toInsertSecond);
         });
 
-        //Layout aktualisieren
-        this._petriLayersContained?.insertToExistingLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+        switch (InductivePetriNet.chosenPetriLayout) {
+            case PetriLayout.Before:
+                //Layout aktualisieren
+                this._petriLayersContained?.insertToExistingLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
+                break;
+            case PetriLayout.Recursive:
+                const newNode = new RecursiveNode([toInsertFirst, toInsertSecond], LayoutDirection.Vertical);
+                this._rootNode.replaceWithCustomElement(toRemove, newNode);
+                break;
+        }
+
 
         //zu entfernendes Element ersetzen und zweites Element an das Ende des Arrays pushen.
         this.replaceDFGAndInsertNewDFG(toRemove, toInsertFirst, toInsertSecond);
@@ -469,7 +520,16 @@ export class InductivePetriNet{
     
     public getSVGRepresentation(): SVGElement[] {
         //Layout für das Petrinetz durchführen, Koordinaten für SVGs der Stellen, Transitionen und zugehöriger Kanten setzen.
-        this.layoutPetriNet();
+        switch (InductivePetriNet.chosenPetriLayout) {
+            case PetriLayout.Before:
+                this.layoutPetriNet(); 
+                break;
+            case PetriLayout.Recursive:
+                this.layoutRecursivePetriNet(); 
+                break;
+            default:
+                break;
+        }
         const result: Array<SVGElement> = this.concatSVGReps();
         return result;
     }
@@ -629,6 +689,65 @@ export class InductivePetriNet{
     private getLayer(element: CustomElement) {
         return this._petriLayersContained!.findIndex(layer => layer.includes(element));
     }
+
+    private layoutRecursivePetriNet() {
+        this._rootNode.layoutRecursive(InductivePetriNet.horizontalOffset, 0);
+        const yOffset = this._rootNode.getHeight() / 2;
+
+        //y Wert der Start- und Endstellen setzen
+        for (let i = 0; i <= this._endPlaceIndex; i++) {
+            this._places[i].y = yOffset;
+        }
+
+        this._places[0].x = (InductivePetriNet.horizontalOffset / 2);
+        this._places[this._endPlaceIndex].x = this._rootNode.getWidth() + (InductivePetriNet.horizontalOffset * 3 / 2);
+
+        //TODO Collision Handling
+
+        //Positionen der Stellen berechnen und setzen
+        this._places.forEach(place => {
+            if (place.id == 'p0' || place.id == 'p3') {
+            } else {
+                this.setPlacePositionRecursive(place, yOffset);
+            }
+        });
+
+        this._places.forEach(place => {
+            //Kanten erzeugen nachdem die Positionen berechFwurden.
+            // Stellen sind nicht mit Stellen verbunden! Daher für aus- und eingegende Kanten Verbindungen einfügen
+            this._arcs.filter(edge => edge.start == place || edge.end == place).forEach(
+                edge => this._svgService.createSVGForArc(edge)
+            );
+        })
+    }
+
+    private setPlacePositionRecursive(place: Place, yOffset: number) {
+        const { edgesToElem: toPlace, edgesFromElem: fromPlace } = this.getConnectedArcs(place);
+        const connectedElems: CustomElement[] = [];
+        //X und Y Werte für die Stellen berechnen.
+        let xValToSet = 0;
+        let yValToSet = 0;
+
+        //Summiere alle x und y Werte der Elemente vor und nach der Stelle
+        toPlace.forEach(edge => {
+            connectedElems.push(edge.start)
+            const centerCoord = edge.start.getCenterXY();
+            xValToSet += centerCoord.x;
+            yValToSet += centerCoord.y;
+        });
+        fromPlace.forEach(edge => {
+            connectedElems.push(edge.end)
+            const centerCoord = edge.end.getCenterXY();
+            xValToSet += centerCoord.x;
+            yValToSet += centerCoord.y;
+        });
+        //Teile die Summe durch die gesamte Anzahl der Elemente um die Stelle mittig zu platzieren
+        const totalBeforeAndAfter = toPlace.length + fromPlace.length;
+        xValToSet = xValToSet / totalBeforeAndAfter;
+        yValToSet = yValToSet / totalBeforeAndAfter;
+    
+        place.setXYonSVG(xValToSet, yValToSet);
+    }
     
     private concatSVGReps() {
         const result: Array<SVGElement> = [];
@@ -718,8 +837,15 @@ export class InductivePetriNet{
                 edge.start = transition;
             });
 
-            //remove from petrilayers
-            this._petriLayersContained?.updateElem(dfg, transition);
+            switch (InductivePetriNet.chosenPetriLayout) {
+                case PetriLayout.Before:
+                    //remove from petrilayers
+                    this._petriLayersContained?.updateElem(dfg, transition);
+                    break;
+                case PetriLayout.Recursive:
+                    this._rootNode.replaceWithCustomElement(dfg, transition);
+                    break;
+            }
         });
         this.netFinished();
     }
@@ -727,3 +853,14 @@ export class InductivePetriNet{
     //#endregion
 
 }
+
+/*
+switch (InductivePetriNet.chosenPetriLayout) {
+    case PetriLayout.Iterative:
+        
+        break;
+    case PetriLayout.Recursive:
+    
+        break;
+}
+*/

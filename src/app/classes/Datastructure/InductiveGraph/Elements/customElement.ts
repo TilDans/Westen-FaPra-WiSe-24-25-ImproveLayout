@@ -2,8 +2,8 @@
 
 export abstract class CustomElement {
     protected _id: string = "";
-    private _x: number;
-    private _y: number;
+    protected _x: number;
+    protected _y: number;
     protected _svgElement: SVGElement | undefined;
 
     constructor() {

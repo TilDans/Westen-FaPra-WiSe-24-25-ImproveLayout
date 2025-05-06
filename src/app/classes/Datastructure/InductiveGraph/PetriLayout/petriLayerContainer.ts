@@ -1,5 +1,5 @@
 import { CustomArray } from "../../customArray";
-import { CustomElement } from "../Elements/element";
+import { CustomElement } from "../Elements/customElement";
 import { InductivePetriNet } from "../inductivePetriNet";
 import { PetriLayer } from "./petriLayer";
 
