@@ -116,49 +116,53 @@ export class SvgLayoutService {
 
     private springEmbedder(nodes: string[], edges: { from: string; to: string; }[]) {
         const positions: { [key: string]: { x: number; y: number; }; } = {};
-        const width = 500; // Canvas width
+        const width = 800; // Canvas width
         const height = 600; // Canvas height
-        const maxIterations = 300; // Number of iterations for the layout
-        const k = 100; // Ideal edge length
-        const repulsiveForce = 1500; // Force constant for repulsion
-        const step = 1; // Step size for position updates
-
-
-        // Initialize positions randomly within the canvas bounds
+        const maxIterations = 600; // Number of iterations for the layout
+        const k = 70; // Ideal edge length
+        const repulsiveForce = 2500; // Force constant for repulsion
+        const step = 1.5; // Step size for position updates
+    
+        // Initialize all positions at the center (0, 0)
         nodes.forEach(node => {
             positions[node] = {
-                x: Math.random() * width,
-                y: Math.random() * height,
+                x: 0,
+                y: 0
             };
         });
-
+    
         // Function to compute repulsive force between two nodes
-        function computeRepulsiveForce (pos1: { x: number; y: number; }, pos2: { x: number; y: number; }) {
-            const dx = pos1.x - pos2.x;
-            const dy = pos1.y - pos2.y;
-            const dist = Math.sqrt(dx * dx + dy * dy) || 1; // Avoid division by zero
+        function computeRepulsiveForce(pos1: { x: number; y: number; }, pos2: { x: number; y: number; }) {
+            let dx = pos1.x - pos2.x;
+            let dy = pos1.y - pos2.y;
+    
+            // Add small jitter to prevent divide-by-zero
+            if (dx === 0 && dy === 0) {
+                dx = (Math.random() - 0.5) * 0.01;
+                dy = (Math.random() - 0.5) * 0.01;
+            }
+    
+            const dist = Math.sqrt(dx * dx + dy * dy);
             const force = repulsiveForce / (dist * dist);
             return { fx: force * (dx / dist), fy: force * (dy / dist) };
-        };
-
+        }
+    
         // Function to compute attractive force along an edge
-        function computeAttractiveForce (pos1: { x: number; y: number; }, pos2: { x: number; y: number; }) {
+        function computeAttractiveForce(pos1: { x: number; y: number; }, pos2: { x: number; y: number; }) {
             const dx = pos2.x - pos1.x;
             const dy = pos2.y - pos1.y;
-            const dist = Math.sqrt(dx * dx + dy * dy) || 1; // Avoid division by zero
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
             const force = (dist - k) / k;
             return { fx: force * (dx / dist), fy: force * (dy / dist) };
-        };
-
-        // Iteratively apply forces
+        }
+    
         for (let i = 0; i < maxIterations; i++) {
             const forces: { [key: string]: { fx: number; fy: number; }; } = {};
-
-            // Initialize forces to zero
+    
             nodes.forEach(node => {
                 forces[node] = { fx: 0, fy: 0 };
             });
-
+    
             // Compute repulsive forces
             for (let j = 0; j < nodes.length; j++) {
                 for (let k = j + 1; k < nodes.length; k++) {
@@ -171,7 +175,7 @@ export class SvgLayoutService {
                     forces[nodeB].fy -= force.fy;
                 }
             }
-
+    
             // Compute attractive forces
             edges.forEach(edge => {
                 const force = computeAttractiveForce(positions[edge.from], positions[edge.to]);
@@ -180,28 +184,30 @@ export class SvgLayoutService {
                 forces[edge.to].fx -= force.fx;
                 forces[edge.to].fy -= force.fy;
             });
-
-            // Update positions based on forces
+    
+            // Apply forces to update positions
             nodes.forEach(node => {
                 const pos = positions[node];
                 const force = forces[node];
                 pos.x += force.fx * step;
                 pos.y += force.fy * step;
-
-                // Keep positions within bounds
+    
+                // Keep positions within canvas bounds
                 pos.x = Math.max(0, Math.min(width, pos.x));
                 pos.y = Math.max(0, Math.min(height, pos.y));
             });
-
-            // Pull "play" nodes to the top and "stop" nodes to the bottom
+    
+            // Pin specific nodes if needed
             nodes.forEach(node => {
                 if (node === "playNodeInDFG") {
-                    positions[node].y = Math.min(positions[node].y, height * 0.2); // Pull to top 10% of the canvas
+                    positions[node].y = Math.min(positions[node].y, height * 0.2);
                 } else if (node === "stopNodeInDFG") {
-                    positions[node].y = Math.max(positions[node].y, height * 0.8); // Pull to bottom 10% of the canvas
+                    positions[node].y = Math.max(positions[node].y, height * 0.8);
                 }
             });
         }
+    
         return positions;
     }
+    
 }

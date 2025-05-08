@@ -16,6 +16,7 @@ export enum RecursiveType {
     Parallel = 'Parallel',
     Loop = 'Loop',
     Flower = 'Flower',
+    ActivityOncePerTrace = 'ActivityOncePerTrace',
 }
 
 export enum LayoutDirection {

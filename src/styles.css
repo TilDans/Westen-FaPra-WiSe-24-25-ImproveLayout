@@ -8,9 +8,39 @@ body {
 }
 
 .group-background {
-    fill: lightblue;
+    fill: rgb(131, 140, 190);
     stroke: black;
     stroke-width: 2;
+}
+
+.GraphElem-background {
+    stroke: black;
+    stroke-width: 2;
+    stroke-dasharray: 15, 10;
+}
+
+.Sequence-background {
+    fill: rgb(242, 239, 198);
+}
+
+.Exclusive-background {
+    fill: rgb(171, 224, 169);
+}
+
+.Parallel-background {
+    fill: rgb(208, 213, 246);
+}
+
+.Loop-background {
+    fill: rgb(250, 200, 237);
+}
+
+.ActivityOncePerTrace-background {
+    fill: rgb(213, 229, 233);
+}
+
+.Flower-background {
+    fill: rgb(248, 179, 179);
 }
 
 .highlightedDFG {

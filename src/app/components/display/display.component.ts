@@ -57,7 +57,6 @@ export class DisplayComponent implements OnDestroy {
         private _displayService: DisplayService,
         private _fileReaderService: FileReaderService,
         private _inductiveMinerService: InductiveMinerService,
-        private _inductiveMinerHelper: InductiveMinerHelper,
         private _http: HttpClient,
         private _intersectionCalculatorService: IntersectionCalculatorService,
         private _pnmlWriterService: PNMLWriterService,
@@ -78,7 +77,7 @@ export class DisplayComponent implements OnDestroy {
             this.draw();
             this.applyZoom();
         });
-    }
+    }    
 
     ngOnDestroy(): void {
         this._sub.unsubscribe();
@@ -88,6 +87,16 @@ export class DisplayComponent implements OnDestroy {
     applyLayout() {
         this._petriNet!.applyNewDFGLayout(this.selectedLayout);
         this.drawKeepZoom();
+    }
+
+    private setDrawingAreaHeight(height: number) {
+        const container = document.getElementById('resizableContainer');
+        const drawingArea = document.getElementById('drawing');
+    
+        if (container && drawingArea) {
+            container.style.height = `${height}px`;
+            drawingArea.style.height = `${height}px`;
+        }
     }
 
     private noDFGinNet() : boolean {
@@ -174,6 +183,7 @@ export class DisplayComponent implements OnDestroy {
             console.debug('drawing area not ready yet')
             return;
         }
+        this.setDrawingAreaHeight(600);
 
         this._markedEdges = [];
 
@@ -207,6 +217,7 @@ export class DisplayComponent implements OnDestroy {
             console.debug('drawing area not ready yet')
             return;
         }
+        this.setDrawingAreaHeight(600);
 
         this._markedEdges = [];
 
@@ -486,7 +497,7 @@ export class DisplayComponent implements OnDestroy {
         let result: EventLog[] = [];
         result = this._fallThroughService.getActivityOncePerTrace(this._selectedEventLog);
         if (result.length != 0) { // ActivityOncePerTrace erfolgreich
-            this._petriNet?.handleCutResult(Cuts.Parallel, this._selectedEventLog, result[0], result[1])
+            this._petriNet?.handleActivityOncePerTraceFallThrough(this._selectedEventLog, result[0], result[1])
             this._snackbar.open(`ActivityOncePerTrace Fall Through applied`, 'Close', {
                 duration: 3000,
             })

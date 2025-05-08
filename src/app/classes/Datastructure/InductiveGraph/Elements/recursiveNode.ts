@@ -1,4 +1,5 @@
-import { LayoutDirection } from "../../enums"; // Enum indicating layout orientation (horizontal or vertical)
+import { SvgService } from "src/app/services/svg.service";
+import { LayoutDirection, RecursiveType } from "../../enums"; // Enum indicating layout orientation (horizontal or vertical)
 import { InductivePetriNet } from "../inductivePetriNet"; // Contains layout offsets (horizontal/vertical)
 import { CustomElement } from "./customElement"; // Base class for visual elements
 
@@ -8,14 +9,25 @@ import { CustomElement } from "./customElement"; // Base class for visual elemen
  */
 export class RecursiveNode extends CustomElement {
     private _children: CustomElement[]; // Child elements of this node
-    private _type: LayoutDirection | undefined; // Layout orientation (horizontal or vertical)
+    private _direction: LayoutDirection | undefined; // Layout orientation (horizontal or vertical)
     private _height: number = 0; // Cached computed height of the node
     private _width: number = 0; // Cached computed width of the node
+    private _type: RecursiveType | undefined;
+    
+    static counter = 0;
+    static colouredBoxes = true;
+    static padding = RecursiveNode.colouredBoxes ? 40 : 0;
 
-    constructor(children: CustomElement[], type?: LayoutDirection) {
+    constructor(children: CustomElement[], svgService: SvgService, direction?: LayoutDirection, type?: RecursiveType, handleIndicator?: number) {
         super();
         this._children = children;
-        this._type = type;
+        this._direction = direction;
+        if (type) {
+            this._type = type;
+            if (RecursiveNode.colouredBoxes && !handleIndicator) {
+                this._svgElement = svgService.createSVGforRecursiveNode(RecursiveNode.counter, type);
+            }
+        }
     }
 
     /**
@@ -37,17 +49,16 @@ export class RecursiveNode extends CustomElement {
         
         this.setXYonSVG(x, y); // Set position for this node itself
 
-        let currentX = x;
-        let currentY = y;
+        let currentX = x + RecursiveNode.padding;
+        let currentY = y + RecursiveNode.padding;
 
-        switch (this._type) {
+        switch (this._direction) {
             case LayoutDirection.Horizontal:
                 this._children.forEach(child => {
                     const childHeight = child.getHeight();
                     // Vertically center-align child within this node
                     const yAligned = y + (this._height - childHeight) / 2;
                     child.setXYonSVG(currentX, yAligned);
-                    console.log("setting xy", currentX, yAligned, child)
 
                     // If the child is also a RecursiveNode, layout it recursively
                     if (child instanceof RecursiveNode) {
@@ -93,7 +104,7 @@ export class RecursiveNode extends CustomElement {
             }
         );
 
-        switch (this._type) {
+        switch (this._direction) {
             case LayoutDirection.Horizontal:
                 // Total width is sum of children's widths + spacing
                 this._width = childrenSizes.reduce((sum, childSize) => sum + childSize.width, 0)
@@ -104,7 +115,10 @@ export class RecursiveNode extends CustomElement {
 
             case LayoutDirection.Vertical:
                 // Width is max of children's widths
-                this._width = Math.max(...childrenSizes.map(childSize => childSize.width));
+                const raw = this._svgElement?.getAttribute('minwidth');
+                const minwidth = !isNaN(parseFloat(raw!)) ? parseFloat(raw!) : 0;
+
+                this._width = Math.max(...childrenSizes.map(childSize => childSize.width), minwidth);
                 // Total height is sum of children's heights + spacing
                 this._height = childrenSizes.reduce((sum, s) => sum + s.height, 0)
                                + (childrenSizes.length - 1) * InductivePetriNet.verticalOffset;
@@ -114,6 +128,8 @@ export class RecursiveNode extends CustomElement {
                 // If no layout direction is defined, use the first child's size as fallback
                 return { width: childrenSizes[0].width, height: childrenSizes[0].height };
         }
+        this.setWidth(this._width + RecursiveNode.padding * 2);
+        this.setHeight(this._height + RecursiveNode.padding * 2);
 
         return { width: this._width, height: this._height };
     }
@@ -121,6 +137,12 @@ export class RecursiveNode extends CustomElement {
     public override setXYonSVG(xNew: number, yNew: number): void {
         this._x = xNew;
         this._y = yNew;
+
+        if (this._svgElement) {
+            this._svgElement!.setAttribute('transform', 'translate(' + xNew + ',' + yNew + ')');
+            this._svgElement!.setAttribute('cx', xNew.toString());
+            this._svgElement!.setAttribute('cy', yNew.toString());
+        }
     }
 
     public override getWidth(): number {
@@ -138,8 +160,42 @@ export class RecursiveNode extends CustomElement {
         this._x = value;
     }
 
+    private setHeight(height: number) {
+        this._height = height
+        if (this._svgElement) {
+            this._svgElement!.setAttribute('height', (height).toString());
+            const svgRect = Array.from(this._svgElement!.getElementsByTagName!('rect'));
+            svgRect.forEach(rect => {
+                rect.setAttribute('height', (height).toString());
+            });
+        }
+    }
+
+    private setWidth(width: number) {
+        this._width = width
+        if (this._svgElement) {
+            this._svgElement!.setAttribute('width', (width).toString());
+            const svgRect = Array.from(this._svgElement!.getElementsByTagName!('rect'));
+            svgRect.forEach(rect => {
+                rect.setAttribute('width', (width).toString());
+            });
+        }
+    }
+
     public replaceWithCustomElement(target: CustomElement, replacement: CustomElement): boolean {
         return this._findAndReplaceInTree(target, replacement);
+    }
+
+    getParentNode(target: CustomElement): RecursiveNode | null {
+        for (const child of this._children) {
+            if (child === target) {
+                return this;
+            } else if (child instanceof RecursiveNode) {
+                const result = child.getParentNode(target);
+                if (result) return result;
+            }
+        }
+        return null;
     }
 
     private _findAndReplaceInTree(target: CustomElement, replacement: CustomElement): boolean {
@@ -159,5 +215,20 @@ export class RecursiveNode extends CustomElement {
             }
         }
         return false;
+    }
+
+    public getSvgReps() : SVGElement[] {
+        const result: SVGElement[] = [];
+        this._children.forEach(child => {
+            if (child instanceof RecursiveNode) {
+                result.push(...child.getSvgReps())
+            }
+        })
+        result.push(this._svgElement!);
+        return result;
+    }
+
+    getType(): RecursiveType {
+        return this._type!;
     }
 }

@@ -7,13 +7,15 @@ import {Edge} from '../classes/Datastructure/InductiveGraph/edgeElement';
 import {SvgArrowService} from "./svg-arrow.service";
 import { SvgLayoutService } from './svg-layout.service';
 import { Transition } from '../classes/Datastructure/InductiveGraph/Elements/transition';
-import { Layout } from '../classes/Datastructure/enums';
+import { Layout, RecursiveType } from '../classes/Datastructure/enums';
 
 @Injectable({
     providedIn: 'root'
 })
 
 export class SvgService {
+    static placeRadius = 20;
+
 
     constructor(private readonly svgArrowService: SvgArrowService,
                 private readonly svgLayoutService: SvgLayoutService
@@ -24,10 +26,46 @@ export class SvgService {
         this.svgLayoutService.setLayout(layout);
     }
 
+    public createSVGforRecursiveNode(id: number, type?: RecursiveType): SVGGElement {
+        const group = this.createSvgElement('g') as SVGGElement;
+        group.setAttribute('id', id.toString());
+        group.classList.add('recursiveNode');
+    
+        // Add a rectangle as background/container
+        const rectangle = this.createSvgElement('rect');
+        rectangle.setAttribute('cx', '0');
+        rectangle.setAttribute('cy', '0');
+        if (type) {
+            rectangle.classList.add(type.toString() + "-background");
+            rectangle.classList.add("GraphElem-background");
+        }
+        group.append(rectangle);
+    
+        // Add label text in top-left corner
+        if (type) {
+            const label = this.createSvgElement('text');
+            const fontSize = 30;
+            label.textContent = type.toString();
+            label.setAttribute('x', '5'); // padding from left
+            label.setAttribute('y', '18'); // vertically within top 30 units
+            label.setAttribute('font-size', fontSize.toString());
+            label.setAttribute('font-weight', 'bold'); // make text bold
+            label.setAttribute('dominant-baseline', 'middle');
+            label.setAttribute('text-anchor', 'start');
+            label.classList.add('recursiveNode-label'); // optional class for styling
+            const width = this.calcWidthOfText(type.toString(), fontSize);
+            group.setAttribute('minwidth', width.toString())
+            group.append(label);
+        }
+    
+        return group;
+    }
+    
+
     createSVGForPlace(placeToGen: Place) {
         const svg = this.createSvgElement('circle');
         svg.setAttribute('id', placeToGen.id);
-        svg.setAttribute('r', '20');
+        svg.setAttribute('r', SvgService.placeRadius.toString());
         svg.setAttribute('class', 'place');
         placeToGen.registerSvg(svg);
     }
