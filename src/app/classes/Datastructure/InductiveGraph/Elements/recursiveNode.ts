@@ -2,6 +2,7 @@ import { SvgService } from "src/app/services/svg.service";
 import { LayoutDirection, RecursiveType } from "../../enums"; // Enum indicating layout orientation (horizontal or vertical)
 import { InductivePetriNet } from "../inductivePetriNet"; // Contains layout offsets (horizontal/vertical)
 import { CustomElement } from "./customElement"; // Base class for visual elements
+import { Place } from "./place";
 
 /**
  * Represents a recursive layout node that can contain other CustomElements,
@@ -9,22 +10,23 @@ import { CustomElement } from "./customElement"; // Base class for visual elemen
  */
 export class RecursiveNode extends CustomElement {
     private _children: CustomElement[]; // Child elements of this node
-    private _direction: LayoutDirection | undefined; // Layout orientation (horizontal or vertical)
+    private _direction: LayoutDirection; // Layout orientation (horizontal or vertical)
     private _height: number = 0; // Cached computed height of the node
     private _width: number = 0; // Cached computed width of the node
     private _type: RecursiveType | undefined;
+    private _connectedPlaces: Place[] = [];
     
     static counter = 0;
     static colouredBoxes = true;
-    static padding = RecursiveNode.colouredBoxes ? 40 : 0;
+    static padding = RecursiveNode.colouredBoxes ? 60 : 0;
 
-    constructor(children: CustomElement[], svgService: SvgService, direction?: LayoutDirection, type?: RecursiveType, handleIndicator?: number) {
+    constructor(children: CustomElement[], svgService: SvgService, direction: LayoutDirection, type?: RecursiveType, createBox?: boolean) {
         super();
         this._children = children;
         this._direction = direction;
         if (type) {
             this._type = type;
-            if (RecursiveNode.colouredBoxes && !handleIndicator) {
+            if (RecursiveNode.colouredBoxes && createBox) {
                 this._svgElement = svgService.createSVGforRecursiveNode(RecursiveNode.counter, type);
             }
         }
@@ -35,6 +37,36 @@ export class RecursiveNode extends CustomElement {
      */
     public override getCenterXY(): { x: number; y: number; } {
         throw new Error("Method not implemented.");
+    }
+
+    public getLayoutDirection(): LayoutDirection {
+        return this._direction;
+    }
+
+    public registerPlace(placeToAdd: Place) {
+        this._connectedPlaces.push(placeToAdd);
+    }
+
+    public deRegisterPlace(placeToRemove: Place) {
+        this._connectedPlaces = this._connectedPlaces.filter(place => place !== placeToRemove);
+    }
+
+    public setXonPlaces() {
+        this._children.forEach(child => {
+            if (child instanceof RecursiveNode) {
+                child.setXonPlaces();
+                console.log(child)
+            }
+        });
+        this._connectedPlaces.forEach(place => {
+            const startX = this._x
+            const endX = this._x + this._width
+
+            const startXDiff = Math.abs(place.x - startX);
+            const endXDiff = Math.abs(place.x - endX);
+            
+            startXDiff > endXDiff ? place.setXYonSVG(endX, place.getCenterXY().y) : place.setXYonSVG(startX, place.getCenterXY().y)
+        });
     }
 
     /**
@@ -49,7 +81,8 @@ export class RecursiveNode extends CustomElement {
         
         this.setXYonSVG(x, y); // Set position for this node itself
 
-        let currentX = x + RecursiveNode.padding;
+        const nodeInSequenceAndNoBox = this._svgElement === undefined && this._type === RecursiveType.Sequence;
+        let currentX = x + (nodeInSequenceAndNoBox ? 0 : (RecursiveNode.padding));
         let currentY = y + RecursiveNode.padding;
 
         switch (this._direction) {
@@ -108,7 +141,7 @@ export class RecursiveNode extends CustomElement {
             case LayoutDirection.Horizontal:
                 // Total width is sum of children's widths + spacing
                 this._width = childrenSizes.reduce((sum, childSize) => sum + childSize.width, 0)
-                              + (childrenSizes.length - 1) * InductivePetriNet.horizontalOffset;
+                                + (childrenSizes.length - 1) * InductivePetriNet.horizontalOffset;
                 // Height is max of children's heights
                 this._height = Math.max(...childrenSizes.map(s => s.height));
                 break;
@@ -128,7 +161,8 @@ export class RecursiveNode extends CustomElement {
                 // If no layout direction is defined, use the first child's size as fallback
                 return { width: childrenSizes[0].width, height: childrenSizes[0].height };
         }
-        this.setWidth(this._width + RecursiveNode.padding * 2);
+        const nodeInSequenceAndNoBox = this._svgElement === undefined && this._type === RecursiveType.Sequence;
+        this.setWidth(this._width + (nodeInSequenceAndNoBox ? 0 : (RecursiveNode.padding * 2)));
         this.setHeight(this._height + RecursiveNode.padding * 2);
 
         return { width: this._width, height: this._height };

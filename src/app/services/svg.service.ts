@@ -45,7 +45,28 @@ export class SvgService {
         if (type) {
             const label = this.createSvgElement('text');
             const fontSize = 30;
-            label.textContent = type.toString();
+            let labeltext: string;
+            switch (type) {
+                case RecursiveType.ActivityOncePerTrace:
+                    labeltext = type.toString() + " Fallthrough";
+                    break;
+                case RecursiveType.Flower:
+                    labeltext = type.toString() + " Fallthrough";
+                    break;
+                case RecursiveType.Exclusive:
+                    labeltext = type.toString() + " Cut";
+                    break;
+                case RecursiveType.Loop:
+                    labeltext = type.toString() + " Cut";
+                    break;
+                case RecursiveType.Parallel:
+                    labeltext = type.toString() + " Cut";
+                    break;
+                case RecursiveType.Sequence:
+                    labeltext = type.toString() + " Cut";
+                    break;
+            }
+            label.textContent = labeltext;
             label.setAttribute('x', '5'); // padding from left
             label.setAttribute('y', '18'); // vertically within top 30 units
             label.setAttribute('font-size', fontSize.toString());
@@ -53,7 +74,7 @@ export class SvgService {
             label.setAttribute('dominant-baseline', 'middle');
             label.setAttribute('text-anchor', 'start');
             label.classList.add('recursiveNode-label'); // optional class for styling
-            const width = this.calcWidthOfText(type.toString(), fontSize);
+            const width = this.calcWidthOfText(labeltext, fontSize);
             group.setAttribute('minwidth', width.toString())
             group.append(label);
         }
