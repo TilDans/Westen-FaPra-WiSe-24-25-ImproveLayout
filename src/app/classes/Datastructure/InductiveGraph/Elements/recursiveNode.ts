@@ -26,7 +26,7 @@ export class RecursiveNode extends CustomElement {
         this._direction = direction;
         if (type) {
             this._type = type;
-            if (RecursiveNode.colouredBoxes && createBox) {
+            if (createBox) {
                 this._svgElement = svgService.createSVGforRecursiveNode(RecursiveNode.counter, type);
             }
         }

@@ -1080,7 +1080,9 @@ export class InductivePetriNet{
                 result.push(svgRep);
             }
         });
-        result.push(...this._rootNode.getSvgReps()!)
+        if (RecursiveNode.colouredBoxes) {
+            result.push(...this._rootNode.getSvgReps()!)
+        }
         return result;
     }
 

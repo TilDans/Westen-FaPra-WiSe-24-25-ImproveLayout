@@ -1,5 +1,5 @@
 <div class="settingsForButtons">
-    <mat-form-field appearance="outline" class="aligned-element" style="margin-top: 30px">
+    <!-- <mat-form-field appearance="outline" class="aligned-element" style="margin-top: 30px">
         <mat-label>Select DFG Layout</mat-label>
         <mat-select [(value)]="selectedLayout" (selectionChange)="applyLayout()" [disabled]="isPetriNetFinished">
             <mat-option *ngFor="let layout of availableLayouts" [value]="layout">
@@ -7,45 +7,75 @@
             </mat-option>
         </mat-select>
     </mat-form-field>
-  <div class="settingsForButtons">
-    <button 
-      mat-raised-button 
-      [disabled]="!isDFGinNet || isPetriNetFinished" 
-      disabledInteractive
-      color="primary" 
-      class="aligned-element" 
-      (click)="performCut(true)">
-      Perform Cut
-    </button>
-    <button 
-      mat-raised-button 
-      [disabled]="!isDFGinNet || isPetriNetFinished" 
-      disabledInteractive
-      color="primary" 
-      class="aligned-element" 
-      (click)="resetCut()">
-      Reset Marked Edges
-    </button>
-    <button 
-      mat-raised-button 
-      [disabled]="!selectedEventLog || !isDFGinNet || isPetriNetFinished" 
-      disabledInteractive
-      color="primary" 
-      class="aligned-element" 
-      (click)="applyFallThrough()">
-      Apply Fall Through
-    </button>
-    <button 
-      mat-raised-button 
-      [disabled]="!selectedEventLog || isPetriNetFinished" 
-      disabledInteractive
+
+  <mat-slide-toggle 
+    [(ngModel)]="colouredBoxesEnabled" 
+    (change)="toggleColouredBoxes()" 
+    [disabled]="!isDFGinNet || isPetriNetFinished" 
+    color="primary"
+    class="aligned-element">
+    Show Boxes
+  </mat-slide-toggle> -->
+  <div class="settingsForToggles" style="display: flex; flex-direction: column; gap: 0px; margin: 5px 0;">
+  
+    <!-- Layout Switch -->
+    <mat-slide-toggle
+      [(ngModel)]="isSpringEmbedder"
+      (change)="applyLayout()"
+      [disabled]="!isDFGinNet || isPetriNetFinished"
       color="primary"
-      class="aligned-element"
-      (click)="applyLayoutToSelectedEventLog()">
-      Redo DFG Layout
-    </button>
+      class="aligned-element">
+      Sugiyama/Spring Embedder
+    </mat-slide-toggle>
+
+    <!-- Coloured Boxes Switch -->
+    <mat-slide-toggle
+      [(ngModel)]="colouredBoxesEnabled"
+      (change)="toggleColouredBoxes()"
+      [disabled]="!isDFGinNet"
+      color="primary"
+      class="aligned-element">
+      Show Cut Outline Boxes
+    </mat-slide-toggle>
+
   </div>
 
+  <button 
+    mat-raised-button 
+    [disabled]="!isDFGinNet || isPetriNetFinished" 
+    disabledInteractive
+    color="primary" 
+    class="aligned-element" 
+    (click)="performCut(true)">
+    Perform Cut
+  </button>
+  <button 
+    mat-raised-button 
+    [disabled]="!isDFGinNet || isPetriNetFinished" 
+    disabledInteractive
+    color="primary" 
+    class="aligned-element" 
+    (click)="resetCut()">
+    Reset Marked Edges
+  </button>
+  <button 
+    mat-raised-button 
+    [disabled]="!selectedEventLog || !isDFGinNet || isPetriNetFinished" 
+    disabledInteractive
+    color="primary" 
+    class="aligned-element" 
+    (click)="applyFallThrough()">
+    Apply Fall Through
+  </button>
+  <button 
+    mat-raised-button 
+    [disabled]="!selectedEventLog || isPetriNetFinished" 
+    disabledInteractive
+    color="primary"
+    class="aligned-element"
+    (click)="applyLayoutToSelectedEventLog()">
+    Redo DFG Layout
+  </button>
   <button 
     mat-raised-button 
     [disabled]="!isPetriNetFinished" 

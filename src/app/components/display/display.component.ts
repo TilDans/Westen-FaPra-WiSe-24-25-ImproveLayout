@@ -21,6 +21,7 @@ import { PNMLWriterService } from 'src/app/services/file-export.service';
 import { InductiveMinerHelper } from 'src/app/services/inductive-miner/inductive-miner-helper';
 import { FallThroughService } from 'src/app/services/inductive-miner/fall-throughs';
 import {MatSnackBar} from "@angular/material/snack-bar";
+import { RecursiveNode } from 'src/app/classes/Datastructure/InductiveGraph/Elements/recursiveNode';
 
 @Component({
     selector: 'app-display',
@@ -40,6 +41,9 @@ export class DisplayComponent implements OnDestroy {
 
     availableLayouts = Object.values(Layout); // Extract the enum values as an array
     selectedLayout: Layout = this._svgLayoutService.getLayout(); // Set a default layout
+    isSpringEmbedder: boolean = true;
+
+    colouredBoxesEnabled = RecursiveNode.colouredBoxes;
 
     private _sub: Subscription;
     private _petriNet: InductivePetriNet | undefined;
@@ -84,8 +88,15 @@ export class DisplayComponent implements OnDestroy {
         this.fileContent.complete();
     }
 
+    toggleColouredBoxes(): void {
+        RecursiveNode.colouredBoxes = this.colouredBoxesEnabled;
+        this.resetCut();
+        this.draw();
+    }
+
+
     applyLayout() {
-        this._petriNet!.applyNewDFGLayout(this.selectedLayout);
+        this._petriNet!.applyNewDFGLayout(this.isSpringEmbedder ? Layout.SpringEmbedder : Layout.Sugiyama);
         this.drawKeepZoom();
     }
 
