@@ -81,9 +81,9 @@ export class RecursiveNode extends CustomElement {
         
         this.setXYonSVG(x, y); // Set position for this node itself
 
-        const nodeInSequenceAndNoBox = this._svgElement === undefined && this._type === RecursiveType.Sequence;
+        const nodeInSequenceAndNoBox = this._svgElement === undefined /* && this._type === RecursiveType.Sequence */;
         let currentX = x + (nodeInSequenceAndNoBox ? 0 : (RecursiveNode.padding));
-        let currentY = y + RecursiveNode.padding;
+        let currentY = y + (nodeInSequenceAndNoBox ? 0 : (RecursiveNode.padding));
 
         switch (this._direction) {
             case LayoutDirection.Horizontal:
@@ -161,9 +161,9 @@ export class RecursiveNode extends CustomElement {
                 // If no layout direction is defined, use the first child's size as fallback
                 return { width: childrenSizes[0].width, height: childrenSizes[0].height };
         }
-        const nodeInSequenceAndNoBox = this._svgElement === undefined && this._type === RecursiveType.Sequence;
+        const nodeInSequenceAndNoBox = this._svgElement === undefined /* && this._type === RecursiveType.Sequence */;
         this.setWidth(this._width + (nodeInSequenceAndNoBox ? 0 : (RecursiveNode.padding * 2)));
-        this.setHeight(this._height + RecursiveNode.padding * 2);
+        this.setHeight(this._height + (nodeInSequenceAndNoBox ? 0 : (RecursiveNode.padding * 2)));
 
         return { width: this._width, height: this._height };
     }

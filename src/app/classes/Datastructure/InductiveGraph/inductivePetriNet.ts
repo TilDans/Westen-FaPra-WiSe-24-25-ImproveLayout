@@ -438,6 +438,8 @@ export class InductivePetriNet{
         } else { // Stellen im Vorbereich haben nur eine ausgehende und solche im Nachbereich nur eine eingehende Kante
             const connectedPlacesBefore: Place [] = [];
             const connectedPlacesAfter: Place [] = [];
+            const newPlacesBefore: Place [] = [];
+            const newPlacesAfter: Place [] = [];
             //Für jede eingehende Kante die entsprechende Stelle duplizieren
             connecionsInNet.edgesToElem.forEach(edgeBeforeElem => {
                 //Ende der aktuellen Kante auf das erste Element setzen
@@ -447,7 +449,7 @@ export class InductivePetriNet{
 
                 //neue Stelle erzeugen und so verbinden wie die andere, zusätzlich mit zweitem einzufügenden Element
                 const newPlaceBeforeElems = this.genPlace();
-                connectedPlacesBefore.push(newPlaceBeforeElems);
+                newPlacesBefore.push(newPlaceBeforeElems);
                 this.getConnectedArcs(place).edgesToElem.forEach(edge => {
                     this.genArc(edge.start, newPlaceBeforeElems);
                 });
@@ -462,7 +464,7 @@ export class InductivePetriNet{
 
                 //neue Stelle erzeugen und so verbinden wie die andere, zusätzlich mit zweitem einzufügenden Element
                 const newPlaceAfterElems = this.genPlace();
-                connectedPlacesAfter.push(newPlaceAfterElems);
+                newPlacesAfter.push(newPlaceAfterElems);
                 this.getConnectedArcs(place).edgesFromElem.forEach(edge => {
                     this.genArc(newPlaceAfterElems, edge.end);
                 });
@@ -488,7 +490,21 @@ export class InductivePetriNet{
                             newNode.registerPlace(place);
                             parent.deRegisterPlace(place);
                         })
+                        newPlacesBefore.forEach(place =>{
+                            newNode.registerPlace(place);
+                        })
+                        newPlacesAfter.forEach(place =>{
+                            newNode.registerPlace(place);
+                        })
+                    } else {
+                        newPlacesBefore.forEach(place =>{
+                            parent.registerPlace(place);
+                        })
+                        newPlacesAfter.forEach(place =>{
+                            parent.registerPlace(place);
+                        })
                     }
+                    
                     this._rootNode.replaceWithCustomElement(toRemove, newNode);
                     break;
             }

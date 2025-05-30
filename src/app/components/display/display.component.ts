@@ -78,7 +78,7 @@ export class DisplayComponent implements OnDestroy {
             this._petriNet.applyNewDFGLayout(this.selectedLayout);
             this.setSelectedEventLog(undefined);
             this._previouslySelected = undefined;
-            this.draw();
+            this.drawResetZoom();
             this.applyZoom();
         });
     }    
@@ -91,7 +91,7 @@ export class DisplayComponent implements OnDestroy {
     toggleColouredBoxes(): void {
         RecursiveNode.colouredBoxes = this.colouredBoxesEnabled;
         this.resetCut();
-        this.draw();
+        this.drawResetZoom();
     }
 
 
@@ -219,41 +219,15 @@ export class DisplayComponent implements OnDestroy {
         this.setSelectedEventLog(this._selectedEventLog)
         // Netz nur herunterladbar, wenn fertig
         this.isPetriNetFinished = this._petriNet!.finished;
+    }
 
+    private drawResetZoom() {
+        this.draw();
         this.resetZoomObject();
     }
 
     private drawKeepZoom() {
-        if (this.drawingArea === undefined) {
-            console.debug('drawing area not ready yet')
-            return;
-        }
-        this.setDrawingAreaHeight(600);
-
-        this._markedEdges = [];
-
-        this.clearDrawingArea();
-
-        this._svgArrowService.appendArrowMarker(this.drawingArea.nativeElement);
-
-        this.dropLines();
-        this._petriNet?.handleBaseCases();
-        try {
-            const petriGraph = this._petriNet!.getSVGRepresentation();
-            for (const node of petriGraph) {
-                if (!this.isDFGinNet) {
-                    this.isDFGinNet = true;
-                }
-                this.drawingArea.nativeElement.prepend(node);
-            }
-        } catch (error) {
-            console.log('net not initialized yet')
-        }
-
-        this.setSelectedEventLog(this._selectedEventLog)
-        // Netz nur herunterladbar, wenn fertig
-        this.isPetriNetFinished = this._petriNet!.finished;
-
+        this.draw()
         this.resetZoomObjectKeepZoomLevel();
     }
 
@@ -464,7 +438,7 @@ export class DisplayComponent implements OnDestroy {
                 const result = this._inductiveMinerService.applyInductiveMiner(eventLogToCutIn!, markedEdges);
                 console.log('cut result: ', result);
                 this._petriNet?.handleCutResult(result.cutMade, eventLogToCutIn!, result.el[0], result.el[1])
-                this.draw();
+                this.drawResetZoom();
 
                 this._snackbar.open(`Executed ${result.cutMade} Cut`, 'Close', {
                     duration: 3000,
@@ -520,7 +494,7 @@ export class DisplayComponent implements OnDestroy {
             })
         }
 
-        this.draw();
+        this.drawResetZoom();
         return;
     }
 
