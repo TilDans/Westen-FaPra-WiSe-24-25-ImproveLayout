@@ -34,7 +34,7 @@ export class InductivePetriNet{
 
     //OffSet sollte nicht frößer sein als kleinstes Element * 2 (Berechnung, ob ein Element in einem Layer ist)
     static horizontalOffset = 150;
-    static verticalOffset = 150;
+    static verticalOffset = 100;
 
     static chosenPetriLayout = PetriLayout.Recursive;
 
@@ -412,10 +412,10 @@ export class InductivePetriNet{
                     const parentType = parent.getType();
                     const sameType: boolean = parentType === type;
                     const newInnerNode = new RecursiveNode([toInsertFirst, toInsertSecond], this._svgService, LayoutDirection.Vertical, type, false);
-                    newInnerNode.registerPlace(prevPlace1)
+                    /* newInnerNode.registerPlace(prevPlace1)
                     newInnerNode.registerPlace(prevPlace2)
                     newInnerNode.registerPlace(postPlace1)
-                    newInnerNode.registerPlace(postPlace2)
+                    newInnerNode.registerPlace(postPlace2) */
                     let newOuterNode: RecursiveNode;
                     if (!isWithinLoopRedo) {
                         newOuterNode = new RecursiveNode([mockTrans1, newInnerNode, mockTrans2], this._svgService, LayoutDirection.Horizontal, type, !sameType);
@@ -579,8 +579,8 @@ export class InductivePetriNet{
                     const parentType = parent.getType();
                     const sameType: boolean = parentType === RecursiveType.Loop;
                     const newInnerNode = new RecursiveNode([toInsertFirst, toInsertSecond], this._svgService, LayoutDirection.Vertical, RecursiveType.Loop, false);
-                    newInnerNode.registerPlace(prevPlace);
-                    newInnerNode.registerPlace(postPlace);
+                    /* newInnerNode.registerPlace(prevPlace);
+                    newInnerNode.registerPlace(postPlace); */
                     let newOuterNode: RecursiveNode;
                     if (!isWithinLoopRedo) {
                         newOuterNode = new RecursiveNode([mockTrans1, newInnerNode, mockTrans2], this._svgService, LayoutDirection.Horizontal, RecursiveType.Loop, !sameType);
@@ -1005,8 +1005,11 @@ export class InductivePetriNet{
         const totalBeforeAndAfter = toPlace.length + fromPlace.length;
         xValToSet = xValToSet / totalBeforeAndAfter;
         yValToSet = yValToSet / totalBeforeAndAfter;
-    
-        const resolved = this.handlePlaceRectCollision(xValToSet, yValToSet, rectDimensions);
+        
+        let resolved: { x: number; y: number } = {x: xValToSet, y: yValToSet};
+        //if (!(toPlace.length === 1 && fromPlace.length === 1 && toPlace[0].start instanceof Transition && fromPlace[0].end instanceof Transition)) {
+            resolved = this.handlePlaceRectCollision(xValToSet, yValToSet, rectDimensions);
+        //}
         place.setXYonSVG(resolved.x, resolved.y);
     }
 

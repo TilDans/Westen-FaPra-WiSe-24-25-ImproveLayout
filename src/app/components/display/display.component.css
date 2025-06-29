@@ -14,7 +14,7 @@ body {
 .resizable-container {
     position: relative;
     /* Allows internal positioning */
-    resize: both;
+    resize: none;
     /* Enables resizing on both width and height */
     overflow: hidden;
     /* Ensures content doesn't overflow when resizing */
