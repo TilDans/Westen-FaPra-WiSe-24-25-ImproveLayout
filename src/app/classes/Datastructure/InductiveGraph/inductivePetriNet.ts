@@ -516,9 +516,12 @@ export class InductivePetriNet{
         //Verbundene Kanten finden
         const connecionsInNet = this.getConnectedArcs(toRemove);
 
+        let isWithinLoopRedo = false;
+
         let mockTransRequired = false;
         //eingehende Kanten 
         connecionsInNet.edgesToElem.forEach(edge => {
+            if (edge.start.x > toRemove.x) isWithinLoopRedo = true;
             const place = edge.start;
             const connectedToPlace = this.getConnectedArcs(place);
             if (connectedToPlace.edgesFromElem.length > 1) { 
@@ -527,6 +530,7 @@ export class InductivePetriNet{
         });
         //ausgehende Kanten
         connecionsInNet.edgesFromElem.forEach(edge => {
+            if (edge.end.x < toRemove.x) isWithinLoopRedo = true;
             const place = edge.end;
             const connectedToPlace = this.getConnectedArcs(place);
             if (connectedToPlace.edgesToElem.length > 1) { 
@@ -577,7 +581,12 @@ export class InductivePetriNet{
                     const newInnerNode = new RecursiveNode([toInsertFirst, toInsertSecond], this._svgService, LayoutDirection.Vertical, RecursiveType.Loop, false);
                     newInnerNode.registerPlace(prevPlace);
                     newInnerNode.registerPlace(postPlace);
-                    const newOuterNode = new RecursiveNode([mockTrans1, newInnerNode, mockTrans2], this._svgService, LayoutDirection.Horizontal, RecursiveType.Loop, !sameType);
+                    let newOuterNode: RecursiveNode;
+                    if (!isWithinLoopRedo) {
+                        newOuterNode = new RecursiveNode([mockTrans1, newInnerNode, mockTrans2], this._svgService, LayoutDirection.Horizontal, RecursiveType.Loop, !sameType);
+                    } else {
+                        newOuterNode = new RecursiveNode([mockTrans2, newInnerNode, mockTrans1], this._svgService, LayoutDirection.Horizontal, RecursiveType.Loop, !sameType);
+                    }
                     if (parent.getLayoutDirection() !== LayoutDirection.Vertical) {
                         connecionsInNet.edgesToElem.forEach(edge => {
                             parent.deRegisterPlace(edge.start)
