@@ -676,8 +676,8 @@ export class InductivePetriNet{
             this._places[i].y = yOffset;
         }
 
-        this._places[0].x = (InductivePetriNet.horizontalOffset / 2);
-        this._places[this._endPlaceIndex].x = this._rootNode.getWidth() + (InductivePetriNet.horizontalOffset * 3 / 2);
+        this._places[0].x = (0);
+        this._places[this._endPlaceIndex].x = this._rootNode.getWidth() + (InductivePetriNet.horizontalOffset * 2);
         
         type Rect = [number, number, number, number];
         const rectDimensions: Rect[] = [];
