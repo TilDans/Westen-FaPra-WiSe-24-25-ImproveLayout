@@ -8,13 +8,11 @@ import {Edge} from "./edgeElement";
 import {CustomElement} from "./Elements/customElement";
 import {SvgArrowService} from "../../../services/svg-arrow.service";
 import {IntersectionCalculatorService} from "../../../services/intersection-calculator.service";
-import { PetriLayerContainer } from "./PetriLayout/petriLayerContainer";
-import { Cuts, Layout, LayoutDirection, PetriLayout, RecursiveType } from "../enums";
+import { Cuts, Layout, LayoutDirection, RecursiveType } from "../enums";
 import { SvgLayoutService } from "src/app/services/svg-layout.service";
 import { Trace } from "../event-log/trace";
 import { TraceEvent } from "../event-log/trace-event";
 import { RecursiveNode } from "./Elements/recursiveNode";
-import { transition } from "@angular/animations";
 //#endregion
 
 export class InductivePetriNet{
@@ -25,7 +23,6 @@ export class InductivePetriNet{
     private _transitions: Transition[] = new Array<Transition>;
     private _arcs: Edge[] = new Array<Edge>;
     private _eventLogDFGs?: EventLogDFG[]; //wenn diese hier eingefügt sind, sind sie fertig berechnet (Knoten, Kanten, Koordinaten, Größe)
-    private _petriLayersContained?: PetriLayerContainer;
     private _rootNode: RecursiveNode = new RecursiveNode([], this._svgService, LayoutDirection.Horizontal);
 
     private _endPlaceIndex = 0;
@@ -36,7 +33,6 @@ export class InductivePetriNet{
     static horizontalOffset = 150;
     static verticalOffset = 100;
 
-    static chosenPetriLayout = PetriLayout.Recursive;
 
     constructor() {
         EventLogDFG.logCounter = 0; // counter der logs für neues Netz resetten
@@ -93,7 +89,6 @@ export class InductivePetriNet{
         const stopTrans = this.genTransition('stop');
 
         this._rootNode = new RecursiveNode([playTrans, firstEventLogDFG, stopTrans], this._svgService, LayoutDirection.Horizontal);
-        this._petriLayersContained = new PetriLayerContainer(playTrans, firstEventLogDFG, stopTrans);
 
         this.genArc(first, playTrans);
         this.genArc(playTrans, second);
@@ -171,66 +166,39 @@ export class InductivePetriNet{
         const firstQuarter = Math.round(halfOfLength / 2);
         const thirdQuarter = (halfOfLength + firstQuarter);
         
-        switch (InductivePetriNet.chosenPetriLayout) {
-            case PetriLayout.Before:
-                //mock Transitionen in Layout einfügen wie Sequence Cut
-                this._petriLayersContained?.insertToNewLayerAfterCurrentElementAndReplaceFormer(eventLogDFGToRemove, mockTrans1, mockTrans2);
-                
-                //erstes Viertel über mocktrans 1
-                for (let i = 0; i < firstQuarter; i++) {
-                    this._petriLayersContained?.insertToExistingLayerBeforeCurrentElement(mockTrans1, newEventLogDFGs[i]);
-                }
-                
-                //zweites Viertel unter mocktrans 1
-                for (let i = firstQuarter; i < halfOfLength; i++) {
-                    this._petriLayersContained?.insertToExistingLayerAfterCurrentElement(mockTrans1, newEventLogDFGs[i]);
-                }
-        
-                //drittes Viertel über mocktrans 2
-                for (let i = halfOfLength; i < thirdQuarter; i++) {
-                    this._petriLayersContained?.insertToExistingLayerBeforeCurrentElement(mockTrans2, newEventLogDFGs[i]);
-                }
-                
-                //viertes Viertel unter mocktrans 2
-                for (let i = thirdQuarter; i < newEventLogDFGs.length; i++) {
-                    this._petriLayersContained?.insertToExistingLayerAfterCurrentElement(mockTrans2, newEventLogDFGs[i]);
-                }
-                break;
-            case PetriLayout.Recursive:
-                const firstVertical: CustomElement[] = [];
-                const secondVertical: CustomElement[] = [];
+        const firstVertical: CustomElement[] = [];
+        const secondVertical: CustomElement[] = [];
 
-                //erstes Viertel über mocktrans 1
-                for (let i = 0; i < firstQuarter; i++) {
-                    firstVertical.push(newEventLogDFGs[i])
-                }
-                
-                firstVertical.push(mockTrans1);
-
-                //zweites Viertel unter mocktrans 1
-                for (let i = firstQuarter; i < halfOfLength; i++) {
-                    firstVertical.push(newEventLogDFGs[i])
-                }
-        
-                //drittes Viertel über mocktrans 2
-                for (let i = halfOfLength; i < thirdQuarter; i++) {
-                    secondVertical.push(newEventLogDFGs[i])
-                }
-                
-                secondVertical.push(mockTrans2);
-                
-                //viertes Viertel unter mocktrans 2
-                for (let i = thirdQuarter; i < newEventLogDFGs.length; i++) {
-                    secondVertical.push(newEventLogDFGs[i])
-                }
-
-                const firstVerticalNode = new RecursiveNode(firstVertical, this._svgService, LayoutDirection.Vertical);
-                const secondVerticalNode = new RecursiveNode(secondVertical, this._svgService, LayoutDirection.Vertical);
-                const newOuterNode = new RecursiveNode([firstVerticalNode, secondVerticalNode], this._svgService, LayoutDirection.Horizontal, RecursiveType.Flower, true);
-                connectedPlaces.forEach(place => newOuterNode.registerPlace(place));
-                this._rootNode.replaceWithCustomElement(eventLogDFGToRemove, newOuterNode);
-                break;
+        //erstes Viertel über mocktrans 1
+        for (let i = 0; i < firstQuarter; i++) {
+            firstVertical.push(newEventLogDFGs[i])
         }
+        
+        firstVertical.push(mockTrans1);
+
+        //zweites Viertel unter mocktrans 1
+        for (let i = firstQuarter; i < halfOfLength; i++) {
+            firstVertical.push(newEventLogDFGs[i])
+        }
+
+        //drittes Viertel über mocktrans 2
+        for (let i = halfOfLength; i < thirdQuarter; i++) {
+            secondVertical.push(newEventLogDFGs[i])
+        }
+        
+        secondVertical.push(mockTrans2);
+        
+        //viertes Viertel unter mocktrans 2
+        for (let i = thirdQuarter; i < newEventLogDFGs.length; i++) {
+            secondVertical.push(newEventLogDFGs[i])
+        }
+
+        const firstVerticalNode = new RecursiveNode(firstVertical, this._svgService, LayoutDirection.Vertical);
+        const secondVerticalNode = new RecursiveNode(secondVertical, this._svgService, LayoutDirection.Vertical);
+        const newOuterNode = new RecursiveNode([firstVerticalNode, secondVerticalNode], this._svgService, LayoutDirection.Horizontal, RecursiveType.Flower, true);
+        connectedPlaces.forEach(place => newOuterNode.registerPlace(place));
+        this._rootNode.replaceWithCustomElement(eventLogDFGToRemove, newOuterNode);
+        
         this._eventLogDFGs?.splice(this._eventLogDFGs.indexOf(eventLogDFGToRemove),1);
     }
 
@@ -264,28 +232,16 @@ export class InductivePetriNet{
             edge.start = toInsertSecond;
         });
 
-        switch (InductivePetriNet.chosenPetriLayout) {
-            case PetriLayout.Before:
-                if (!isWithinLoopRedo) {
-                    //Layout aktualisieren
-                    this._petriLayersContained?.insertToNewLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
-                } else {
-                    this._petriLayersContained?.insertToNewLayerBeforeCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
-                }
-                break;
-            case PetriLayout.Recursive:
-                const parent = this._rootNode.getParentNode(toRemove)!;
-                const parentType = parent.getType();
-                const sameType: boolean = parentType === RecursiveType.Sequence;
-                let newNode: RecursiveNode;
-                if (isWithinLoopRedo) {
-                    newNode = new RecursiveNode([toInsertSecond, toInsertFirst], this._svgService, LayoutDirection.Horizontal, RecursiveType.Sequence, !sameType);                    
-                } else {
-                    newNode = new RecursiveNode([toInsertFirst, toInsertSecond], this._svgService, LayoutDirection.Horizontal, RecursiveType.Sequence, !sameType);
-                }
-                this._rootNode.replaceWithCustomElement(toRemove, newNode);
-                break;
+        const parent = this._rootNode.getParentNode(toRemove)!;
+        const parentType = parent.getType();
+        const sameType: boolean = parentType === RecursiveType.Sequence;
+        let newNode: RecursiveNode;
+        if (isWithinLoopRedo) {
+            newNode = new RecursiveNode([toInsertSecond, toInsertFirst], this._svgService, LayoutDirection.Horizontal, RecursiveType.Sequence, !sameType);                    
+        } else {
+            newNode = new RecursiveNode([toInsertFirst, toInsertSecond], this._svgService, LayoutDirection.Horizontal, RecursiveType.Sequence, !sameType);
         }
+        this._rootNode.replaceWithCustomElement(toRemove, newNode);
 
         this.replaceDFGAndInsertNewDFG(toRemove, toInsertFirst, toInsertSecond);
     }
@@ -307,30 +263,21 @@ export class InductivePetriNet{
             this.genArc(toInsertSecond, edge.end);
         });
 
-        switch (InductivePetriNet.chosenPetriLayout) {
-            case PetriLayout.Before:
-                //Layout aktualisieren
-                this._petriLayersContained?.insertToExistingLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
-                break;
-            case PetriLayout.Recursive:
-                const parent = this._rootNode.getParentNode(toRemove)!;
-                const parentType = parent.getType();
-                const sameType: boolean = parentType === RecursiveType.Exclusive;
-                const newNode = new RecursiveNode([toInsertFirst, toInsertSecond], this._svgService, LayoutDirection.Vertical, RecursiveType.Exclusive, !sameType);
-                if (parent.getLayoutDirection() !== LayoutDirection.Vertical) {
-                    connecionsInNet.edgesToElem.forEach(edge => {
-                        parent.deRegisterPlace(edge.start)
-                        newNode.registerPlace(edge.start);
-                    });
-                    connecionsInNet.edgesFromElem.forEach(edge => {
-                        parent.deRegisterPlace(edge.end)
-                        newNode.registerPlace(edge.end);
-                    });
-                }
-                this._rootNode.replaceWithCustomElement(toRemove, newNode);
-                break;
+        const parent = this._rootNode.getParentNode(toRemove)!;
+        const parentType = parent.getType();
+        const sameType: boolean = parentType === RecursiveType.Exclusive;
+        const newNode = new RecursiveNode([toInsertFirst, toInsertSecond], this._svgService, LayoutDirection.Vertical, RecursiveType.Exclusive, !sameType);
+        if (parent.getLayoutDirection() !== LayoutDirection.Vertical) {
+            connecionsInNet.edgesToElem.forEach(edge => {
+                parent.deRegisterPlace(edge.start)
+                newNode.registerPlace(edge.start);
+            });
+            connecionsInNet.edgesFromElem.forEach(edge => {
+                parent.deRegisterPlace(edge.end)
+                newNode.registerPlace(edge.end);
+            });
         }
-        
+        this._rootNode.replaceWithCustomElement(toRemove, newNode);
 
         //zu entfernendes Element ersetzen und zweites Element an das Ende des Arrays pushen.
         this.replaceDFGAndInsertNewDFG(toRemove, toInsertFirst, toInsertSecond);
@@ -398,43 +345,31 @@ export class InductivePetriNet{
             //vorherigen DFG durch die beiden neuen ersetzen
             this.replaceDFGAndInsertNewDFG(toRemove, toInsertFirst, toInsertSecond);
             
-            
-            switch (InductivePetriNet.chosenPetriLayout) {
-                case PetriLayout.Before:
-                    //künstliche Transitionen in neues Layer vor/nach dem DFG einfügen
-                    this._petriLayersContained!.insertToNewLayerBeforeElement(toRemove, mockTrans1);
-                    this._petriLayersContained!.insertToNewLayerAfterElement(toRemove, mockTrans2);
-                    //aktuellen DFG durch die beiden neu generierten ersetzen
-                    this._petriLayersContained!.insertToExistingLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
-                    break;
-                case PetriLayout.Recursive:
-                    const parent = this._rootNode.getParentNode(toRemove)!;
-                    const parentType = parent.getType();
-                    const sameType: boolean = parentType === type;
-                    const newInnerNode = new RecursiveNode([toInsertFirst, toInsertSecond], this._svgService, LayoutDirection.Vertical, type, false);
-                    /* newInnerNode.registerPlace(prevPlace1)
-                    newInnerNode.registerPlace(prevPlace2)
-                    newInnerNode.registerPlace(postPlace1)
-                    newInnerNode.registerPlace(postPlace2) */
-                    let newOuterNode: RecursiveNode;
-                    if (!isWithinLoopRedo) {
-                        newOuterNode = new RecursiveNode([mockTrans1, newInnerNode, mockTrans2], this._svgService, LayoutDirection.Horizontal, type, !sameType);
-                    } else {
-                        newOuterNode = new RecursiveNode([mockTrans2, newInnerNode, mockTrans1], this._svgService, LayoutDirection.Horizontal, type, !sameType);
-                    }
-                    if (parent.getLayoutDirection() !== LayoutDirection.Vertical) {
-                        connecionsInNet.edgesToElem.forEach(edge => {
-                            newOuterNode.registerPlace(edge.start);
-                            parent.deRegisterPlace(edge.start);
-                        });
-                        connecionsInNet.edgesFromElem.forEach(edge => {
-                            newOuterNode.registerPlace(edge.end);
-                            parent.deRegisterPlace(edge.end);
-                        });
-                    }
-                    this._rootNode.replaceWithCustomElement(toRemove, newOuterNode);
-                    break;
+            const parent = this._rootNode.getParentNode(toRemove)!;
+            const parentType = parent.getType();
+            const sameType: boolean = parentType === type;
+            const newInnerNode = new RecursiveNode([toInsertFirst, toInsertSecond], this._svgService, LayoutDirection.Vertical, type, false);
+            /* newInnerNode.registerPlace(prevPlace1)
+            newInnerNode.registerPlace(prevPlace2)
+            newInnerNode.registerPlace(postPlace1)
+            newInnerNode.registerPlace(postPlace2) */
+            let newOuterNode: RecursiveNode;
+            if (!isWithinLoopRedo) {
+                newOuterNode = new RecursiveNode([mockTrans1, newInnerNode, mockTrans2], this._svgService, LayoutDirection.Horizontal, type, !sameType);
+            } else {
+                newOuterNode = new RecursiveNode([mockTrans2, newInnerNode, mockTrans1], this._svgService, LayoutDirection.Horizontal, type, !sameType);
             }
+            if (parent.getLayoutDirection() !== LayoutDirection.Vertical) {
+                connecionsInNet.edgesToElem.forEach(edge => {
+                    newOuterNode.registerPlace(edge.start);
+                    parent.deRegisterPlace(edge.start);
+                });
+                connecionsInNet.edgesFromElem.forEach(edge => {
+                    newOuterNode.registerPlace(edge.end);
+                    parent.deRegisterPlace(edge.end);
+                });
+            }
+            this._rootNode.replaceWithCustomElement(toRemove, newOuterNode);
         } else { // Stellen im Vorbereich haben nur eine ausgehende und solche im Nachbereich nur eine eingehende Kante
             const connectedPlacesBefore: Place [] = [];
             const connectedPlacesAfter: Place [] = [];
@@ -472,42 +407,35 @@ export class InductivePetriNet{
             });
 
             this.replaceDFGAndInsertNewDFG(toRemove, toInsertFirst, toInsertSecond);
-            switch (InductivePetriNet.chosenPetriLayout) {
-                case PetriLayout.Before:
-                    this._petriLayersContained?.insertToExistingLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
-                    break;
-                case PetriLayout.Recursive:
-                    const parent = this._rootNode.getParentNode(toRemove)!;
-                    const parentType = parent.getType();
-                    const sameType: boolean = parentType === type;
-                    const newNode = new RecursiveNode([toInsertFirst, toInsertSecond], this._svgService, LayoutDirection.Vertical, type, !sameType);
-                    if (parent.getLayoutDirection() !== LayoutDirection.Vertical) {
-                        connectedPlacesBefore.forEach(place =>{
-                            newNode.registerPlace(place);
-                            parent.deRegisterPlace(place);
-                        })
-                        connectedPlacesAfter.forEach(place => {
-                            newNode.registerPlace(place);
-                            parent.deRegisterPlace(place);
-                        })
-                        newPlacesBefore.forEach(place =>{
-                            newNode.registerPlace(place);
-                        })
-                        newPlacesAfter.forEach(place =>{
-                            newNode.registerPlace(place);
-                        })
-                    } else {
-                        newPlacesBefore.forEach(place =>{
-                            parent.registerPlace(place);
-                        })
-                        newPlacesAfter.forEach(place =>{
-                            parent.registerPlace(place);
-                        })
-                    }
-                    
-                    this._rootNode.replaceWithCustomElement(toRemove, newNode);
-                    break;
+            const parent = this._rootNode.getParentNode(toRemove)!;
+            const parentType = parent.getType();
+            const sameType: boolean = parentType === type;
+            const newNode = new RecursiveNode([toInsertFirst, toInsertSecond], this._svgService, LayoutDirection.Vertical, type, !sameType);
+            if (parent.getLayoutDirection() !== LayoutDirection.Vertical) {
+                connectedPlacesBefore.forEach(place =>{
+                    newNode.registerPlace(place);
+                    parent.deRegisterPlace(place);
+                })
+                connectedPlacesAfter.forEach(place => {
+                    newNode.registerPlace(place);
+                    parent.deRegisterPlace(place);
+                })
+                newPlacesBefore.forEach(place =>{
+                    newNode.registerPlace(place);
+                })
+                newPlacesAfter.forEach(place =>{
+                    newNode.registerPlace(place);
+                })
+            } else {
+                newPlacesBefore.forEach(place =>{
+                    parent.registerPlace(place);
+                })
+                newPlacesAfter.forEach(place =>{
+                    parent.registerPlace(place);
+                })
             }
+            
+            this._rootNode.replaceWithCustomElement(toRemove, newNode);
         }
     }
 
@@ -570,36 +498,29 @@ export class InductivePetriNet{
             //vorherigen DFG durch die beiden neuen ersetzen
             this.replaceDFGAndInsertNewDFG(toRemove, toInsertFirst, toInsertSecond);
             
-            switch (InductivePetriNet.chosenPetriLayout) {
-                case PetriLayout.Before:
-                    throw new Error;
-                    break;
-                case PetriLayout.Recursive:
-                    const parent = this._rootNode.getParentNode(toRemove)!;
-                    const parentType = parent.getType();
-                    const sameType: boolean = parentType === RecursiveType.Loop;
-                    const newInnerNode = new RecursiveNode([toInsertFirst, toInsertSecond], this._svgService, LayoutDirection.Vertical, RecursiveType.Loop, false);
-                    /* newInnerNode.registerPlace(prevPlace);
-                    newInnerNode.registerPlace(postPlace); */
-                    let newOuterNode: RecursiveNode;
-                    if (!isWithinLoopRedo) {
-                        newOuterNode = new RecursiveNode([mockTrans1, newInnerNode, mockTrans2], this._svgService, LayoutDirection.Horizontal, RecursiveType.Loop, !sameType);
-                    } else {
-                        newOuterNode = new RecursiveNode([mockTrans2, newInnerNode, mockTrans1], this._svgService, LayoutDirection.Horizontal, RecursiveType.Loop, !sameType);
-                    }
-                    if (parent.getLayoutDirection() !== LayoutDirection.Vertical) {
-                        connecionsInNet.edgesToElem.forEach(edge => {
-                            parent.deRegisterPlace(edge.start)
-                            newOuterNode.registerPlace(edge.start);
-                        });
-                        connecionsInNet.edgesFromElem.forEach(edge => {
-                            parent.deRegisterPlace(edge.end)
-                            newOuterNode.registerPlace(edge.end);
-                        });
-                    }
-                    this._rootNode.replaceWithCustomElement(toRemove, newOuterNode);
-                    break;
+            const parent = this._rootNode.getParentNode(toRemove)!;
+            const parentType = parent.getType();
+            const sameType: boolean = parentType === RecursiveType.Loop;
+            const newInnerNode = new RecursiveNode([toInsertFirst, toInsertSecond], this._svgService, LayoutDirection.Vertical, RecursiveType.Loop, false);
+            /* newInnerNode.registerPlace(prevPlace);
+            newInnerNode.registerPlace(postPlace); */
+            let newOuterNode: RecursiveNode;
+            if (!isWithinLoopRedo) {
+                newOuterNode = new RecursiveNode([mockTrans1, newInnerNode, mockTrans2], this._svgService, LayoutDirection.Horizontal, RecursiveType.Loop, !sameType);
+            } else {
+                newOuterNode = new RecursiveNode([mockTrans2, newInnerNode, mockTrans1], this._svgService, LayoutDirection.Horizontal, RecursiveType.Loop, !sameType);
             }
+            if (parent.getLayoutDirection() !== LayoutDirection.Vertical) {
+                connecionsInNet.edgesToElem.forEach(edge => {
+                    parent.deRegisterPlace(edge.start)
+                    newOuterNode.registerPlace(edge.start);
+                });
+                connecionsInNet.edgesFromElem.forEach(edge => {
+                    parent.deRegisterPlace(edge.end)
+                    newOuterNode.registerPlace(edge.end);
+                });
+            }
+            this._rootNode.replaceWithCustomElement(toRemove, newOuterNode);
         } else { 
             //für eingehende Kanten das erste einzufügende Element als Ziel setzen
             connecionsInNet.edgesToElem.forEach(edge => {
@@ -616,29 +537,21 @@ export class InductivePetriNet{
             //vorherigen DFG durch die beiden neuen ersetzen
             this.replaceDFGAndInsertNewDFG(toRemove, toInsertFirst, toInsertSecond);
 
-            switch (InductivePetriNet.chosenPetriLayout) {
-                case PetriLayout.Before:
-                    //Layout aktualisieren
-                    this._petriLayersContained?.insertToExistingLayerAfterCurrentElementAndReplaceFormer(toRemove, toInsertFirst, toInsertSecond);
-                    break;
-                case PetriLayout.Recursive:
-                    const parent = this._rootNode.getParentNode(toRemove)!;
-                    const parentType = parent.getType();
-                    const sameType: boolean = parentType === RecursiveType.Loop;
-                    const newNode = new RecursiveNode([toInsertFirst, toInsertSecond], this._svgService, LayoutDirection.Vertical, RecursiveType.Loop, !sameType);
-                    if (parent.getLayoutDirection() !== LayoutDirection.Vertical) {
-                        connecionsInNet.edgesToElem.forEach(edge => {
-                            newNode.registerPlace(edge.start);
-                            parent.deRegisterPlace(edge.start);
-                        });
-                        connecionsInNet.edgesFromElem.forEach(edge => {
-                            newNode.registerPlace(edge.end);
-                            parent.deRegisterPlace(edge.end);
-                        });
-                    }
-                    this._rootNode.replaceWithCustomElement(toRemove, newNode);
-                    break;
+            const parent = this._rootNode.getParentNode(toRemove)!;
+            const parentType = parent.getType();
+            const sameType: boolean = parentType === RecursiveType.Loop;
+            const newNode = new RecursiveNode([toInsertFirst, toInsertSecond], this._svgService, LayoutDirection.Vertical, RecursiveType.Loop, !sameType);
+            if (parent.getLayoutDirection() !== LayoutDirection.Vertical) {
+                connecionsInNet.edgesToElem.forEach(edge => {
+                    newNode.registerPlace(edge.start);
+                    parent.deRegisterPlace(edge.start);
+                });
+                connecionsInNet.edgesFromElem.forEach(edge => {
+                    newNode.registerPlace(edge.end);
+                    parent.deRegisterPlace(edge.end);
+                });
             }
+            this._rootNode.replaceWithCustomElement(toRemove, newNode);
         }
     }
 
@@ -749,174 +662,9 @@ export class InductivePetriNet{
     
     public getSVGRepresentation(): SVGElement[] {
         //Layout für das Petrinetz durchführen, Koordinaten für SVGs der Stellen, Transitionen und zugehöriger Kanten setzen.
-        switch (InductivePetriNet.chosenPetriLayout) {
-            case PetriLayout.Before:
-                this.layoutPetriNet(); 
-                break;
-            case PetriLayout.Recursive:
-                this.layoutRecursivePetriNet(); 
-                break;
-            default:
-                break;
-        }
+        this.layoutRecursivePetriNet(); 
         const result: Array<SVGElement> = this.concatSVGReps();
         return result;
-    }
-
-    private layoutPetriNet() {
-        //maxY insgesamt bestimmen, um das gesamte Netz mittig platzieren zu können
-        let maxY = 0;
-        if(!this._petriLayersContained) { return };
-        this._petriLayersContained!.forEach(layer => {
-            let yValInLayer = ((layer.length - 1) * InductivePetriNet.verticalOffset) + 50;
-            layer.forEach(element => {
-                yValInLayer += element.getHeight();
-            });
-            maxY = (yValInLayer > maxY ? yValInLayer : maxY);
-        });
-        const yOffset = maxY / 2;
-        //y Wert der Start- und Endstellen setzen
-        for (let i = 0; i <= this._endPlaceIndex; i++) {
-            this._places[i].y = yOffset;
-        }
-
-        let currLayerXOffSet = InductivePetriNet.horizontalOffset;
-        this._petriLayersContained!.forEach(layer => {
-            //Für jedes Layer Gesamthöhe und Breite berechnen und diese zentrieren
-            let totalLayerHeight = layer.length * InductivePetriNet.verticalOffset;
-            let layerMaxWidth = 0;
-            layer.forEach(element => {
-                layerMaxWidth = (element.getWidth() > layerMaxWidth ? element.getWidth() : layerMaxWidth);
-                totalLayerHeight += element.getHeight();
-            });
-            //subtrahiere aktuelle von maximaler Höhe um die Differenz zu erhalten, teilen zum mittig platzieren.
-            let currLayerYOffset = (((maxY - totalLayerHeight) / 2) + (InductivePetriNet.verticalOffset / 2));
-
-            //für jedes Element x und y Werte setzen
-            layer.forEach(element => {
-                const currElemHeight = element.getHeight();
-                const currElemWidth = element.getWidth();
-                let yValToSet = currLayerYOffset;
-                let xValToSet = currLayerXOffSet + ((layerMaxWidth - currElemWidth) / 2);
-                element.setXYonSVG(xValToSet, yValToSet);
-                currLayerYOffset += (InductivePetriNet.verticalOffset + currElemHeight);
-            });
-            layer.minX = currLayerXOffSet;
-            layer.maxX = currLayerXOffSet + layerMaxWidth;
-            currLayerXOffSet += (InductivePetriNet.horizontalOffset + layerMaxWidth);
-        });
-        //alle Koordinaten der Layer gesetzt, daher kann nun die Endstelle horizontal platziert werden.
-        this._places[this._endPlaceIndex].x = currLayerXOffSet - (InductivePetriNet.horizontalOffset / 2);
-
-        //Positionen der Stellen berechnen und setzen
-        this._places.forEach(place => {
-            if (place.id == 'p0' || place.id == 'p3') {
-            } else {
-                this.setPlacePosition(place, yOffset);
-            }
-        });
-        this._places.forEach(place => {
-            //Kanten erzeugen nachdem die Positionen berechnet wurden.
-            // Stellen sind nicht mit Stellen verbunden! Daher für aus- und eingegende Kanten Verbindungen einfügen
-            this._arcs.filter(edge => edge.start == place || edge.end == place).forEach(
-                edge => this._svgService.createSVGForArc(edge)
-            );
-        })
-    }
-
-    private setPlacePosition(place: Place, yOffset: number) {
-        const { edgesToElem: toPlace, edgesFromElem: fromPlace } = this.getConnectedArcs(place);
-        const connectedElems: CustomElement[] = [];
-        //X und Y Werte für die Stellen berechnen.
-        let xValToSet = 0;
-        let yValToSet = 0;
-
-        //Summiere alle x und y Werte der Elemente vor und nach der Stelle
-        toPlace.forEach(edge => {
-            connectedElems.push(edge.start)
-            const centerCoord = edge.start.getCenterXY();
-            xValToSet += centerCoord.x;
-            yValToSet += centerCoord.y;
-        });
-        fromPlace.forEach(edge => {
-            connectedElems.push(edge.end)
-            const centerCoord = edge.end.getCenterXY();
-            xValToSet += centerCoord.x;
-            yValToSet += centerCoord.y;
-        });
-        //Teile die Summe durch die gesamte Anzahl der Elemente um die Stelle mittig zu platzieren
-        const totalBeforeAndAfter = toPlace.length + fromPlace.length;
-        xValToSet = xValToSet / totalBeforeAndAfter;
-        yValToSet = yValToSet / totalBeforeAndAfter;
-
-        const collidingLayer = this._petriLayersContained!.getCollidingLayer(xValToSet);
-        if (collidingLayer) {
-            let layerBeforePlace = -1;
-            toPlace.forEach(edge => {
-                const currStartElemLayer = this.getLayer(edge.start);
-                layerBeforePlace = (currStartElemLayer > layerBeforePlace) ? currStartElemLayer : layerBeforePlace;
-            });
-            let maxLayerAfterPlace = -1;
-            let minLayerAfterPlace = -1;
-            fromPlace.forEach(edge => {
-                const currEndElemLayer = this.getLayer(edge.end);
-                maxLayerAfterPlace = (currEndElemLayer > maxLayerAfterPlace) ? currEndElemLayer : maxLayerAfterPlace;
-                minLayerAfterPlace = (currEndElemLayer < maxLayerAfterPlace) ? currEndElemLayer : maxLayerAfterPlace;
-            });
-            let collidingLayerCoordinates;
-            if (layerBeforePlace >= collidingLayer && maxLayerAfterPlace > layerBeforePlace) {
-                collidingLayerCoordinates = this._petriLayersContained!.getLayerCoordinates(layerBeforePlace);
-                xValToSet = collidingLayerCoordinates.maxX + (InductivePetriNet.horizontalOffset / 2);
-            } else {
-                const collisionCoords = this._petriLayersContained!.getLayerCoordinates(collidingLayer);
-                const middleOfCollidingLayer = (collisionCoords.minX + collisionCoords.maxX) / 2
-                if (xValToSet <= middleOfCollidingLayer) {
-                    xValToSet = collisionCoords.minX - (InductivePetriNet.horizontalOffset / 2);
-                } else {
-                    xValToSet = collisionCoords.maxX + (InductivePetriNet.horizontalOffset / 2);
-                }
-            }            
-        }
-        
-        if (toPlace.length === 1 && fromPlace.length === 1) {
-            const toPlaceX = toPlace[0].start.getCenterXY().x;
-            const fromPlaceX = fromPlace[0].end.getCenterXY().x;
-            const toPlaceY = toPlace[0].start.getCenterXY().y;
-            const fromPlaceY = fromPlace[0].end.getCenterXY().y;
-        
-            // Calculate differences
-            const xOffsetBetweenNodes = fromPlaceX - toPlaceX;
-            const yOffsetBetweenNodes = fromPlaceY - toPlaceY;
-        
-            if (xOffsetBetweenNodes !== 0) {
-                const slope = yOffsetBetweenNodes / xOffsetBetweenNodes;
-        
-                //Wert berechnen y = mx + b
-                yValToSet = toPlaceY + slope * (xValToSet - toPlaceX);
-            }
-        }
-        
-        // Kollisionen auf der Mittellinie vermeiden, wenn Stelle dort nah dran liegt
-        if (yOffset - 15 < yValToSet && yValToSet < yOffset + 15) {
-            let moreThanOneApart = true;
-            //nur für Stellen, deren Layer nicht direkt aufeinander folgen
-            for (const connectedElem of connectedElems) {
-                for (const connectedElemTwo of connectedElems) {
-                    let test = Math.abs(this.getLayer(connectedElem) - this.getLayer(connectedElemTwo))
-                    if (test > 1) {
-                        moreThanOneApart = false;
-                    }
-                }   
-            }
-            if (!moreThanOneApart){
-                    yValToSet += 50;
-            }
-        }
-        place.setXYonSVG(xValToSet, yValToSet);
-    }
-
-    private getLayer(element: CustomElement) {
-        return this._petriLayersContained!.findIndex(layer => layer.includes(element));
     }
 
     private layoutRecursivePetriNet() {
@@ -1176,15 +924,7 @@ export class InductivePetriNet{
                 edge.start = transition;
             });
 
-            switch (InductivePetriNet.chosenPetriLayout) {
-                case PetriLayout.Before:
-                    //remove from petrilayers
-                    this._petriLayersContained?.updateElem(dfg, transition);
-                    break;
-                case PetriLayout.Recursive:
-                    this._rootNode.replaceWithCustomElement(dfg, transition);
-                    break;
-            }
+            this._rootNode.replaceWithCustomElement(dfg, transition);
         });
         this.netFinished();
     }

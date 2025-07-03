@@ -23,8 +23,3 @@ export enum LayoutDirection {
     Horizontal = 'Horizontal',
     Vertical = 'Vertical',
 }
-
-export enum PetriLayout {
-    Recursive = 'Recursive',
-    Before = 'Before'
-}
