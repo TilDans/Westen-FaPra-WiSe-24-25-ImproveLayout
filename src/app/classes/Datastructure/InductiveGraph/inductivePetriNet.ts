@@ -30,8 +30,8 @@ export class InductivePetriNet{
 
 
     //OffSet sollte nicht frößer sein als kleinstes Element * 2 (Berechnung, ob ein Element in einem Layer ist)
-    static horizontalOffset = 150;
-    static verticalOffset = 100;
+    static horizontalOffset = 120;
+    static verticalOffset = 70;
 
 
     constructor() {

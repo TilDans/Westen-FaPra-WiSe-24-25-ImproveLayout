@@ -94,7 +94,7 @@ export class SvgService {
     createSVGForTransition(transToGen: Transition) {
         const MINHEIGHT = 50;
         const MINWIDTH = 100;
-        const fontSize = 16;
+        const fontSize = 30;
 
         const labelForTrans = transToGen.event;
 

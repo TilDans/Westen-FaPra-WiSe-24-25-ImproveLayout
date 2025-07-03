@@ -18,7 +18,7 @@ export class RecursiveNode extends CustomElement {
     
     static counter = 0;
     static colouredBoxes = true;
-    static padding = RecursiveNode.colouredBoxes ? 60 : 0;
+    static padding = RecursiveNode.colouredBoxes ? 45 : 0;
 
     constructor(children: CustomElement[], svgService: SvgService, direction: LayoutDirection, type?: RecursiveType, createBox?: boolean) {
         super();
@@ -55,7 +55,6 @@ export class RecursiveNode extends CustomElement {
         this._children.forEach(child => {
             if (child instanceof RecursiveNode) {
                 child.setXonPlaces();
-                console.log(child)
             }
         });
         this._connectedPlaces.forEach(place => {
@@ -89,32 +88,26 @@ export class RecursiveNode extends CustomElement {
             case LayoutDirection.Horizontal:
                 this._children.forEach(child => {
                     const childHeight = child.getHeight();
-                    // Vertically center-align child within this node
                     const yAligned = y + (this._height - childHeight) / 2;
                     child.setXYonSVG(currentX, yAligned);
 
-                    // If the child is also a RecursiveNode, layout it recursively
                     if (child instanceof RecursiveNode) {
                         child.layoutRecursive(currentX, yAligned);
                     }
 
-                    // Advance X position by width of child and offset
                     currentX += child.getWidth() + InductivePetriNet.horizontalOffset;
                 });
                 break;
             case LayoutDirection.Vertical:
                 this._children.forEach(child => {
                     const childWidth = child.getWidth();
-                    // Horizontally center-align child within this node
                     const xAligned = x + (this._width - childWidth) / 2;
                     child.setXYonSVG(xAligned, currentY);
 
-                    // Recurse layout for RecursiveNode children
                     if (child instanceof RecursiveNode) {
                         child.layoutRecursive(xAligned, currentY);
                     }
 
-                    // Advance Y position by height of child and offset
                     currentY += child.getHeight() + InductivePetriNet.verticalOffset;
                 });
                 break;
@@ -129,7 +122,6 @@ export class RecursiveNode extends CustomElement {
      */
     private calculateRecursiveSize(): { width: number; height: number } {
 
-        // Get size for each child, recursively if needed
         const childrenSizes = this._children.map(child =>
             child instanceof RecursiveNode ? child.calculateRecursiveSize() : {
                 width: child.getWidth(),
@@ -139,26 +131,21 @@ export class RecursiveNode extends CustomElement {
 
         switch (this._direction) {
             case LayoutDirection.Horizontal:
-                // Total width is sum of children's widths + spacing
                 this._width = childrenSizes.reduce((sum, childSize) => sum + childSize.width, 0)
                                 + (childrenSizes.length - 1) * InductivePetriNet.horizontalOffset;
-                // Height is max of children's heights
                 this._height = Math.max(...childrenSizes.map(s => s.height));
                 break;
 
             case LayoutDirection.Vertical:
-                // Width is max of children's widths
                 const raw = this._svgElement?.getAttribute('minwidth');
                 const minwidth = !isNaN(parseFloat(raw!)) ? parseFloat(raw!) : 0;
 
                 this._width = Math.max(...childrenSizes.map(childSize => childSize.width), minwidth);
-                // Total height is sum of children's heights + spacing
                 this._height = childrenSizes.reduce((sum, s) => sum + s.height, 0)
                                + (childrenSizes.length - 1) * InductivePetriNet.verticalOffset;
                 break;
 
             default:
-                // If no layout direction is defined, use the first child's size as fallback
                 return { width: childrenSizes[0].width, height: childrenSizes[0].height };
         }
         const nodeInSequenceAndNoBox = this._svgElement === undefined /* && this._type === RecursiveType.Sequence */;
