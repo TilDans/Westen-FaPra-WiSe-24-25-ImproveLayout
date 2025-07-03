@@ -126,8 +126,8 @@ export class SvgLayoutService {
         // Initialize all positions at the center (0, 0)
         nodes.forEach(node => {
             positions[node] = {
-                x: 0,
-                y: 0
+                x: Math.random() * 50,
+                y: Math.random() * 50
             };
         });
     
