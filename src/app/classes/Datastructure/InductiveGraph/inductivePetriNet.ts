@@ -296,7 +296,7 @@ export class InductivePetriNet{
             if (edge.start.x > toRemove.x) isWithinLoopRedo = true;
             const place = edge.start;
             const connectedToPlace = this.getConnectedArcs(place);
-            if (connectedToPlace.edgesFromElem.length > 1) { 
+            if (connectedToPlace.edgesFromElem.length > 1 || connectedToPlace.edgesToElem.length > 1) { 
                 mockTransRequired = true;
             }
         });
@@ -305,7 +305,7 @@ export class InductivePetriNet{
             if (edge.end.x < toRemove.x) isWithinLoopRedo = true;
             const place = edge.end;
             const connectedToPlace = this.getConnectedArcs(place);
-            if (connectedToPlace.edgesToElem.length > 1) { 
+            if (connectedToPlace.edgesToElem.length > 1 || connectedToPlace.edgesFromElem.length > 1 ) { 
                 mockTransRequired = true;
             }
         });
